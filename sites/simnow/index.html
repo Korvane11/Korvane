@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SimNow | Salem's Sim Racing Destination</title>
+  <meta name="description" content="SimNow is Salem's sim racing destination: professional racing simulators, premium gear, and a welcoming local community, built for first-time drivers and seasoned racers alike.">
+  <meta name="theme-color" content="#14151b">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700;1,800&family=Barlow:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="intro-active">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- Intro: black screen, headlights ignite, site opens -->
+  <div class="intro" id="intro" aria-hidden="true">
+    <svg class="intro__car" viewBox="0 0 1200 520" role="presentation">
+      <defs>
+        <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#9aa3ad" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#9aa3ad" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="beam">
+          <stop offset="0" stop-color="#f2f8ff" stop-opacity=".95"/>
+          <stop offset=".25" stop-color="#cfe3ff" stop-opacity=".45"/>
+          <stop offset="1" stop-color="#9cc4ff" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="glow" x="-50%" y="-200%" width="200%" height="500%">
+          <feGaussianBlur stdDeviation="6" result="b1"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="b2"/>
+          <feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Body silhouette: low, wide wedge seen head-on -->
+      <g class="intro__body" fill="none" stroke="url(#rim)" stroke-width="2" stroke-linejoin="round">
+        <path d="M120 440 L150 330 Q170 292 230 286 L420 268 Q600 252 780 268 L970 286 Q1030 292 1050 330 L1080 440"/>
+        <path d="M420 268 L470 178 Q600 160 730 178 L780 268"/>
+        <path d="M486 186 Q600 172 714 186" stroke-opacity=".6"/>
+        <path d="M230 286 Q600 300 970 286" stroke-opacity=".5"/>
+        <path d="M600 262 L600 300" stroke-opacity=".35"/>
+        <!-- Lower intakes and splitter -->
+        <path d="M190 380 L330 372 L360 410 L210 420 Z"/>
+        <path d="M1010 380 L870 372 L840 410 L990 420 Z"/>
+        <path d="M430 372 L770 372 L740 408 L460 408 Z" stroke-opacity=".6"/>
+        <path d="M140 440 L1060 440" stroke-opacity=".8"/>
+      </g>
+
+      <!-- Light thrown forward by the headlights -->
+      <g class="intro__beams">
+        <ellipse class="intro__beam" cx="305" cy="322" rx="300" ry="120" fill="url(#beam)"/>
+        <ellipse class="intro__beam" cx="895" cy="322" rx="300" ry="120" fill="url(#beam)"/>
+      </g>
+
+      <!-- Headlights: angular housings with Y-shaped LED signatures -->
+      <g class="intro__lights">
+        <g class="intro__lamp intro__lamp--l">
+          <path class="intro__housing" d="M186 318 L420 296 L408 332 L214 350 Z"/>
+          <g class="intro__drl" filter="url(#glow)">
+            <path class="seg seg-1" d="M206 324 L318 312"/>
+            <path class="seg seg-2" d="M220 344 L318 312"/>
+            <path class="seg seg-3" d="M318 312 L404 304"/>
+          </g>
+        </g>
+        <g class="intro__lamp intro__lamp--r" transform="translate(1200 0) scale(-1 1)">
+          <path class="intro__housing" d="M186 318 L420 296 L408 332 L214 350 Z"/>
+          <g class="intro__drl" filter="url(#glow)">
+            <path class="seg seg-1" d="M206 324 L318 312"/>
+            <path class="seg seg-2" d="M220 344 L318 312"/>
+            <path class="seg seg-3" d="M318 312 L404 304"/>
+          </g>
+        </g>
+      </g>
+    </svg>
+    <div class="intro__flash"></div>
+    <button class="intro__skip" type="button" id="skipIntro">Skip intro</button>
+  </div>
+
+  <!-- Site-wide cinematic background -->
+  <div class="backdrop" aria-hidden="true">
+    <div class="track">
+      <div class="track__sky"></div>
+      <div class="track__road"><span class="track__curb track__curb--l"></span><span class="track__curb track__curb--r"></span></div>
+      <span class="streak streak--1"></span>
+      <span class="streak streak--2"></span>
+      <span class="streak streak--3"></span>
+    </div>
+    <!-- Drop the cinematic Lamborghini track footage at assets/hero.mp4 (and optionally hero.webm). -->
+    <video class="backdrop__video" id="bgVideo" muted loop playsinline preload="metadata">
+      <source src="assets/hero.webm" type="video/webm">
+      <source src="assets/hero.mp4" type="video/mp4">
+    </video>
+    <div class="backdrop__shade"></div>
+  </div>
+
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a class="logo" href="#top">
+        <img src="assets/simnow-logo.png" alt="SimNow" width="358" height="200">
+      </a>
+      <nav class="nav__links" id="navLinks" aria-label="Primary">
+        <a href="#race">Race</a>
+        <a href="#events">Race Nights</a>
+        <a href="#shop">Gear Shop</a>
+        <a href="#visit">Visit</a>
+      </nav>
+      <a class="btn btn--primary nav__cta" href="#visit">Book a Sim</a>
+      <button class="nav__toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="container hero__inner">
+        <p class="eyebrow reveal"><span class="eyebrow__line" aria-hidden="true"></span>Salem's Sim Racing Destination</p>
+        <h1 class="hero__title reveal">Your fastest lap<br><em>starts here</em></h1>
+        <p class="hero__lead reveal">Professional racing simulators, premium gear, and a welcoming local community&mdash;built for first-time drivers and seasoned racers alike.</p>
+        <div class="hero__ctas reveal">
+          <a class="btn btn--primary btn--lg" href="#visit">Book a Sim <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn--ghost btn--lg" href="#events">See Race Nights</a>
+        </div>
+        <ul class="hero__chips reveal" aria-label="Highlights">
+          <li>Hourly sim rentals</li>
+          <li>Weekly community racing</li>
+          <li>New &amp; pre-owned gear</li>
+        </ul>
+      </div>
+      <a class="hero__scroll" href="#race" aria-label="Scroll to Race section"><span></span></a>
+    </section>
+
+    <section class="section" id="race" aria-labelledby="race-title">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="kicker">01 &mdash; Race</p>
+          <h2 id="race-title">Lights out. <em>Your turn.</em></h2>
+          <p>Whether it's your first lap or your thousandth, SimNow puts you in the seat of a full racing simulator. Book by the hour, pick your car and track, and send it.</p>
+        </header>
+        <div class="cards">
+          <article class="card reveal">
+            <div class="card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <h3>Hourly rentals</h3>
+            <p>Grab a rig for an hour or make a night of it. Solo practice, head-to-head with friends, or chasing a personal best.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg></div>
+            <h3>Community race nights</h3>
+            <p>Weekly events where local drivers line up on the same grid. Show up, qualify, and fight for position.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3v6.5M4.2 16.5l5.6-3.2M19.8 16.5l-5.6-3.2"/></svg></div>
+            <h3>Gear you can take home</h3>
+            <p>Loved the wheel? Our retail floor stocks new and pre-owned sim racing gear, with delivery and set-up available.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--steps" aria-labelledby="steps-title">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="kicker">02 &mdash; Your first session</p>
+          <h2 id="steps-title">From the door to the <em>grid</em> in minutes</h2>
+        </header>
+        <ol class="steps">
+          <li class="step reveal"><span class="step__num">1</span><h3>Book your time</h3><p>Reserve a simulator by the hour for yourself or your crew.</p></li>
+          <li class="step reveal"><span class="step__num">2</span><h3>Strap in</h3><p>We'll set you up in the seat and dial in the wheel and pedals.</p></li>
+          <li class="step reveal"><span class="step__num">3</span><h3>Go racing</h3><p>Pick a car and circuit, then hunt down lap time. Bring friends and race each other.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section" id="events" aria-labelledby="events-title">
+      <div class="container">
+        <div class="banner reveal">
+          <div class="banner__flag" aria-hidden="true"></div>
+          <div class="banner__body">
+            <p class="kicker">03 &mdash; Race nights</p>
+            <h2 id="events-title">Weekly community <em>racing</em></h2>
+            <p>Every week, Salem's sim drivers share the same grid. Rivalries encouraged. Ask at the counter or get in touch for this week's event.</p>
+          </div>
+          <a class="btn btn--primary btn--lg" href="#visit">Get the Schedule</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="shop" aria-labelledby="shop-title">
+      <div class="container shop">
+        <header class="section__head reveal">
+          <p class="kicker">04 &mdash; Gear shop</p>
+          <h2 id="shop-title">Build your <em>home rig</em></h2>
+          <p>Try it in the lounge, then take it home. SimNow's retail floor carries new and pre-owned sim racing gear, so you can test before you buy.</p>
+          <a class="btn btn--ghost" href="#visit">Visit the Shop</a>
+        </header>
+        <ul class="shop__list">
+          <li class="reveal"><h3>New gear</h3><p>Wheels, pedals, cockpits and accessories for every level of build.</p></li>
+          <li class="reveal"><h3>Pre-owned gear</h3><p>Quality used equipment for a fraction of the price.</p></li>
+          <li class="reveal"><h3>Delivery &amp; set-up</h3><p>We can deliver and set up your rig at home for an extra fee.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="visit" aria-labelledby="visit-title">
+      <div class="container">
+        <div class="visit reveal">
+          <div class="visit__info">
+            <p class="kicker">05 &mdash; Visit</p>
+            <h2 id="visit-title">Find us in <em>Salem</em></h2>
+            <address>
+              3790 Silverton Rd NE, Suite C<br>
+              Salem, OR 97305
+            </address>
+            <div class="visit__ctas">
+              <a class="btn btn--primary btn--lg" href="https://www.google.com/maps/search/?api=1&amp;query=3790+Silverton+Rd+NE+Suite+C+Salem+OR+97305" target="_blank" rel="noopener">Get Directions</a>
+            </div>
+          </div>
+          <div class="hours">
+            <h3>Hours</h3>
+            <dl>
+              <div><dt>Sunday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
+              <div><dt>Monday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
+              <div><dt>Tuesday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
+              <div><dt>Wednesday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
+              <div><dt>Thursday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
+              <div><dt>Friday</dt><dd>9:00 AM &ndash; 10:00 PM</dd></div>
+              <div><dt>Saturday</dt><dd>9:00 AM &ndash; 10:00 PM</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <a class="logo logo--footer" href="#top"><img src="assets/simnow-logo.png" alt="SimNow" width="358" height="200" loading="lazy"></a>
+      <p>Salem's premier racing lounge &amp; retail outlet &middot; 3790 Silverton Rd NE, Suite C, Salem, OR 97305</p>
+      <p class="footer__copy">&copy; <span id="year">2026</span> SimNow</p>
+    </div>
+  </footer>
+
+  <button class="video-toggle" id="videoToggle" type="button" aria-label="Pause background video" aria-pressed="false" hidden>
+    <svg class="i-pause" aria-hidden="true" viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg>
+    <svg class="i-play" aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>
+  </button>
+
+  <script src="main.js"></script>
+</body>
+</html>
