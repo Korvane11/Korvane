@@ -506,10 +506,11 @@ export async function createStage(canvas, { onProgress = () => {}, lowPower = fa
   const car = gltf.scene.children[0];
 
   const mats = {
+    // Matte black satin paint (reference: matte black Aventador SVJ).
     body: new THREE.MeshPhysicalMaterial({
-      color: 0x24272d, metalness: 0.88, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.025,
+      color: 0x0d0d0f, metalness: 0.4, roughness: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.45, envMapIntensity: 1.7,
     }),
-    rim: new THREE.MeshStandardMaterial({ color: 0x2a2c30, metalness: 1, roughness: 0.28 }),
+    rim: new THREE.MeshStandardMaterial({ color: 0x0f1012, metalness: 0.85, roughness: 0.36 }),
     metal: new THREE.MeshStandardMaterial({ color: 0x6d7076, metalness: 1, roughness: 0.4 }),
     caliper: new THREE.MeshStandardMaterial({ color: 0xc0261f, metalness: 0.2, roughness: 0.35 }),
     chrome: new THREE.MeshStandardMaterial({ color: 0x9a9da3, metalness: 1, roughness: 0.12 }),
