@@ -224,7 +224,8 @@ document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 /* ---------------------------------------------------------------- boot */
 async function boot() {
   buildSegments(chapters.length);
-  if (!video.getAttribute('src')) video.src = `assets/drive/drive.${ext}`;   // index.html sets it early, except with reduced motion
+  // index.html sets it early, except with reduced motion; phones (the band layout) get the lighter encode
+  if (!video.getAttribute('src')) video.src = `assets/drive/${matchMedia('(max-aspect-ratio: 1/1)').matches ? 'drive-phone' : 'drive'}.${ext}`;
 
   if (reduced) {
     // No intro and no motion: the poster frame sits behind stacked content.

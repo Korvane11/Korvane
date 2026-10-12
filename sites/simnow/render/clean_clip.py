@@ -1,5 +1,6 @@
 """Clean a TikTok clip for the background: cut the end card, paint out the
-watermark, turn it upright, and encode the MP4 and WebM the site plays.
+watermark, turn it upright, and encode the MP4 and WebM the site plays (full
+quality, plus a lighter pair for phones).
 
     python3 -I clean_clip.py SRC.mp4 OUT_DIR --frames 382 --switch 150 \
         --box-a 0,455,150,570 --box-b 440,765,576,875 --rotate ccw
@@ -76,13 +77,17 @@ def main():
         enc.stdin.write(cv2.inpaint(f, m, 6, cv2.INPAINT_TELEA).tobytes())
     enc.stdin.close(); enc.wait()
 
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', master, '-an', '-c:v', 'libx264', '-preset', 'slow',
-                    '-crf', '21', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
-                    os.path.join(a.out, 'drive.mp4')], check=True)
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', master, '-an', '-c:v', 'libvpx-vp9', '-b:v', '0',
-                    '-crf', '32', '-row-mt', '1', '-deadline', 'good', '-cpu-used', '2',
-                    os.path.join(a.out, 'drive.webm')], check=True)
-    print('wrote', os.path.join(a.out, 'drive.mp4'), 'and drive.webm')
+    # drive-phone: the same frames at about half the bitrate, for the phone layout (the band across
+    # the top), where the picture is already enlarged and the difference doesn't show; it starts
+    # sooner on cell data
+    for name, crf_h264, crf_vp9 in (('drive', 21, 32), ('drive-phone', 27, 38)):
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', master, '-an', '-c:v', 'libx264', '-preset', 'slow',
+                        '-crf', str(crf_h264), '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+                        os.path.join(a.out, f'{name}.mp4')], check=True)
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', master, '-an', '-c:v', 'libvpx-vp9', '-b:v', '0',
+                        '-crf', str(crf_vp9), '-row-mt', '1', '-deadline', 'good', '-cpu-used', '2',
+                        os.path.join(a.out, f'{name}.webm')], check=True)
+    print('wrote drive.mp4|webm and drive-phone.mp4|webm in', a.out)
 
 
 if __name__ == '__main__':

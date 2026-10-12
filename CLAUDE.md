@@ -40,7 +40,9 @@ near-black.
   - Prepared with `render/clean_clip.py`: first 12.7 s kept (TikTok end
     card cut), watermark inpainted pixel by pixel (left until frame 150,
     then bottom-right), rotated upright from sideways storage, audio
-    stripped. Result: `assets/drive/drive.mp4|webm`, 1024x576 landscape.
+    stripped. Result: `assets/drive/drive.mp4|webm`, 1024x576 landscape,
+    and `drive-phone.mp4|webm` at about half the bitrate for the phone
+    layout (chosen by `max-aspect-ratio: 1/1`, same as the band layout).
   - Desktop: full-screen background. Phones: a band across the top.
   - Intro (`js/lights.js`, WebGL): black, the light bar draws on from the
     middle with a soft red glow and a thin lens streak, then the night
@@ -68,6 +70,19 @@ near-black.
   badge was unreadable at nav size; the footer shows the full badge at 92px.
   The owner asked for the logo to "look better" (2026-10-12); the design
   itself was not changed, and redesigning it would be SimNow's call.
+- Address-bound files, to update if the site moves to SimNow's domain: the
+  absolute share URLs (og:url, og:image, twitter:image, canonical) in
+  `sites/simnow/index.html` and the root `index.html` (the link that gets
+  shared; it carries SimNow's preview too), and the root `404.html`'s
+  `<base href="/Korvane/sites/simnow/">`.
+- Added 2026-10-12 after an audit the owner approved: those share tags,
+  square icons (`assets/icons/`, `render/make_icons.py`: an SN monogram
+  from their lettering for tabs, the badge for home screens), a Book
+  button in the phone nav, a lighter clip for the phone layout
+  (`drive-phone.*`, crf 27/38 via `clean_clip.py`), and the 404 page.
+  Still open from that audit, all needing SimNow or the owner: launch on
+  their domain, real reviews (never invented), a clip filmed in their
+  shop, and visitor stats (the owner makes the account).
 - `?skip` skips the intro (for testing; there is no skip button), `?debug`
   exposes `window.__simnow`.
 - Playwright's Chromium has no H.264, so tests get the WebM; real browsers

@@ -6,13 +6,24 @@
   <title>SimNow | Salem's Sim Racing Destination</title>
   <meta name="description" content="SimNow is Salem's sim racing destination: professional racing simulators, premium gear, and a welcoming local community, built for first-time drivers and seasoned racers alike.">
   <meta name="theme-color" content="#030304">
+  <!-- Link previews (texts, Facebook, X) need absolute URLs: these name the current address and change with the domain (CLAUDE.md) -->
+  <link rel="canonical" href="https://korvane11.github.io/Korvane/sites/simnow/">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SimNow">
+  <meta property="og:url" content="https://korvane11.github.io/Korvane/sites/simnow/">
   <meta property="og:title" content="SimNow | Salem's Sim Racing Destination">
   <meta property="og:description" content="Professional racing simulators, premium gear, and a welcoming local community in Salem, Oregon.">
-  <meta property="og:image" content="assets/og.jpg">
+  <meta property="og:image" content="https://korvane11.github.io/Korvane/sites/simnow/assets/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The red light bar across the back of a black Porsche 911 GT3 RS at night">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" type="image/png" href="assets/simnow-logo.png">
-  <link rel="apple-touch-icon" href="assets/simnow-logo.png">
+  <meta name="twitter:image" content="https://korvane11.github.io/Korvane/sites/simnow/assets/og.jpg">
+  <!-- icons: render/make_icons.py (an SN monogram from their lettering for tabs, the whole badge for home screens) -->
+  <link rel="icon" href="assets/icons/favicon.ico" sizes="48x48">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="assets/icons/site.webmanifest">
   <link rel="preload" href="assets/fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="vendor/lenis/lenis.css">
   <link rel="stylesheet" href="styles.css">
@@ -45,8 +56,9 @@
   <div class="film" aria-hidden="true">
     <div class="film__frame">
       <video class="film__video" id="driveVideo" muted playsinline loop preload="auto" poster="assets/drive/poster.webp"></video>
-      <!-- start the download now, not when the scripts at the end have run (no clip at all with reduced motion) -->
-      <script>(function (v) { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) v.src = 'assets/drive/drive.' + (v.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm'); })(document.getElementById('driveVideo'));</script>
+      <!-- start the download now, not when the scripts at the end have run (no clip at all with reduced motion);
+           the phone layout (taller than wide) gets the lighter encode, drive-phone -->
+      <script>(function (v) { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; v.src = 'assets/drive/drive' + (matchMedia('(max-aspect-ratio: 1/1)').matches ? '-phone.' : '.') + (v.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm'); })(document.getElementById('driveVideo'));</script>
       <canvas class="film__lights" id="lightsCanvas" hidden></canvas>
     </div>
     <div class="film__shade" id="filmShade"></div>
@@ -66,7 +78,7 @@
         <a href="#contact">Contact</a>
       </nav>
       <a class="btn btn--primary btn--sm nav__cta" href="https://simnowusa.com/book#booking">
-        <span>Book a sim</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
+        <span>Book<span class="nav__cta-more"> a sim</span></span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
       </a>
       <button class="nav__toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
         <span></span><span></span>

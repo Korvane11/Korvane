@@ -1,6 +1,6 @@
 ---
 id: 11
-title: "The redesign audit checks that share tags and a favicon exist, not that they work: a relative og:image and a squashed wide-logo favicon both passed"
+title: "The redesign audit checks that share tags and a favicon exist, not that they work: a relative og:image and a squashed wide-logo favicon both passed, and the URL actually shared (a redirect page) had no tags at all"
 status: open
 type: open-source
 skill: [redesign-existing-projects]
@@ -49,3 +49,11 @@ a new domain.
 For anything consumed by another system (crawlers, browsers, home screens),
 the check has to read the value and test it against what that system
 accepts.
+
+**Follow-up (same day, while fixing it):** The worse gap was on a page the
+audit never looked at. The address that actually gets shared is the
+repository root, a redirect page that forwards to the site. It had no
+preview tags at all, and its title was the repository's name. So every
+shared link previewed as that name, with no picture, however good the
+site's own tags were. The meta check should therefore start from the URL
+people share and follow redirects, not from the page being redesigned.

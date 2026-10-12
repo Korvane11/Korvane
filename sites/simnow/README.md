@@ -44,15 +44,31 @@ Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
 | `styles.css` | Layout and brand tokens (`--brand`, `--black`, …) |
 | `js/main.js` | Intro and background clip, scroll chapters (GSAP ScrollTrigger + Lenis), nav, reveals |
 | `js/lights.js` | The tail-lights-first intro: draws the clip through WebGL so only the red tail lights show (with a bloom), then reveals the scene and hands back to the `<video>` |
-| `assets/drive/` | The clip (MP4 + WebM), its poster frame and the race-nights card image |
+| `assets/drive/` | The clip (MP4 + WebM, plus `drive-phone`: the same frames at about half the bitrate, which the phone layout plays), its poster frame and the race-nights card image |
 | `assets/photos/` | SimNow's own shop and event photos, from their current site |
 | `render/night_drive.py`, `render/night_post.py` | A 3D night-drive render, kept as a fallback background (not used now) |
 | `render/svj_studio.py` | Car set-up shared by the renders (materials, SVJ wing and splitter); also an older studio scene |
 | `render/post.py` | The grade (contrast, bloom on the lamps, vignette) |
-| `assets/simnow-logo.webp`, `assets/simnow-wordmark.svg` | Their logo badge (footer, favicon), and the name from it traced to a vector for the nav, where the whole badge is too small to read |
+| `assets/simnow-logo.webp`, `assets/simnow-wordmark.svg` | Their logo badge (footer), and the name from it traced to a vector for the nav, where the whole badge is too small to read |
+| `assets/icons/` | Square icons: an SN monogram cut from their lettering for browser tabs (`favicon.svg`, `favicon.ico`), the whole badge on black for home screens (`apple-touch-icon.png`, `icon-192/512.png`, `site.webmanifest`) |
+| `render/make_icons.py` | Makes `assets/icons/` from the badge; rerun if they change their logo |
 | `render/trace_logo.py` | Traces the SIMNOW lettering out of the badge into `simnow-wordmark.svg` (needs `pip install potracer`); rerun if they change their logo |
-| `render/clean_clip.py` | Prepares a TikTok clip: cuts the end card, paints out the watermark, turns it upright, encodes MP4 + WebM |
+| `render/clean_clip.py` | Prepares a TikTok clip: cuts the end card, paints out the watermark, turns it upright, encodes MP4 + WebM (full and phone) |
+| `../../404.html` | The "page not found" page GitHub Pages shows for any missing address (repo root; its `<base>` points at this folder) |
 | `render/upscale.py` | Real-ESRGAN 4x photo upscaler in plain numpy (used for `assets/drive/card.webp`) |
+
+## Sharing, icons and the address
+
+Link previews (texts, Facebook, X) only work with absolute URLs, so the
+share tags in `index.html` and in the repo root's `index.html` (the address
+that gets shared, which forwards here) name the current address,
+`https://korvane11.github.io/Korvane/sites/simnow/`. So do the canonical
+link and the root `404.html`'s `<base href="/Korvane/sites/simnow/">`. If
+the site moves to SimNow's own domain, update all of them.
+
+Phones get a short Book button in the nav, beside the menu, on every
+screen. Below 370px wide the logo shrinks and the button drops its arrow so
+all three still fit.
 
 ## The tail-lights intro
 
@@ -123,7 +139,7 @@ shows all three). Then:
 ```bash
 python3 -I render/clean_clip.py tiktok.mp4 out --frames 382 --switch 150 \
   --box-a 0,455,150,570 --box-b 440,765,576,875 --rotate ccw
-cp out/drive.mp4 out/drive.webm assets/drive/
+cp out/drive.mp4 out/drive.webm out/drive-phone.mp4 out/drive-phone.webm assets/drive/
 ```
 
 Those are the values for the current clip. After that:

@@ -486,8 +486,11 @@ address { font-style: normal; }
 @media (max-width: 1180px) { .packages { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .packages { grid-template-columns: 1fr; } }
 @media (max-width: 900px) {
-  .nav__links, .nav__cta { display: none; }
-  .nav__pill { gap: 18px; padding: 6px 6px 6px 16px; }
+  .nav__links { display: none; }
+  .nav__pill { gap: 12px; padding: 6px 6px 6px 16px; }
+  /* phones keep Book in reach: a short button beside the menu, on every screen */
+  .nav__cta { --h: 44px; gap: 8px; padding-left: 16px; }
+  .nav__cta-more { display: none; }
   .nav__toggle {
     display: grid; place-items: center; position: relative;
     width: 44px; height: 44px; border: 0; border-radius: 50%;
@@ -523,6 +526,11 @@ address { font-style: normal; }
 @media (max-width: 420px) {
   .btn--lg { --h: 54px; padding-left: 22px; font-size: 0.9rem; }
   .btn--ghost.btn--lg { padding-right: 22px; }
+}
+@media (max-width: 370px) {   /* the smallest phones: logo, Book and the menu still fit on one line */
+  .nav__logo img { height: 18px; }
+  .nav__cta { padding-right: 16px; }
+  .nav__cta .btn__icon { display: none; }
 }
 
 /* ---------- no JS / reduced motion: a still page ---------- */
