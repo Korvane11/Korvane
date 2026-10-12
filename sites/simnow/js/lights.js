@@ -261,15 +261,15 @@ export function createLights(video, canvas) {
     draw();
     tl = gsap.timeline()
       // the bar draws on from the middle, and the streak grows out of it
-      .set(state, { lights: 1 }, 0.3)
-      .to(state, { sweep: 1.12, duration: 1.0, ease: 'power2.inOut' }, 0.3)
-      .to(state, { streak: 1, duration: 1.3, ease: 'power2.out' }, 0.6)
+      .set(state, { lights: 1 }, 0.1)
+      .to(state, { sweep: 1.12, duration: 1.0, ease: 'power2.inOut' }, 0.1)
+      .to(state, { streak: 1, duration: 1.2, ease: 'power2.out' }, 0.35)
       // then the night comes in from the lights and the streak gives way
-      .to(state, { reveal: 1, duration: 1.7, ease: 'power2.inOut' }, 1.6)
-      .to(state, { streak: 0, duration: 1.2, ease: 'power1.in' }, 2.0)
-      .to(state, { pan: 0.5, duration: 1.7, ease: 'power2.inOut' }, 1.6)
-      .call(() => onOpen?.(), null, 2.3)
-      .call(() => { stop(); onDone?.(); }, null, 3.9);
+      .to(state, { reveal: 1, duration: 1.6, ease: 'power2.inOut' }, 1.3)
+      .to(state, { streak: 0, duration: 1.2, ease: 'power1.in' }, 1.7)
+      .to(state, { pan: 0.5, duration: 1.6, ease: 'power2.inOut' }, 1.3)
+      .call(() => onOpen?.(), null, 1.95)
+      .call(() => { stop(); onDone?.(); }, null, 3.5);
   }
 
   return { run, stop, get timeline() { return tl; } };   // timeline: for ?debug tests

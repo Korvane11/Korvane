@@ -47,6 +47,10 @@ near-black.
     spreads out and the site opens; it hands back to the plain video (no
     WebGL: a fade from black). The owner found the first version (two
     blinks, broken outline, boxy glow) "tacky"; keep it clean.
+  - No loading bar, "Warming up" label or Skip intro button: the owner had
+    them removed and wanted less time on black. The clip plays as soon as it
+    can (not after buffering); after 2.5 s without it the site opens on the
+    poster. The site opens ~2 s into the intro.
   - The owner wants the video playing the whole time on loop: `js/main.js`
     restarts it whenever the browser pauses it (except a hidden tab or
     reduced motion).
@@ -58,7 +62,8 @@ near-black.
   `night_post.py`; Blender 5.2 via the `bpy` pip package, ~20-30 s a frame,
   light tree off, emission sampling NONE). Stock video sites, Sketchfab,
   Hugging Face and Poly Haven are blocked from this container.
-- `?skip` skips the intro, `?debug` exposes `window.__simnow`.
+- `?skip` skips the intro (for testing; there is no skip button), `?debug`
+  exposes `window.__simnow`.
 - Playwright's Chromium has no H.264, so tests get the WebM; real browsers
   get the MP4 (chosen with `canPlayType`).
 - Run: `cd sites/simnow && python3 -m http.server 8000`.

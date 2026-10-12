@@ -2,7 +2,7 @@
  * around them as it drives, and the site opens over it.
  *
  * The background is one looping clip (assets/drive/drive.mp4|webm; footage by
- * @supercar_driven, used with permission). The intro draws it through
+ * @nghtstlkr.idn, used with permission). The intro draws it through
  * js/lights.js (tail lights first); where WebGL is missing it fades up from
  * black instead. Then the hero appears, and the chapters fade in and out over
  * the drive as you scroll.
@@ -16,9 +16,6 @@ const body = document.body;
 const video = $('#driveVideo');
 const shade = $('#filmShade');
 const loader = $('#loader');
-const loaderBar = $('#loaderBar');
-const loaderLabel = $('#loaderLabel');
-const skipBtn = $('#skipIntro');
 const nav = $('#nav');
 const storyEl = $('.story');
 const storyBar = $('#storyBar');
@@ -28,6 +25,7 @@ const params = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ext = video.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';
 const FADE_IN = 1.6;   // seconds of black-to-drive before the site opens (no-WebGL path)
+const START_WAIT = 2500; // ms of black at most: a clip that hasn't started by then opens on its poster
 const INTRO_RATE = 0.8; // the first shot plays a little slow under the intro
 
 let lights = null;
@@ -80,13 +78,16 @@ function setStory(p) {
 }
 
 /* ---------------------------------------------------------------- video */
-function ready(v) {
+// Start the clip now and resolve true once it is actually moving. False if the
+// browser refuses to autoplay, or the clip hasn't started within `wait` ms
+// (a slow connection): the site then opens on the poster frame, and the
+// keep-alive below starts the drive as soon as it can.
+function startPlayback(v, wait) {
   return new Promise((resolve) => {
-    if (v.readyState >= 3) { resolve(); return; }
-    const done = () => resolve();
-    v.addEventListener('canplaythrough', done, { once: true });
-    v.addEventListener('error', done, { once: true });
-    setTimeout(done, 9000);
+    const timer = setTimeout(() => resolve(false), wait);
+    const ok = () => { clearTimeout(timer); resolve(true); };
+    v.addEventListener('playing', ok, { once: true });
+    v.play().catch(() => { clearTimeout(timer); resolve(false); });
   });
 }
 
@@ -223,7 +224,7 @@ document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 /* ---------------------------------------------------------------- boot */
 async function boot() {
   buildSegments(chapters.length);
-  video.src = `assets/drive/drive.${ext}`;
+  if (!video.getAttribute('src')) video.src = `assets/drive/drive.${ext}`;   // index.html sets it early, except with reduced motion
 
   if (reduced) {
     // No intro and no motion: the poster frame sits behind stacked content.
@@ -237,29 +238,18 @@ async function boot() {
     return;
   }
 
-  skipBtn.addEventListener('click', () => finishIntro(true));
   if (params.has('skip')) { finishIntro(true); return; }
 
-  loaderBar.style.transform = 'scaleX(0.35)';
-  await ready(video);
-  loaderBar.style.transform = 'scaleX(1)';
-  loaderLabel.textContent = '';
-  if (introDone) return;
-
+  // No waiting for the whole clip to buffer: play as soon as the browser can.
   lights = createLights(video, $('#lightsCanvas'));
-  if (lights) {
-    video.playbackRate = INTRO_RATE;
-    loader.style.transitionDuration = '250ms';   // black on black: get out of the lamps' way
-  }
-  loader.classList.add('is-done');
+  if (lights) video.playbackRate = INTRO_RATE;
   wantPlay = true;
-  try {
-    await video.play();
-  } catch {
-    finishIntro(true);   // autoplay refused: show the site with the poster
+  if (!(await startPlayback(video, START_WAIT))) {
+    finishIntro(true);   // autoplay refused or a slow start: show the site with the poster
     return;
   }
-  if (introDone) return;   // skipped while the clip was starting
+  if (lights) loader.style.transitionDuration = '250ms';   // black on black: get out of the lamps' way
+  loader.classList.add('is-done');
   if (lights) {
     // black, the tail lights come on, then the night around them; the site
     // opens as it does

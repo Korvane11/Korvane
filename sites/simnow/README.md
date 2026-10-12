@@ -54,14 +54,22 @@ Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
 
 ## The tail-lights intro
 
-`js/lights.js` runs for the first ~4 seconds (the clip plays at 0.8x under
-it). Timeline:
-- 0.3 s: the light bar draws on from the middle outward, over 1 s.
-- From 0.6 s: a soft red glow and a long, thin lens streak grow out of it.
-- 1.6 s: the night spreads out from the lights, and the streak gives way.
-- 2.3 s: the site opens.
-- 3.9 s: the canvas fades out over the plain video, before the clip's first
-  cut (3.9 s of footage).
+The page opens on plain black: no loading bar, no label, no skip button (the
+owner asked for all three to go). `index.html` sets the clip's source as soon
+as the `<video>` is parsed, and `js/main.js` plays it straight away instead
+of waiting for it to buffer. The intro starts on the first frame that plays.
+If the clip hasn't started within 2.5 s (`START_WAIT`: a slow connection, or
+autoplay refused), the site opens on the poster frame and the keep-alive
+starts the drive when it can.
+
+`js/lights.js` then runs for ~3.5 seconds (the clip plays at 0.8x under it).
+Timeline:
+- 0.1 s: the light bar draws on from the middle outward, over 1 s.
+- From 0.35 s: a soft red glow and a long, thin lens streak grow out of it.
+- 1.3 s: the night spreads out from the lights, and the streak gives way.
+- 1.95 s: the site opens.
+- 3.5 s: the canvas fades out over the plain video, well before the clip's
+  first cut (3.9 s of footage).
 
 The glow and streak are blurred at 1/4 size in many small steps (big steps
 leave stacked copies of a thin line), and stored as square roots in the 8-bit

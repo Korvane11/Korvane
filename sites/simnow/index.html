@@ -38,17 +38,15 @@
 <body class="is-intro">
   <a class="skip-link" href="#main">Skip to main content</a>
 
-  <!-- Black screen while the video loads; then the car's tail lights come on in the dark. -->
-  <div class="loader" id="loader" aria-hidden="true">
-    <div class="loader__meter"><span id="loaderBar"></span></div>
-    <p class="loader__label" id="loaderLabel">Warming up</p>
-  </div>
-  <button class="skip-intro" type="button" id="skipIntro">Skip intro</button>
+  <!-- Black until the clip starts (2.5 s at most); then the car's tail lights come on in the dark. -->
+  <div class="loader" id="loader" aria-hidden="true"></div>
 
   <!-- The background: a black Porsche 911 GT3 RS driving at night (footage: @nghtstlkr.idn, used with permission) -->
   <div class="film" aria-hidden="true">
     <div class="film__frame">
       <video class="film__video" id="driveVideo" muted playsinline loop preload="auto" poster="assets/drive/poster.webp"></video>
+      <!-- start the download now, not when the scripts at the end have run (no clip at all with reduced motion) -->
+      <script>(function (v) { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) v.src = 'assets/drive/drive.' + (v.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm'); })(document.getElementById('driveVideo'));</script>
       <canvas class="film__lights" id="lightsCanvas" hidden></canvas>
     </div>
     <div class="film__shade" id="filmShade"></div>
