@@ -1,0 +1,152 @@
+<!doctype html>
+<!--
+STYLE: Isometric
+LOOK: A small stone-and-terracotta city on a floating slab, built block by block in true 2:1 isometric: each block rises with a soft overshoot, its shadow growing with it, holds, then sinks away and the build starts again.
+TECHNIQUE: Plain SVG polygons from one projection, iso(x, y, z) = [(x - y) * TW/2, (x + y) * TH/2 - z * ZH] with TH = TW/2 and ZH = TW * 0.6124 (so a unit cube is a cube). Three tones per block (top light, left mid, right dark, light from the front-left), painter's order by x + y, heights re-projected every frame from a staggered timeline; ground shadows are one rectangle per block stretched along -y, drawn in a single group so overlaps never double up.
+KNOBS: --bg-1 / --bg-2 (backdrop), --ink, --accent. JS: TW (tile width; scales nothing visually, the viewBox does), MAP (heights + palette letter per cell: a = accent, n = slate, p = park, - = empty), PAL (top/left/right tones per palette), STAGGER (s per diagonal), GROW (rise time), HOLD_AT / SINK_AT / LOOP (timeline in s), OVERSHOOT (easeOutBack strength), SHADOW (shadow length per unit height).
+COST: ~180 SVG nodes, attributes rewritten only while a block is moving. Cheap everywhere; phones fine.
+REDUCED MOTION: The finished city, shadows and windows in place, no rise, no bob.
+PITFALLS: 2:1 tiles with cube heights equal to TH look squashed: use ZH = 0.6124 * TW. Hairline seams between faces read as broken outlines: stroke each face in its own fill colour (stroke-linejoin round). Wrong draw order makes back blocks cut through front ones: sort by x + y. Random heights look like noise: hand-place a skyline (tall at the back, low at the front).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isometric</title>
+<style>
+  :root {
+    --bg-1: #f1efe9; --bg-2: #e2e3e2;
+    --ink: #1e2230; --muted: #5d6170; --accent: #c8603f;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { min-height: 100%; }
+  body { background: radial-gradient(110% 90% at 65% 40%, var(--bg-1), var(--bg-2)); background-color: var(--bg-2);
+    color: var(--ink); font-family: var(--sans); overflow-x: hidden; }
+  main { min-height: 100vh; min-height: 100svh; display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+    align-items: center; gap: clamp(12px, 4vw, 64px); padding: clamp(20px, 5vw, 80px); max-width: 1400px; margin: 0 auto; }
+  .eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+  h1 { margin-top: 18px; font-size: clamp(2.4rem, min(6vw, 9vh), 4.8rem); line-height: .98; letter-spacing: -.04em; font-weight: 700; }
+  p.lede { margin-top: 18px; max-width: 30ch; font-size: clamp(1rem, 1.25vw, 1.15rem); line-height: 1.5; color: var(--muted); }
+  .scene { display: block; width: 100%; height: min(78vh, 760px); }
+  @media (max-aspect-ratio: 1/1) {
+    main { grid-template-columns: 1fr; grid-template-rows: auto auto; align-content: center; align-items: start; gap: 8px; }
+    .scene { height: auto; aspect-ratio: 430 / 440; max-height: 64vh; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="copy">
+    <p class="eyebrow">Platform &middot; 6 &times; 6</p>
+    <h1>Built block<br>by block.</h1>
+    <p class="lede">Plan, stack and ship your infrastructure from one calm, visual workspace.</p>
+  </div>
+  <svg class="scene" viewBox="-215 -178 430 440" role="img" aria-label="An isometric city assembling itself">
+    <defs><filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+      <filter id="softer" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter></defs>
+    <g id="world"></g>
+  </svg>
+</main>
+<script>
+(() => {
+  const TW = 64, TH = TW / 2, ZH = TW * 0.6124;          // 2:1 dimetric; 0.6124 makes a unit cube a cube
+  const N = 6, INSET = 0.14, SLAB = 0.45;
+  const MAP = [                                            // rows = y (back to front), cols = x
+    '3.2a 4.4n 2.4 1.2 2.8 1.6',
+    '2.2 3.6 1.8 1.0a 3.0 2.0',
+    '1.4 2.6n 2.0 1.6 1.0 1.2a',
+    '1.8 1.0 1.4 0.6 2.2 0.8',
+    '0.9a p p 1.2 0.6 -',
+    '0.6 p p 0.5a - 0.4',
+  ];
+  const PAL = {                                            // top, left (lit), right (shade)
+    b: ['#f8f5ef', '#e0d8ca', '#c2b8a6'], a: ['#ee9070', '#d47150', '#b0563b'],
+    n: ['#7482ae', '#56628c', '#414b6f'], p: ['#bcd3a4', '#9fba86', '#82a06c'],
+    t: ['#8aad72', '#71945b', '#5b7a49'], g: ['#e7e0d3', '#cdc2ad', '#ae9f87'],
+  };
+  const WIN = { b: 'rgba(52, 64, 96, .16)', n: 'rgba(214, 226, 255, .32)', a: 'rgba(110, 40, 20, .18)' };
+  const STAGGER = 0.09, GROW = 0.85, SINK = 0.6, SINK_AT = 6.6, LOOP = 9, OVERSHOOT = 1.25, SHADOW = 0.5;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const NS = 'http://www.w3.org/2000/svg', world = document.getElementById('world');
+  const el = (tag, attrs, parent = world) => { const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+  const iso = (x, y, z) => `${((x - y) * TW / 2).toFixed(2)},${((x + y) * TH / 2 - z * ZH).toFixed(2)}`;
+  const quad = (a, b, c, d) => [a, b, c, d].map(p => iso(...p)).join(' ');
+  const face = (fill, parent) => el('polygon', { fill, stroke: fill, 'stroke-width': 0.8, 'stroke-linejoin': 'round' }, parent);
+
+  // --- slab: blurred shadow, three faces, dashed lane lines
+  const G = PAL.g, slab = el('g', {});
+  const foot = quad([0.3, 0.3, -SLAB], [N - 0.3, 0.3, -SLAB], [N - 0.3, N - 0.3, -SLAB], [0.3, N - 0.3, -SLAB]);
+  el('polygon', { points: foot, fill: 'rgba(40, 36, 30, .10)', filter: 'url(#softer)', transform: 'translate(0 34)' }, slab);   // ambient
+  el('polygon', { points: foot, fill: 'rgba(40, 36, 30, .16)', filter: 'url(#soft)', transform: 'translate(0 12)' }, slab);    // contact
+  face(G[1], slab).setAttribute('points', quad([0, N, -SLAB], [N, N, -SLAB], [N, N, 0], [0, N, 0]));
+  face(G[2], slab).setAttribute('points', quad([N, N, -SLAB], [N, 0, -SLAB], [N, 0, 0], [N, N, 0]));
+  face(G[0], slab).setAttribute('points', quad([0, 0, 0], [N, 0, 0], [N, N, 0], [0, N, 0]));
+  let lanes = '';
+  for (let i = 1; i < N; i++) lanes += `M${iso(i, 0, 0)}L${iso(i, N, 0)}M${iso(0, i, 0)}L${iso(N, i, 0)}`;
+  el('path', { d: lanes, stroke: 'rgba(255, 255, 255, .7)', 'stroke-width': 1, 'stroke-dasharray': '3 7', fill: 'none' }, slab);
+  const shadows = el('g', { opacity: 0.14, fill: '#3a3226' });    // one group: overlapping shadows never double
+
+  // --- blocks
+  const blocks = [];
+  const add = (x0, y0, x1, y1, h, pal, z0 = 0) => blocks.push({ x0, y0, x1, y1, h, pal, z0, key: (x0 + x1 + y0 + y1) / 2 });
+  MAP.forEach((row, y) => row.split(' ').forEach((c, x) => {
+    if (c === '-' || c === 'p') return;
+    add(x + INSET, y + INSET, x + 1 - INSET, y + 1 - INSET, parseFloat(c), c.replace(/[\d.]/g, '') || 'b');
+  }));
+  add(1 + INSET, 4 + INSET, 3 - INSET, 6 - INSET, 0.14, 'p');             // 2x2 park at the open front
+  [[1.45, 4.5], [2.4, 4.55], [1.55, 5.45], [2.35, 5.35], [1.95, 4.98]].forEach(([x, y], i) =>
+    add(x - 0.17, y - 0.17, x + 0.17, y + 0.17, 0.42 + (i % 3) * 0.12, 't', 0.14));
+  blocks.sort((a, b) => a.key - b.key);
+  const hash = i => (Math.sin(i * 91.7) * 43758.5) % 1;
+  blocks.forEach((b, i) => {
+    b.g = el('g', {}); b.right = face(PAL[b.pal][2], b.g); b.left = face(PAL[b.pal][1], b.g); b.top = face(PAL[b.pal][0], b.g);
+    if (WIN[b.pal] && b.h >= 1) b.win = el('path', { stroke: WIN[b.pal], 'stroke-width': 3, fill: 'none' }, b.g);
+    b.shadow = el('polygon', {}, shadows);
+    b.delay = 0.45 + b.key * STAGGER + Math.abs(hash(i)) * 0.12 + (b.z0 ? 0.35 : 0);   // trees after their park
+    b.sink = SINK_AT + (12 - b.key) * 0.05;                                            // front sinks first
+    b.cur = -1;
+  });
+
+  const easeOutBack = u => 1 + (OVERSHOOT + 1) * Math.pow(u - 1, 3) + OVERSHOOT * Math.pow(u - 1, 2);
+  const easeInCubic = u => u * u * u;
+  function heightAt(b, t) {
+    if (t < b.delay) return 0;
+    if (t < b.sink) return b.h * easeOutBack(Math.min(1, (t - b.delay) / GROW));
+    return b.h * (1 - easeInCubic(Math.min(1, (t - b.sink) / SINK)));
+  }
+  function setBlock(b, hz) {
+    if (Math.abs(hz - b.cur) < 1e-4) return; b.cur = hz;
+    const { x0, y0, x1, y1, z0 } = b, z1 = z0 + hz;
+    b.g.style.opacity = Math.min(1, hz / 0.12);           // fade the first sliver so blocks never pop
+    b.top.setAttribute('points', quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]));
+    b.left.setAttribute('points', quad([x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]));
+    b.right.setAttribute('points', quad([x1, y1, z0], [x1, y0, z0], [x1, y0, z1], [x1, y1, z1]));
+    const ys = Math.max(0, y0 - (hz + z0) * SHADOW);       // shadow falls along -y (light from the front-left)
+    b.shadow.setAttribute('points', hz > 0.01 ? quad([x0, ys, 0], [x1, ys, 0], [x1, y1, 0], [x0, y1, 0]) : '');
+    if (b.win) {
+      let d = '';
+      for (let z = 0.42; z < hz - 0.28; z += 0.38)
+        d += `M${iso(x0 + 0.1, y1, z)}L${iso(x1 - 0.1, y1, z)}M${iso(x1, y1 - 0.1, z)}L${iso(x1, y0 + 0.1, z)}`;
+      b.win.setAttribute('d', d);
+    }
+  }
+
+  const t0 = performance.now();
+  function frame(now) {
+    const s = (now - t0) / 1000, t = s % LOOP;
+    const e = Math.min(1, s / 0.7), intro = 1 - Math.pow(1 - e, 3);
+    slab.setAttribute('opacity', intro.toFixed(3));
+    world.setAttribute('transform', `translate(0 ${((1 - intro) * 18 + Math.sin(s * 0.8) * 3).toFixed(2)})`);  // gentle float
+    blocks.forEach(b => setBlock(b, heightAt(b, t)));
+    requestAnimationFrame(frame);
+  }
+  if (reduce) blocks.forEach(b => setBlock(b, b.h));
+  else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<!--
+STYLE: Liquid morph
+LOOK: Mercury-like drops that drift, stretch into each other and pinch apart behind a headline, with a soft specular sheen so they read as heavy liquid metal rather than flat shapes.
+TECHNIQUE: Plain SVG circles on slow Lissajous paths, run through one "gooey" filter: blur them together (feGaussianBlur), then crush the blurred alpha back to a hard edge (feColorMatrix alpha row "0 0 0 A B"), so overlapping halos fuse into one surface. A wider blur of that shape is used as a height map for feSpecularLighting, clipped back inside the shape and added on top: the highlight slides over the bulges as they merge. Each circle has its own off-centre radial gradient so the body has volume and a dark rim.
+KNOBS: BLOBS (radius as a share of the short side, orbit size, speed, phase); BLUR (merge distance, share of the short side); the alpha row values "28 -11" in #goo (higher = crisper edge, the offset sets how fat the bridges are); feSpecularLighting surfaceScale / specularExponent and feDistantLight azimuth / elevation (sheen size and direction); #metal stops (the metal colour); SPEED.
+COST: The SVG filter re-runs on every frame over the whole stage, and cost scales with screen pixels and blur radius. Fine on laptops; on phones it holds 60 fps at this size but drop BLOBS or SPEED before adding more. For many blobs or full-bleed 4K, move to a WebGL metaball shader.
+REDUCED MOTION: The blobs are drawn once in a pose where two pairs are mid-merge, so the liquid character still shows.
+PITFALLS: A threshold without the sheen looks like flat clip art: the specular pass is what makes it liquid. Blur larger than the smallest drop erases it: BLUR stays under the smallest radius. A filter region left at the default clips the goo into straight edges near the frame: the filter uses userSpaceOnUse over the whole viewBox. Busy, fast motion looks like a lava-lamp screensaver: orbits are slow and the palette is a single cool metal.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid morph</title>
+<style>
+  :root { --bg: #0b0d11; --ink: #f2f3f5; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(90% 70% at 50% 42%, #1a1e26 0%, #0f1217 55%, var(--bg) 100%);
+    color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  svg { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .copy {
+    position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 18px;
+    padding: 16px; text-align: center; pointer-events: none;
+    mix-blend-mode: difference;              /* white on the dark room, dark on the bright metal */
+  }
+  h1 {
+    font-family: "Didot", "Bodoni 72", "Times New Roman", serif; font-weight: 400;
+    font-size: clamp(44px, 9vw, 132px); line-height: .95; letter-spacing: -.02em; color: #fff;
+  }
+  h1 em { font-style: italic; }
+  p { font-size: clamp(14px, 1.3vw, 17px); letter-spacing: .14em; text-transform: uppercase; color: #fff; opacity: .8; }
+</style>
+</head>
+<body>
+<svg id="stage" aria-hidden="true">
+  <defs>
+    <radialGradient id="metal" cx="36%" cy="30%" r="78%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".1" stop-color="#d9dee6"/>
+      <stop offset=".3" stop-color="#7e8797"/>
+      <stop offset=".58" stop-color="#2f3540"/>
+      <stop offset=".86" stop-color="#11141a"/>
+      <stop offset="1" stop-color="#2b313c"/>
+    </radialGradient>
+    <filter id="goo" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="24" result="blur"/>
+      <!-- the decisive line: alpha * 28 - 11 turns soft overlapping halos into one hard-edged surface -->
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 28 -11" result="goo"/>
+      <feGaussianBlur in="goo" stdDeviation="3.5" result="height"/>
+      <feSpecularLighting in="height" surfaceScale="7" specularConstant="1.4" specularExponent="40" lighting-color="#ffffff" result="spec">
+        <feDistantLight azimuth="225" elevation="52"/>
+      </feSpecularLighting>
+      <feComposite in="spec" in2="goo" operator="in" result="shine"/>
+      <feComposite in="goo" in2="shine" operator="arithmetic" k1="0" k2="1" k3=".9" k4="0"/>
+    </filter>
+  </defs>
+  <g id="blobs" filter="url(#goo)"></g>
+</svg>
+<div class="copy">
+  <h1>Fluid by <em>nature</em></h1>
+  <p>Shapes that never hold still</p>
+</div>
+<script>
+// r: radius (share of short side) · ax/ay: orbit (share of width/height) · fx/fy: rad per second · p: phase
+const BLOBS = [
+  { r: .20, ax: .10, ay: .06, fx: .21, fy: .17, p: 0 },
+  { r: .13, ax: .26, ay: .16, fx: .23, fy: .31, p: 1.7 },
+  { r: .11, ax: .30, ay: .22, fx: .17, fy: .26, p: 3.9 },
+  { r: .09, ax: .22, ay: .30, fx: .29, fy: .19, p: 5.2 },
+  { r: .075, ax: .34, ay: .12, fx: .33, fy: .41, p: 2.6 },
+  { r: .06, ax: .16, ay: .32, fx: .37, fy: .23, p: 4.4 },
+  { r: .14, ax: .18, ay: .10, fx: .14, fy: .22, p: 3.1 },
+];
+const BLUR = .028, SPEED = 1;
+const NS = 'http://www.w3.org/2000/svg';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const svg = document.getElementById('stage'), g = document.getElementById('blobs');
+const goo = document.getElementById('goo'), blurs = goo.querySelectorAll('feGaussianBlur');
+const els = BLOBS.map(() => { const c = document.createElementNS(NS, 'circle'); c.setAttribute('fill', 'url(#metal)'); g.appendChild(c); return c; });
+let W, H, S, t0 = performance.now();
+
+function layout() {
+  W = innerWidth; H = innerHeight; S = Math.min(W, H);
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  ['x', 'y', 'width', 'height'].forEach((k, i) => goo.setAttribute(k, [0, 0, W, H][i]));
+  blurs[0].setAttribute('stdDeviation', (S * BLUR).toFixed(1));        // merge distance follows the screen
+}
+
+function place(t) {
+  const portrait = H > W * 1.15;
+  BLOBS.forEach((b, i) => {
+    // portrait screens swap the orbit axes so the cluster stays on screen and tall
+    const ox = (portrait ? b.ay * .9 : b.ax) * W, oy = (portrait ? b.ax : b.ay) * H;
+    const x = W / 2 + Math.sin(t * b.fx + b.p) * ox;
+    const y = H * .48 + Math.sin(t * b.fy + b.p * 1.3) * oy;
+    const r = b.r * S * (1 + .07 * Math.sin(t * .8 + i));               // slow breathing
+    els[i].setAttribute('cx', x.toFixed(1));
+    els[i].setAttribute('cy', y.toFixed(1));
+    els[i].setAttribute('r', r.toFixed(1));
+  });
+}
+
+function frame(now) {
+  place((now - t0) / 1000 * SPEED + 6);
+  requestAnimationFrame(frame);
+}
+
+addEventListener('resize', () => { layout(); if (reduce) place(9.4); });
+layout();
+place(reduce ? 9.4 : 6);
+if (!reduce) requestAnimationFrame(frame);
+</script>
+</body>
+</html>

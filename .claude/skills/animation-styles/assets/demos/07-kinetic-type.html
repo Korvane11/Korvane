@@ -1,0 +1,187 @@
+<!doctype html>
+<!--
+STYLE: Kinetic type
+LOOK: Editorial poster type in motion: a heavy condensed line and a serif-italic word that swaps every few seconds, letters rising out of a mask one by one, with a slow marquee rule along the bottom.
+TECHNIQUE: Split each word into letter spans yourself, each inside a line that clips vertically (overflow-y: clip). Every frame, a tiny timeline maps time to each letter's translateY / rotate. "Tracking" changes are done with per-letter translateX (no letter-spacing animation, so no layout). A fit() pass sizes the headline to the viewport whatever font the system substitutes.
+KNOBS: --paper / --ink / --accent colours; WORDS (the rotating line); HOLD (seconds per word); IN / OUT (letter durations); STAG_IN / STAG_OUT (stagger per letter); SPREAD (start tracking, em per letter); MARQUEE_SPEED (px/s); MAX_FS (largest headline size).
+COST: Very low: ~60 spans get a transform per frame; no canvas. Scales with letter count. Fine on phones.
+REDUCED MOTION: The settled frame: "Make it move." in place, marquee still, nothing loops.
+PITFALLS: Bouncy back-easing makes type look cartoonish: this uses expo-out in, quad-in out. Animating letter-spacing or font-size reflows every frame: use transforms. Masks that clip italic overhangs or descenders look broken: clip only vertically and pad the mask. Fixed font sizes overflow when a wide fallback font loads: measure and fit.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinetic type</title>
+<style>
+  :root { --paper: #ece8e0; --ink: #141312; --accent: #d4441b; --pad: clamp(20px, 5vw, 72px); }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--paper); color: var(--ink); overflow: hidden; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  .stage { height: 100%; height: 100svh; display: flex; flex-direction: column; }
+  .meta { display: flex; justify-content: space-between; padding: 22px var(--pad) 0; font: 500 12px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; }
+  .meta b { color: var(--accent); font-weight: 500; }
+  .body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 0 var(--pad); min-height: 0; }
+  h1 { font-size: 120px; font-weight: 400; transform-origin: 0 60%; will-change: transform; }
+  /* The mask: each line clips vertically only (never the italic overhang). Padding reaches just past
+     ascenders and descenders, negative margin keeps the leading tight, so a rising letter appears out of the baseline. */
+  .line { display: block; width: max-content; overflow-x: visible; overflow-y: clip; }
+  .l1 { font-family: "Arial Narrow", "Roboto Condensed", sans-serif-condensed, "Helvetica Neue", sans-serif; font-stretch: condensed;
+        font-weight: 800; text-transform: uppercase; letter-spacing: -.035em; line-height: .88; padding: .06em 0; margin: -.06em 0; }
+  .top { display: block; margin-left: -.03em; }
+  .l2 { padding: .05em 0 .2em; margin: -.05em 0 0; font-family: "Didot", "Bodoni 72", "Times New Roman", serif; font-style: italic; font-size: 1.04em; line-height: .8;
+        padding-left: var(--indent, 0); }
+  .swap { display: inline-grid; }
+  .word { grid-area: 1 / 1; white-space: nowrap; }
+  .ch { display: inline-block; transform: translateY(130%); will-change: transform; transform-origin: 0 100%; }
+  .ch.dot { color: var(--accent); }
+  .sub { max-width: 36ch; margin-top: clamp(18px, 3.2vh, 36px); font-size: clamp(15px, 1.25vw, 19px); line-height: 1.5; color: #3b3834; opacity: 0; }
+  .marquee { border-top: 1.5px solid var(--ink); padding: 14px 0 18px; overflow: hidden; opacity: 0;
+             font: 700 clamp(18px, 2.1vw, 30px)/1 "Arial Narrow", "Roboto Condensed", sans-serif-condensed, sans-serif; font-stretch: condensed;
+             text-transform: uppercase; letter-spacing: .02em; }
+  .track { display: flex; width: max-content; will-change: transform; }
+  .track span { white-space: nowrap; }
+  .track i { display: inline-block; width: .32em; height: .32em; border-radius: 50%; background: var(--accent); margin: 0 .9em; vertical-align: .18em; }
+</style>
+</head>
+<body>
+<main class="stage">
+  <header class="meta"><span>Motion studies</span><span><b id="num">01</b> / 05</span></header>
+  <div class="body">
+    <h1 id="head" aria-label="Make it move.">
+      <span class="top" id="top" aria-hidden="true"></span>
+      <span class="line l2" id="l2" aria-hidden="true"><span class="swap" id="swap"></span></span>
+    </h1>
+    <p class="sub" id="sub">Letters set one at a time and eased into place: confident, weighty, never bouncy.</p>
+  </div>
+  <div class="marquee" id="marquee" aria-hidden="true"><div class="track" id="track"></div></div>
+</main>
+<script>
+const WORDS = ['move', 'bold', 'clear', 'last', 'sing'];
+const HOLD = 2.8;               // seconds each word holds the line
+const IN = 1.05, OUT = 0.5;     // letter rise / exit durations (s)
+const STAG_IN = 0.05, STAG_OUT = 0.025;
+const GAP = 0.3;                // the next word starts rising this long after the old one starts leaving
+const SPREAD = 0.09;            // extra tracking at the start of a rise, em per letter from centre
+const START = 0.55;             // first word enters after "MAKE IT" starts
+const MARQUEE_SPEED = 46;       // px per second
+const MAX_FS = 300;
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const expoOut = p => p >= 1 ? 1 : 1 - Math.pow(2, -10 * p);
+const quadIn = p => p * p;
+const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+
+// Split text into letter spans (no SplitText needed).
+function split(parent, text, dotLast) {
+  return [...text].map((c, i, a) => {
+    const s = document.createElement('span');
+    s.className = 'ch' + (dotLast && i === a.length - 1 ? ' dot' : '');
+    s.textContent = c === ' ' ? ' ' : c;
+    parent.appendChild(s);
+    return s;
+  });
+}
+const topEl = document.getElementById('top'), l2 = document.getElementById('l2');
+let l1 = [];   // one array of letters per line: "Make it" on wide screens, "Make" / "it" on tall ones
+function buildTop(parts) {
+  topEl.innerHTML = '';
+  l1 = parts.map(p => {
+    const line = document.createElement('span');
+    line.className = 'line l1';
+    topEl.appendChild(line);
+    return split(line, p);
+  });
+}
+const swap = document.getElementById('swap');
+const words = WORDS.map(w => {
+  const el = document.createElement('span');
+  el.className = 'word';
+  swap.appendChild(el);
+  return split(el, w + '.', true);
+});
+const track = document.getElementById('track');
+const phrase = WORDS.map(w => 'Make it ' + w).join('<i></i>') + '<i></i>';
+track.innerHTML = `<span>${phrase}</span><span>${phrase}</span>`;   // two copies: wrap seamlessly at one copy's width
+const head = document.getElementById('head'), sub = document.getElementById('sub');
+const marquee = document.getElementById('marquee'), num = document.getElementById('num');
+
+// Size the headline to the space, whatever font the system substituted.
+function fit() {
+  const box = head.parentElement;
+  const parts = innerWidth / innerHeight < 0.75 ? ['Make', 'it'] : ['Make it'];
+  if (parts.length !== l1.length) buildTop(parts);
+  head.style.fontSize = '100px';
+  const wide = innerWidth > 720;
+  head.style.setProperty('--indent', wide ? '0.9em' : '0');
+  // l2 stacks every word in one grid cell, so its width is the widest word, indent included
+  const widest = Math.max(l2.offsetWidth, ...[...topEl.children].map(l => l.offsetWidth));
+  const avail = box.clientWidth - parseFloat(getComputedStyle(box).paddingLeft) * 2;
+  const byW = 100 * avail / widest;
+  const byH = (innerHeight - 250) / ((parts.length + 1) * 0.93);   // lines plus room for the copy and marquee
+  head.style.fontSize = Math.max(40, Math.min(MAX_FS, byW * 0.98, byH)) + 'px';
+  copyW = track.firstElementChild.offsetWidth;
+}
+let copyW = 1;
+
+function setLetters(list, y, rot, xFor) {
+  for (let i = 0; i < list.length; i++) {
+    list[i].style.transform = `translate(${xFor(i).toFixed(4)}em, ${y(i).toFixed(2)}%) rotate(${rot(i).toFixed(2)}deg)`;
+  }
+}
+
+let shown = -1;
+function render(t) {
+  // Intro: "MAKE IT" rises while its wide tracking collapses to normal.
+  let n = 0;
+  l1.forEach(line => {
+    const mid = (line.length - 1) / 2, base = n;
+    const e1 = i => expoOut(clamp01((t - 0.1 - (base + i) * 0.055) / 1.25));
+    setLetters(line, i => (1 - e1(i)) * 130, i => (1 - e1(i)) * 6, i => (i - mid) * SPREAD * 2.2 * (1 - e1(i)));
+    n += line.length;
+  });
+  head.style.transform = `scale(${1 + 0.06 * (1 - expoOut(clamp01(t / 2.6)))})`;   // slow settle, like a camera easing back
+  const s = expoOut(clamp01((t - 1.0) / 1.1));
+  sub.style.opacity = s; sub.style.transform = `translateY(${(1 - s) * 14}px)`;
+  const m = expoOut(clamp01((t - 1.3) / 1.2));
+  marquee.style.opacity = m;
+
+  // Rotating word: the outgoing word lifts out, the next rises in just behind it.
+  const k = Math.max(0, Math.floor((t - START) / HOLD));
+  const local = t - START - k * HOLD;
+  const cur = k % WORDS.length, prev = k > 0 ? (k - 1) % WORDS.length : -1;
+  words.forEach((list, w) => {
+    const mid = (list.length - 1) / 2;
+    if (w === cur) {
+      const e = i => expoOut(clamp01((local - (k ? GAP : 0) - i * STAG_IN) / IN));
+      setLetters(list, i => (1 - e(i)) * 130, i => (1 - e(i)) * 8, i => (i - mid) * SPREAD * (1 - e(i)));
+    } else if (w === prev && local < OUT + list.length * STAG_OUT) {
+      const q = i => quadIn(clamp01((local - i * STAG_OUT) / OUT));
+      setLetters(list, i => -130 * q(i), i => -5 * q(i), i => (i - mid) * -SPREAD * 0.6 * q(i));
+    } else {
+      setLetters(list, () => 130, () => 0, () => 0);
+    }
+  });
+  if (cur !== shown) { shown = cur; num.textContent = String(cur + 1).padStart(2, '0'); head.setAttribute('aria-label', `Make it ${WORDS[cur]}.`); }
+
+  track.style.transform = `translateX(${-((t * MARQUEE_SPEED) % copyW)}px)`;
+}
+
+fit();
+addEventListener('resize', fit);
+if (document.fonts) document.fonts.ready.then(fit);
+
+if (reduce) {
+  render(START + IN + 1.2);   // the settled first word; no loop
+} else {
+  let t0 = null;
+  const frame = now => {
+    if (t0 === null) t0 = now;
+    render((now - t0) / 1000);
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

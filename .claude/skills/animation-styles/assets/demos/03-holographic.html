@@ -1,0 +1,149 @@
+<!doctype html>
+<!--
+STYLE: Holographic
+LOOK: A dark foil card that catches the light: a pastel iridescent sheen and a soft specular glare slide across it as it tilts, over fine diffraction lines. It follows the pointer and sways on its own on touch screens or before any pointer input.
+TECHNIQUE: One element, four stacked layers sharing a few CSS custom properties. JS eases a 2D "light" position (pointer, or a slow Lissajous sway) and writes --rx/--ry (3D tilt), --mx/--my (glare centre) and --pow (how hard the light hits). The foil is a repeating pastel gradient in color-dodge whose background-position slides with the tilt and is masked to the lit area; the diffraction lines are a 1px repeating gradient in overlay; the glare is a radial gradient in soft-light/overlay. CSS does all the drawing.
+KNOBS: --tilt (max rotation in deg); --foil-a / --lines-a / --glare-a (layer strengths); the hue stops in .foil (keep 4-5 pastel hues, saturation <= 70%); SWAY_X / SWAY_Y (idle sway, 0-1) and SWAY_SPEED; EASE (how quickly the card chases the pointer); IDLE_MS (pointer silence before it goes back to swaying).
+COST: Cheap: one card, transforms on the compositor, but the gradient layers repaint each frame because background-position and mask move. Card-sized repaints are fine on phones; don't do this full-screen or on dozens of cards at once (pause off-screen cards with IntersectionObserver).
+REDUCED MOTION: The card is shown at a fixed, flattering angle with the glare and sheen frozen mid-sweep; no tilt or sway.
+PITFALLS: Fully saturated rainbow gradients look like a toy: hues are pastel, desaturated and only bloom where the glare is. A sheen that never changes intensity looks printed on: --pow scales foil and glare with the tilt angle. Snapping to the raw pointer feels cheap: the light eases with a time-based exponential. Mixing blend modes on a transparent page reveals the page behind: the card has its own dark base, so blending stays inside it.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Holographic</title>
+<style>
+  :root { --bg: #0b0b0f; --ink: #eceaf2; --muted: rgba(236, 234, 242, .58); --tilt: 14; --foil-a: .8; --lines-a: .6; --glare-a: .8; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(70% 60% at 50% 55%, #1b1a22 0%, #111016 50%, var(--bg) 100%);
+    color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: grid; place-items: center; padding: 16px;
+  }
+  main { display: grid; justify-items: center; gap: clamp(20px, 4vh, 40px); text-align: center; }
+  .eyebrow { font: 500 11px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: clamp(30px, 4.6vw, 58px); font-weight: 600; letter-spacing: -.03em; line-height: 1.02; margin-top: 12px; }
+  .support { font-size: clamp(14px, 1.2vw, 16px); color: var(--muted); max-width: 34ch; line-height: 1.5; }
+
+  .scene { perspective: 1100px; }
+  .card {
+    --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%; --pow: .4;
+    position: relative; width: min(86vw, 500px, 50vh * 1.586); aspect-ratio: 1.586; border-radius: 4.6% / 7.3%;
+    overflow: hidden; isolation: isolate; transform: rotateX(var(--rx)) rotateY(var(--ry)); will-change: transform;
+    background: linear-gradient(140deg, #3b3b46 0%, #24242c 48%, #32323d 100%);   /* graphite base: blends stay inside */
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 0 0 1px rgba(255, 255, 255, .07) inset,
+                0 40px 70px -30px rgba(0, 0, 0, .85), 0 12px 24px -12px rgba(0, 0, 0, .6);
+  }
+  .layer { position: absolute; inset: 0; pointer-events: none; }
+  .foil {
+    background: repeating-linear-gradient(118deg,
+      hsl(188 70% 66%) 0%, hsl(250 55% 72%) 4%, hsl(320 52% 74%) 8%,
+      hsl(40 70% 72%) 12%, hsl(160 46% 66%) 16%, hsl(188 70% 66%) 20%);   /* one period = 20% of a 200% tile: ~2.5 bands per card */
+    background-size: 200% 200%;
+    background-position: calc(50% + (var(--mx) - 50%) * -1.2) calc(50% + (var(--my) - 50%) * -1.2);  /* bands slide against the light */
+    mix-blend-mode: color-dodge; filter: saturate(.75);
+    opacity: calc(var(--foil-a) * (.4 + var(--pow) * .6));
+    -webkit-mask-image: radial-gradient(farthest-corner circle at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, .4) 32%, rgba(0, 0, 0, .1) 62%, rgba(0, 0, 0, .04) 100%);
+            mask-image: radial-gradient(farthest-corner circle at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, .4) 32%, rgba(0, 0, 0, .1) 62%, rgba(0, 0, 0, .04) 100%);
+  }
+  .lines {
+    background: repeating-linear-gradient(62deg, transparent 0 2px, rgba(255, 255, 255, .5) 2px 3px);   /* 1px diffraction lines */
+    mix-blend-mode: soft-light; opacity: calc(var(--lines-a) * (.3 + var(--pow) * .7));
+    -webkit-mask-image: radial-gradient(60% 80% at var(--mx) var(--my), #000, transparent);
+            mask-image: radial-gradient(60% 80% at var(--mx) var(--my), #000, transparent);
+  }
+  .glare {
+    background: radial-gradient(farthest-corner circle at var(--mx) var(--my),
+      rgba(255, 255, 255, .78) 0%, rgba(255, 255, 255, .24) 9%, rgba(255, 255, 255, .06) 24%, rgba(255, 255, 255, 0) 44%);
+    mix-blend-mode: screen; opacity: calc(var(--glare-a) * (.45 + var(--pow) * .55));
+  }
+  .shade { background: radial-gradient(farthest-corner circle at var(--mx) var(--my), transparent 25%, rgba(4, 4, 8, .42) 100%); }
+  .content {
+    position: absolute; inset: 0; padding: 7% 7.5%; display: flex; flex-direction: column; justify-content: space-between;
+    text-align: left; color: rgba(240, 238, 246, .9); text-shadow: 0 1px 0 rgba(0, 0, 0, .35);
+  }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .mark { width: 15%; aspect-ratio: 1; }
+  .ed { font: 500 clamp(8px, 1.6vw, 11px)/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .2em; text-transform: uppercase; opacity: .7; text-align: right; }
+  .name { font-size: clamp(18px, 4.6vw, 30px); font-weight: 600; letter-spacing: -.02em; }
+  .meta { display: flex; justify-content: space-between; font: 500 clamp(8px, 1.6vw, 11px)/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .2em; text-transform: uppercase; opacity: .65; margin-top: 8px; }
+
+  .touch { display: none; }
+  @media (hover: none) { .fine { display: none; } .touch { display: inline; } }
+  @media (orientation: landscape) and (max-height: 560px) {
+    main { grid-template-columns: minmax(0, 1fr) auto; align-items: center; text-align: left; justify-items: start; column-gap: 32px; }
+    .scene { grid-row: 1 / span 2; grid-column: 2; }
+    .card { width: min(50vw, 72vh * 1.586); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Edition of 250</p>
+    <h1>Light that changes<br>its mind.</h1>
+  </header>
+  <div class="scene">
+    <div class="card" id="card" role="img" aria-label="Holographic Prism Pass card">
+      <div class="layer foil"></div>
+      <div class="layer lines"></div>
+      <div class="layer glare"></div>
+      <div class="layer shade"></div>
+      <div class="content">
+        <div class="top">
+          <svg class="mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+            <circle cx="24" cy="24" r="21"/><path d="M24 7 39 33H9Z"/><path d="M24 7v26M9 33l15-9 15 9" opacity=".55"/>
+          </svg>
+          <p class="ed">No. 024<br>of 250</p>
+        </div>
+        <div>
+          <p class="name">Prism Pass</p>
+          <p class="meta"><span>Holder</span><span>Series 01</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="support"><span class="fine">Move your cursor across the card, or just watch it catch the light.</span><span class="touch">Hold still and watch it catch the light.</span></p>
+</main>
+<script>
+const SWAY_X = .75, SWAY_Y = .55, SWAY_SPEED = 1, EASE = 5, IDLE_MS = 2500;
+const card = document.getElementById('card');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const tilt = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tilt')) || 14;
+let aim = { x: 0, y: 0 }, cur = { x: 0, y: 0 }, lastPointer = -1e9, last = performance.now(), maxTilt = tilt();
+
+function apply(x, y) {                                  // x, y in -1..1: where the light hits the card
+  card.style.setProperty('--ry', (x * maxTilt).toFixed(2) + 'deg');
+  card.style.setProperty('--rx', (-y * maxTilt * .8).toFixed(2) + 'deg');
+  card.style.setProperty('--mx', (50 + x * 55).toFixed(1) + '%');
+  card.style.setProperty('--my', (50 + y * 55).toFixed(1) + '%');
+  card.style.setProperty('--pow', Math.min(1, Math.hypot(x, y)).toFixed(3));
+}
+
+addEventListener('pointermove', (e) => {
+  if (e.pointerType === 'touch') return;                // touch screens keep the idle sway
+  const r = card.getBoundingClientRect();
+  aim.x = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / (r.width * .75)));
+  aim.y = Math.max(-1, Math.min(1, (e.clientY - r.top - r.height / 2) / (r.height * .75)));
+  lastPointer = performance.now();
+});
+
+function frame(now) {
+  const dt = Math.min(.1, (now - last) / 1000), t = now / 1000 * SWAY_SPEED; last = now;
+  if (now - lastPointer > IDLE_MS) {                    // idle: slow figure-of-eight sway
+    aim.x = Math.sin(t * .55) * SWAY_X;
+    aim.y = Math.sin(t * .83 + 1.2) * SWAY_Y;
+  }
+  const k = 1 - Math.exp(-EASE * dt);                   // time-based easing, same feel at 30 or 120 Hz
+  cur.x += (aim.x - cur.x) * k; cur.y += (aim.y - cur.y) * k;
+  apply(cur.x, cur.y);
+  requestAnimationFrame(frame);
+}
+
+if (reduce) apply(.55, -.4);
+else { cur.x = aim.x = Math.sin(last / 1000 * .55) * SWAY_X; cur.y = aim.y = Math.sin(last / 1000 * .83 + 1.2) * SWAY_Y; requestAnimationFrame(frame); }
+</script>
+</body>
+</html>

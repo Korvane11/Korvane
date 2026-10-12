@@ -1,0 +1,163 @@
+<!doctype html>
+<!--
+STYLE: Wireframe 3D (ink on paper)
+LOOK: A (2,3) torus-knot tube drawn as a fine blue-violet ink wireframe on warm engineering paper; it inks itself on, then turns slowly, far lines fading like a lighter pen stroke.
+TECHNIQUE: Build the tube mesh by hand (rings of RADIAL points around the knot curve, oriented with a cheap Frenet frame), rotate and perspective-project every vertex in plain canvas 2D, then sort edges into BUCKETS depth bins and stroke each bin once with its own alpha and line width (8 strokes per frame, not 4,000). The paper grid is pure CSS gradients.
+KNOBS: --paper / --ink / --grid / --cell (paper colour, ink colour, grid tint, grid pitch). JS: P,Q (knot winding), TUBULAR, RADIAL (mesh density), TUBE (tube radius), CAM (camera distance: lower = stronger perspective), BUCKETS (depth bins), ALPHA_FAR/ALPHA_NEAR and LW_FAR/LW_NEAR (the depth fade), SPIN (rad/s), DRAW_MS (ink-on duration), TILT (pointer influence in rad).
+COST: Canvas 2D, ~4,300 segments per frame batched into 8 paths; scales with TUBULAR x RADIAL. Cheap on phones; drop TUBULAR to 120 for very old devices.
+REDUCED MOTION: The fully drawn knot at a fixed three-quarter angle, no draw-on, no rotation, no pointer tilt.
+PITFALLS: One stroke per segment with its own alpha is slow and looks noisy; batch by depth. Uniform line weight reads as flat CAD output: vary both alpha and width with depth. Pure black ink on pure white looks clinical: use a tinted ink on warm paper with a faint grid. Too much perspective (small CAM) distorts the knot into a fish-eye blob.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe 3D</title>
+<style>
+  :root {
+    --paper: #f3f0e7;
+    --ink: #2d32a4;            /* blue-violet ink; text uses a darker cut of it */
+    --ink-deep: #1c1f5e;
+    --grid: rgba(56, 74, 168, .065);
+    --grid-major: rgba(56, 74, 168, .12);
+    --cell: 22px;
+    --serif: "Didot", "Bodoni 72", "Times New Roman", serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    overflow: hidden; color: var(--ink-deep); font-family: var(--serif);
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: calc(var(--cell) * 5) calc(var(--cell) * 5), calc(var(--cell) * 5) calc(var(--cell) * 5),
+                     var(--cell) var(--cell), var(--cell) var(--cell);
+    background-position: center;
+  }
+  /* soft paper vignette so the grid falls away at the edges */
+  body::after { content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(120, 96, 60, .10)); }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .fig { position: fixed; top: clamp(16px, 4vh, 36px); left: clamp(16px, 5vw, 72px); right: clamp(16px, 5vw, 72px);
+    display: flex; justify-content: space-between; gap: 1rem;
+    font: 500 11px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); opacity: .7; }
+  .copy { position: fixed; left: clamp(16px, 6vw, 96px); right: 16px; bottom: clamp(28px, 7vh, 80px); max-width: 34rem; }
+  h1 { font-weight: 400; font-size: clamp(2.3rem, min(9vw, 7.4vh), 4.6rem); line-height: 1.02; letter-spacing: -.012em; }
+  h1 em { font-style: italic; color: var(--ink); }
+  p { margin-top: 1rem; max-width: 26rem; font: 400 clamp(.92rem, 1.1vw, 1.05rem)/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: rgba(28, 31, 94, .78); }
+  @media (min-width: 760px) and (orientation: landscape) {
+    .copy { top: 50%; bottom: auto; transform: translateY(-50%); max-width: min(34rem, 40vw); }
+  }
+  @media (max-width: 520px) { .fig span:last-child { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<div class="fig"><span>Fig. 01 &mdash; Torus knot (2, 3)</span><span>Sheet 1 / 1 &middot; Scale 1:1</span></div>
+<main class="copy">
+  <h1>Precision,<br><em>drawn by hand.</em></h1>
+  <p>An engineering studio for objects that have to work and look right, from the first sketch to the last tolerance.</p>
+</main>
+<script>
+(() => {
+  const P = 2, Q = 3, TUBULAR = 160, RADIAL = 12, TUBE = 0.36;   // knot + mesh density
+  const CAM = 7;                       // camera distance: 7 keeps perspective gentle
+  const BUCKETS = 8;                   // depth bins, one stroke() each
+  const ALPHA_FAR = 0.10, ALPHA_NEAR = 0.92, LW_FAR = 0.5, LW_NEAR = 1.35;
+  const SPIN = 0.16, DRAW_MS = 1500, TILT = 0.35;
+  const INK = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+
+  // --- mesh: rings of RADIAL points along the knot curve
+  const knot = u => { const cs = Math.cos(Q / P * u);
+    return [(2 + cs) * 0.5 * Math.cos(u), (2 + cs) * 0.5 * Math.sin(u), Math.sin(Q / P * u) * 0.5]; };
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+  const N = TUBULAR * RADIAL, V = new Float32Array(N * 3);
+  for (let i = 0, k = 0; i < TUBULAR; i++) {
+    const u = i / TUBULAR * P * Math.PI * 2, p1 = knot(u), p2 = knot(u + 0.01);
+    const T = sub(p2, p1), B = norm(cross(T, [p1[0] + p2[0], p1[1] + p2[1], p1[2] + p2[2]])), Nn = norm(cross(B, T));
+    for (let j = 0; j < RADIAL; j++) {
+      const v = j / RADIAL * Math.PI * 2, a = -TUBE * Math.cos(v), b = TUBE * Math.sin(v);
+      V[k++] = p1[0] + a * Nn[0] + b * B[0]; V[k++] = p1[1] + a * Nn[1] + b * B[1]; V[k++] = p1[2] + a * Nn[2] + b * B[2];
+    }
+  }
+  // edges: [a, b, ringIndex] — ring edges and the long lines that run along the tube
+  const E = [];
+  for (let i = 0; i < TUBULAR; i++) for (let j = 0; j < RADIAL; j++) {
+    const a = i * RADIAL + j;
+    E.push(a, i * RADIAL + (j + 1) % RADIAL, i);
+    E.push(a, ((i + 1) % TUBULAR) * RADIAL + j, i + 1);
+  }
+  const SX = new Float32Array(N), SY = new Float32Array(N), SZ = new Float32Array(N);
+
+  let w = 0, h = 0, dpr = 1, cx = 0, cy = 0, scale = 1;
+  function resize() {
+    dpr = Math.min(devicePixelRatio || 1, 2); w = innerWidth; h = innerHeight;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const wide = w >= 760 && w > h;
+    cx = wide ? w * 0.66 : w * 0.5;
+    cy = wide ? h * 0.5 : h * 0.4;
+    scale = wide ? Math.min(h * 0.19, w * 0.135) : Math.min(w * 0.23, h * 0.13);
+    if (reduce) draw(performance.now());
+  }
+
+  let px = 0, py = 0, tx = 0, ty = 0, last = 0, start = performance.now();
+  addEventListener('pointermove', e => { tx = (e.clientX / w - 0.5) * 2; ty = (e.clientY / h - 0.5) * 2; });
+
+  function draw(now) {
+    const t = reduce ? 2 : (now - start) / 1000;
+    const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
+    const k = 1 - Math.exp(-dt * 2.5);                       // frame-rate independent easing
+    px += (tx - px) * k; py += (ty - py) * k;
+    const spin = t * SPIN, pitch = 0.55 + 0.2 * Math.sin(t * 0.13) + (reduce ? 0 : py * TILT * 0.6);
+    const yaw = 0.4 * Math.sin(t * 0.09 + 1) + (reduce ? 0 : px * TILT);
+    // R = Ry(yaw) * Rx(pitch) * Rz(spin)
+    const cz = Math.cos(spin), sz = Math.sin(spin), cxp = Math.cos(pitch), sxp = Math.sin(pitch), cyw = Math.cos(yaw), syw = Math.sin(yaw);
+    let zmin = 9, zmax = -9;
+    for (let i = 0, k3 = 0; i < N; i++, k3 += 3) {
+      let x = V[k3], y = V[k3 + 1], z = V[k3 + 2];
+      let x1 = x * cz - y * sz, y1 = x * sz + y * cz;                 // Rz
+      let y2 = y1 * cxp - z * sxp, z2 = y1 * sxp + z * cxp;           // Rx
+      let x3 = x1 * cyw + z2 * syw, z3 = -x1 * syw + z2 * cyw;        // Ry
+      const s = CAM / (CAM - z3) * scale;
+      SX[i] = cx + x3 * s; SY[i] = cy - y2 * s; SZ[i] = z3;
+      if (z3 < zmin) zmin = z3; if (z3 > zmax) zmax = z3;
+    }
+    const prog = reduce ? 1 : 1 - Math.pow(1 - Math.min(1, (now - start) / DRAW_MS), 4);
+    const limit = prog * TUBULAR;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.lineCap = 'round'; ctx.strokeStyle = INK;
+    const paths = [];
+    for (let b = 0; b < BUCKETS; b++) paths.push(new Path2D());
+    for (let e = 0; e < E.length; e += 3) {
+      if (E[e + 2] > limit) continue;                                 // ink-on: the pen travels along the knot
+      const a = E[e], c = E[e + 1];
+      const d = ((SZ[a] + SZ[c]) * 0.5 - zmin) / (zmax - zmin);       // 0 far .. 1 near, per frame
+      const p = paths[Math.max(0, Math.min(BUCKETS - 1, (d * BUCKETS) | 0))];
+      p.moveTo(SX[a], SY[a]); p.lineTo(SX[c], SY[c]);
+    }
+    for (let b = 0; b < BUCKETS; b++) {
+      const d = (b + 0.5) / BUCKETS;
+      ctx.globalAlpha = ALPHA_FAR + (ALPHA_NEAR - ALPHA_FAR) * Math.pow(d, 1.6);
+      ctx.lineWidth = LW_FAR + (LW_NEAR - LW_FAR) * d;
+      ctx.stroke(paths[b]);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function loop(now) { draw(now); requestAnimationFrame(loop); }
+  addEventListener('resize', resize);
+  resize();
+  if (reduce) draw(performance.now()); else requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
