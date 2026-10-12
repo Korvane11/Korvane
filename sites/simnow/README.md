@@ -20,6 +20,12 @@ and credited in the footer. From the TikTok download:
 Layout: on wide screens the clip fills the whole background. On phones it's
 a band across the top that fades into the page.
 
+It never stops: the clip loops, and `js/main.js` restarts it if the browser
+pauses it (power saving, a stalled download, coming back to the tab) and on
+the first tap or scroll where autoplay was refused. It pauses only while the
+tab is hidden, and doesn't play at all for visitors who ask for reduced
+motion (they get the still poster).
+
 ## Run it locally
 
 ```bash
@@ -50,19 +56,24 @@ Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
 
 `js/lights.js` runs for the first ~4 seconds (the clip plays at 0.8x under
 it). Timeline:
-- 0.35 s and 0.56 s: two blinks of the whole light bar, on black.
-- 0.8 s: the bar sweeps on from the middle outward, with a red bloom.
-- 1.6 s: the scene starts to spread out from the lights.
-- 2.1 s: the site opens.
+- 0.3 s: the light bar draws on from the middle outward, over 1 s.
+- From 0.6 s: a soft red glow and a long, thin lens streak grow out of it.
+- 1.6 s: the night spreads out from the lights, and the streak gives way.
+- 2.3 s: the site opens.
 - 3.9 s: the canvas fades out over the plain video, before the clip's first
   cut (3.9 s of footage).
+
+The glow and streak are blurred at 1/4 size in many small steps (big steps
+leave stacked copies of a thin line), and stored as square roots in the 8-bit
+buffers so the faint edges don't band.
 
 Phones: the band sits in the middle of the screen during the intro, then
 slides up as the site opens. Without WebGL the clip just fades up from
 black.
 
-The lights are found by colour (red well above green and blue), inside a zone
-measured on this clip's first shot. `CLIP` at the top of `lights.js` holds
+The lights are found by colour, inside a zone measured on this clip's first
+shot. The bar's core burns orange-white, so the test is strong red, and red
+well above blue (not pure red, which only catches its edges). `CLIP` at the top of `lights.js` holds
 the zone, the middle of the bar, its width, the glow colour, and where a
 narrow phone crop starts. A different clip needs these re-measured, or other
 red things will show through (or the lights won't).

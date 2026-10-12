@@ -42,9 +42,14 @@ near-black.
     then bottom-right), rotated upright from sideways storage, audio
     stripped. Result: `assets/drive/drive.mp4|webm`, 1024x576 landscape.
   - Desktop: full-screen background. Phones: a band across the top.
-  - Intro (`js/lights.js`, WebGL): black, the red light bar blinks twice,
-    sweeps on from the middle, the night spreads out, the site opens. Then
-    it hands back to the plain video (no WebGL: a fade from black).
+  - Intro (`js/lights.js`, WebGL): black, the light bar draws on from the
+    middle with a soft red glow and a thin lens streak, then the night
+    spreads out and the site opens; it hands back to the plain video (no
+    WebGL: a fade from black). The owner found the first version (two
+    blinks, broken outline, boxy glow) "tacky"; keep it clean.
+  - The owner wants the video playing the whole time on loop: `js/main.js`
+    restarts it whenever the browser pauses it (except a hidden tab or
+    reduced motion).
   - `CLIP` in lights.js is measured on this clip's first shot; a new clip
     needs it re-measured (README).
 - The previous clip (@supercar_driven, a Lamborghini, headlights intro) is

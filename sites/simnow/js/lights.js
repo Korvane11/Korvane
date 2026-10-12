@@ -1,9 +1,9 @@
 /* Tail lights first. For the intro the drive clip is drawn through a small
- * WebGL shader instead of shown directly: at first only the car's tail
- * lights come through (two blinks, then the light bar sweeps on from the
- * middle, with a red bloom), then the night spreads out around them. It ends
- * on the plain video frame, so the page hands back to the <video> element
- * unseen.
+ * WebGL shader instead of shown directly: at first only the car's light bar
+ * comes through, drawing on from the middle outward with a soft red glow and
+ * a long, thin lens streak; then the streak gives way and the night spreads
+ * out from the lights as the site opens. It ends on the plain video frame,
+ * so the page hands back to the <video> element unseen.
  *
  * CLIP holds what is measured on the clip's first shot (0-3.9 s, the car
  * from behind). Swapping the clip means re-measuring it (README).
@@ -11,10 +11,11 @@
 const { gsap } = window;
 
 const CLIP = {
-  zone: [0.43, 0.85, 0.36, 0.66],   // where the lamps can be: x0, x1, y0, y1 (texture uv, y up)
-  center: [0.635, 0.55],            // the middle of the light bar: the sweep and the reveal start here
+  zone: [0.42, 0.86, 0.50, 0.67],   // the light bar's track: x0, x1, y0, y1 (texture uv, y up)
+  center: [0.635, 0.58],            // the middle of the bar: the sweep and the reveal start here
   sweep: 0.22,                      // half-width of the bar, for the sweep
-  glow: '1.0, 0.16, 0.08',          // bloom colour (red)
+  glow: '1.0, 0.18, 0.10',          // glow colour around the bar
+  streak: '1.0, 0.30, 0.22',        // the lens streak, a touch warmer
   phonePan: 0.73,                   // where a narrow crop starts, across the clip (object-position x)
 };
 const GW = 256, GH = 144;   // bloom buffer: the clip (16:9) at 1/4 size
@@ -36,12 +37,16 @@ float zone(vec2 uv) {
   float on = 1.0 - smoothstep(uSweep * ${f(CLIP.sweep)}, uSweep * ${f(CLIP.sweep)} + 0.03, abs(uv.x - ${f(CLIP.center[0])}));
   return box * on;
 }
-// red light: the red channel well above the others
+// tail light: bright and warm. The bar's core burns orange-white, so this
+// asks for strong red and red well above blue, not for pure red.
 float hot(vec2 uv) {
   vec3 c = texture2D(uTex, uv).rgb;
-  return smoothstep(0.16, 0.4, c.r - max(c.g, c.b)) * smoothstep(0.35, 0.7, c.r) * zone(uv);
+  return smoothstep(0.42, 0.75, c.r) * smoothstep(0.1, 0.3, c.r - c.b) * zone(uv);
 }`;
 
+// The glow buffers are 8-bit, so they store the square root of the light:
+// that spends the precision on the faint edges of the glow, where plain 8-bit
+// shows as stripes once the glow is brightened.
 // pass 1: the lamps alone, at bloom size
 const HOT = `
 precision mediump float;
@@ -51,19 +56,22 @@ varying vec2 vUv;
 void main() {
   float h = 0.25 * (hot(vUv - uStep) + hot(vUv + uStep)
                   + hot(vUv + vec2(uStep.x, -uStep.y)) + hot(vUv + vec2(-uStep.x, uStep.y)));
+  h = sqrt(h);
   gl_FragColor = vec4(h, h, h, 1.0);
 }`;
 
-// passes 2-9: separable gaussian, four times at growing widths
+// the blurs: a separable gaussian, run several times at growing widths
 const BLUR = `
 precision mediump float;
 uniform sampler2D uSrc;
 uniform vec2 uDir;
 varying vec2 vUv;
+float px(vec2 uv) { float t = texture2D(uSrc, uv).r; return t * t; }
 void main() {
-  float s = texture2D(uSrc, vUv).r * 0.2270;
-  s += (texture2D(uSrc, vUv + uDir * 1.3846).r + texture2D(uSrc, vUv - uDir * 1.3846).r) * 0.3162;
-  s += (texture2D(uSrc, vUv + uDir * 3.2308).r + texture2D(uSrc, vUv - uDir * 3.2308).r) * 0.0703;
+  float s = px(vUv) * 0.2270;
+  s += (px(vUv + uDir * 1.3846) + px(vUv - uDir * 1.3846)) * 0.3162;
+  s += (px(vUv + uDir * 3.2308) + px(vUv - uDir * 3.2308)) * 0.0703;
+  s = sqrt(s);
   gl_FragColor = vec4(s, s, s, 1.0);
 }`;
 
@@ -71,25 +79,30 @@ void main() {
 const FINAL = `
 precision mediump float;
 ${LAMPS}
-uniform sampler2D uBloom;
+uniform sampler2D uBloom, uStreakTex;
 uniform vec2 uScale, uOffset, uAspect;
-uniform float uLights, uReveal;
+uniform float uLights, uReveal, uStreak;
 varying vec2 vUv;
 const vec3 LAMP = vec3(${CLIP.glow});
+const vec3 STREAK = vec3(${CLIP.streak});
 void main() {
   vec2 uv = vUv * uScale + uOffset;
   vec3 c = texture2D(uTex, uv).rgb;
-  float bloom = texture2D(uBloom, uv).r;
+  float bloom = texture2D(uBloom, uv).r;  bloom *= bloom;
+  float streak = texture2D(uStreakTex, uv).r;  streak *= streak;
 
   // the night spreads out from the lamps, brighter things first
   float near = 1.0 - clamp(length((uv - vec2(${f(CLIP.center[0])}, ${f(CLIP.center[1])})) * uAspect) * 0.9, 0.0, 1.0);
   float t = mix(1.05, -0.35, uReveal);
   vec3 scene = c * smoothstep(t, t + 0.25, 0.3 * dot(c, W) + 0.7 * near);
 
-  // a thin light bar needs a hot core and a wide glow to read as lights
-  vec3 col = max(scene, c * hot(uv) * uLights * 1.6) + LAMP * bloom * 6.0 * uLights * (1.0 - uReveal);
+  // the bar itself, a soft glow around it, and a long thin lens streak
+  float fade = uLights * (1.0 - uReveal);
+  vec3 col = max(scene, c * hot(uv) * uLights * 1.25)
+           + LAMP * bloom * 2.6 * fade
+           + STREAK * streak * 1.8 * uStreak * (1.0 - uReveal);
   // dither, so the dark halo doesn't band
-  col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
+  col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 1.5 / 255.0;
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -118,7 +131,7 @@ export function createLights(video, canvas) {
   }
   const pHot = program(HOT, ['uTex', 'uStep', 'uSweep']);
   const pBlur = program(BLUR, ['uSrc', 'uDir']);
-  const pFinal = program(FINAL, ['uTex', 'uBloom', 'uScale', 'uOffset', 'uAspect', 'uLights', 'uReveal', 'uSweep']);
+  const pFinal = program(FINAL, ['uTex', 'uBloom', 'uStreakTex', 'uScale', 'uOffset', 'uAspect', 'uLights', 'uReveal', 'uStreak', 'uSweep']);
   if (!pHot || !pBlur || !pFinal) return null;
 
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -144,7 +157,7 @@ export function createLights(video, canvas) {
     return { tex, fb };
   }
   const clipTex = texture();
-  const a = target(), b = target();
+  const a = target(), b = target(), c = target();
   if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) return null;
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -165,7 +178,7 @@ export function createLights(video, canvas) {
   // pan: where the crop sits across a clip wider than the screen (like
   // object-position x). Phones start on the car (right of the clip, both
   // lamps in view), then settle to centre.
-  const state = { lights: 0, reveal: 0, sweep: 1, pan: CLIP.phonePan };
+  const state = { lights: 0, reveal: 0, sweep: 0, streak: 0, pan: CLIP.phonePan };
   let raf = 0;
   let tl = null;
   let alive = true;
@@ -183,15 +196,26 @@ export function createLights(video, canvas) {
     gl.bindTexture(gl.TEXTURE_2D, clipTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video);
 
-    // bloom: the lamps at 1/4 size, blurred four times
+    // the lamps alone, at 1/4 size
     pass(pHot, a);
     gl.uniform1i(pHot.uTex, 0);
     gl.uniform2f(pHot.uStep, 0.25 / GW, 0.25 / GH);
     gl.uniform1f(pHot.uSweep, state.sweep);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    for (const r of [1.5, 3, 4.5, 7]) {
-      blur(a, b, r, 0);
-      blur(b, a, 0, r);
+    // Each blur step's taps must sit closer than the blur already done, or a
+    // thin line comes out as stacked copies; so: many small steps.
+    // streak: blurred sideways only, wider and wider, then softened a hair (ends in b)
+    blur(a, b, 3, 0);
+    blur(b, c, 6, 0);
+    blur(c, b, 10, 0);
+    blur(b, c, 16, 0);
+    blur(c, b, 26, 0);
+    blur(b, c, 40, 0);
+    blur(c, b, 0, 1);
+    // glow: blurred both ways (ends in a)
+    for (const r of [1, 1.5, 2, 2.5, 3]) {
+      blur(a, c, r, 0);
+      blur(c, a, 0, r);
     }
 
     // the picture, cropped like object-fit: cover
@@ -202,8 +226,12 @@ export function createLights(video, canvas) {
     if (box > clip) sy = clip / box; else sx = box / clip;
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, a.tex);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, b.tex);
     gl.uniform1i(pFinal.uTex, 0);
     gl.uniform1i(pFinal.uBloom, 1);
+    gl.uniform1i(pFinal.uStreakTex, 2);
+    gl.uniform1f(pFinal.uStreak, state.streak);
     gl.uniform2f(pFinal.uScale, sx, sy);
     gl.uniform2f(pFinal.uOffset, (1 - sx) * state.pan, (1 - sy) * 0.5);
     gl.uniform2f(pFinal.uAspect, vw / vh, 1);
@@ -232,17 +260,15 @@ export function createLights(video, canvas) {
     canvas.hidden = false;
     draw();
     tl = gsap.timeline()
-      // ignition: two blinks of the whole bar, then it sweeps on from the middle
-      .set(state, { lights: 0.85 }, 0.35)
-      .set(state, { lights: 0 }, 0.42)
-      .set(state, { lights: 0.45 }, 0.56)
-      .set(state, { lights: 0, sweep: 0 }, 0.61)
-      .set(state, { lights: 1 }, 0.8)
-      .to(state, { sweep: 1.15, duration: 0.6, ease: 'power3.out' }, 0.8)
-      // then the night comes in around them
-      .to(state, { reveal: 1, duration: 1.5, ease: 'power2.inOut' }, 1.6)
-      .to(state, { pan: 0.5, duration: 1.5, ease: 'power2.inOut' }, 1.6)
-      .call(() => onOpen?.(), null, 2.1)
+      // the bar draws on from the middle, and the streak grows out of it
+      .set(state, { lights: 1 }, 0.3)
+      .to(state, { sweep: 1.12, duration: 1.0, ease: 'power2.inOut' }, 0.3)
+      .to(state, { streak: 1, duration: 1.3, ease: 'power2.out' }, 0.6)
+      // then the night comes in from the lights and the streak gives way
+      .to(state, { reveal: 1, duration: 1.7, ease: 'power2.inOut' }, 1.6)
+      .to(state, { streak: 0, duration: 1.2, ease: 'power1.in' }, 2.0)
+      .to(state, { pan: 0.5, duration: 1.7, ease: 'power2.inOut' }, 1.6)
+      .call(() => onOpen?.(), null, 2.3)
       .call(() => { stop(); onDone?.(); }, null, 3.9);
   }
 

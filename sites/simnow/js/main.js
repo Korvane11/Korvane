@@ -97,6 +97,31 @@ document.addEventListener('visibilitychange', () => {
   else video.play().catch(() => {});
 });
 
+// Keep the drive going. Browsers can pause a muted background video on their
+// own (power saving, a stalled download, a page restored from the back
+// button), so resume it whenever it stops while the page is on screen, and on
+// the visitor's first tap, scroll or key (which every browser accepts as
+// permission to play, even where autoplay was refused).
+let wantPlay = false;
+function resume() {
+  if (!wantPlay || reduced || document.hidden) return;
+  if (video.paused || video.ended) video.play().catch(() => {});
+}
+video.addEventListener('pause', () => setTimeout(resume, 250));
+video.addEventListener('ended', () => { video.currentTime = 0; resume(); });   // if looping is ever ignored
+video.addEventListener('stalled', resume);
+['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach((t) => addEventListener(t, resume, { passive: true }));
+addEventListener('pageshow', resume);
+let lastT = -1, stuck = 0;
+setInterval(() => {
+  resume();
+  if (!wantPlay || video.paused || document.hidden) { stuck = 0; return; }
+  // playing but not moving (a decoder hiccup): nudge it along
+  stuck = video.currentTime === lastT ? stuck + 1 : 0;
+  lastT = video.currentTime;
+  if (stuck >= 2) { stuck = 0; video.currentTime = (video.currentTime + 0.05) % (video.duration || 1); video.play().catch(() => {}); }
+}, 2000);
+
 /* ---------------------------------------------------------------- intro */
 function revealHero(instant) {
   const hero = chapters[0];
@@ -120,6 +145,7 @@ function revealHero(instant) {
 function finishIntro(instant = false) {
   if (introDone) return;
   introDone = true;
+  wantPlay = true;
   video.classList.add('is-on');
   if (instant) {
     lights?.stop();
@@ -226,6 +252,7 @@ async function boot() {
     loader.style.transitionDuration = '250ms';   // black on black: get out of the lamps' way
   }
   loader.classList.add('is-done');
+  wantPlay = true;
   try {
     await video.play();
   } catch {
@@ -240,6 +267,9 @@ async function boot() {
       onOpen: () => finishIntro(false),
       onDone: () => { video.playbackRate = 1; },
     });
+    // shown (under the opaque canvas) from the start: some browsers pause a
+    // video they think is invisible
+    video.classList.add('is-on');
   } else {
     // black, then the car drives out of the dark; the site opens behind it
     requestAnimationFrame(() => video.classList.add('is-on'));
