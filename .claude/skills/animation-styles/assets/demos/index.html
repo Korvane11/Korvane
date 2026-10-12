@@ -1,0 +1,63 @@
+<!doctype html>
+<!-- All twenty demos at a glance. Thumbnails are stills from scripts/check-demos.cjs --thumbs;
+     each card opens the live demo. Works from disk (file://), no network. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Animation styles</title>
+  <style>
+    :root { --bg: #0c0c0e; --card: #151518; --line: rgba(255, 255, 255, 0.08); --text: #f2f2f4; --muted: #9a9aa3; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    header { padding: clamp(28px, 6vw, 72px) clamp(16px, 4vw, 48px) 24px; max-width: 1400px; margin: 0 auto; }
+    h1 { margin: 0; font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1; letter-spacing: -0.02em; }
+    header p { margin: 12px 0 0; color: var(--muted); max-width: 60ch; }
+    main { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 18px; padding: 0 clamp(16px, 4vw, 48px) 64px; max-width: 1400px; margin: 0 auto; }
+    a.card { display: block; color: inherit; text-decoration: none; background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); transition: transform 300ms cubic-bezier(.2, .8, .2, 1), box-shadow 300ms; }
+    a.card:hover, a.card:focus-visible { transform: translateY(-3px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 18px 40px -20px #000; outline: none; }
+    .thumb { aspect-ratio: 16 / 10; background: #000; }
+    .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .meta { padding: 14px 16px 16px; }
+    .meta b { display: block; font-size: 1.02rem; }
+    .meta b span { color: var(--muted); font-weight: 500; margin-right: 8px; font-variant-numeric: tabular-nums; }
+    .meta small { display: block; margin-top: 4px; color: var(--muted); font-size: 0.86rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Animation styles</h1>
+    <p>Twenty styles, each a self-contained demo. Open one to see it move; the notes for each are in <code>references/styles.md</code>.</p>
+  </header>
+  <main id="grid"></main>
+  <script>
+    const styles = [
+      ['01-particles', 'Particles', 'Fine points gather into a word and drift apart'],
+      ['02-liquid-morph', 'Liquid morph', 'Blobs that merge and split like mercury'],
+      ['03-holographic', 'Holographic', 'Iridescent foil that follows the pointer'],
+      ['04-neon-glow', 'Neon glow', 'A glass-tube sign powering on'],
+      ['05-wireframe-3d', 'Wireframe 3D', 'A line-drawn mesh turning on grid paper'],
+      ['06-glassmorphism', 'Glassmorphism', 'Frosted cards over moving colour'],
+      ['07-kinetic-type', 'Kinetic type', 'Big type that rises, swaps and shifts'],
+      ['08-isometric', 'Isometric', 'A block world building itself'],
+      ['09-clay-3d', 'Clay 3D', 'Soft matte shapes that bob and squash'],
+      ['10-ascii-art', 'ASCII art', 'A 3D shape drawn in characters'],
+      ['11-gradient-mesh', 'Gradient mesh', 'Drifting colour fields with grain'],
+      ['12-comic-book', 'Comic book', 'Inked panels and a POW burst'],
+      ['13-split-flap', 'Split-flap', 'Departure-board tiles flipping'],
+      ['14-retro-vhs', 'Retro VHS', 'Scanlines, RGB split, tracking noise'],
+      ['15-halftone', 'Halftone', 'A dot screen that swells with light'],
+      ['16-bauhaus', 'Bauhaus', 'Primary shapes composing on a grid'],
+      ['17-pixel-art', 'Pixel art', 'A crisp low-res scene, stepped motion'],
+      ['18-blueprint', 'Blueprint', 'A technical drawing drawing itself'],
+      ['19-art-deco', 'Art deco', 'Gold sunburst and a metallic sheen'],
+      ['20-neo-brutalism', 'Neo-brutalism', 'Thick outlines and buttons that press'],
+    ];
+    document.getElementById('grid').innerHTML = styles.map(([slug, name, line]) => `
+      <a class="card" href="${slug}.html">
+        <div class="thumb"><img src="thumbs/${slug}.jpg" alt="" loading="lazy" width="640" height="400"></div>
+        <div class="meta"><b><span>${slug.slice(0, 2)}</span>${name}</b><small>${line}</small></div>
+      </a>`).join('');
+  </script>
+</body>
+</html>
