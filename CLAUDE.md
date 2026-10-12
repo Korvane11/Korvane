@@ -25,20 +25,30 @@ Sim racing lounge, 3790 Silverton Rd NE, Suite C, Salem, OR 97305.
 Live site: https://www.simnowusa.com. Brand red `#d0312c` / `#f0605a` on
 near-black.
 
-- Black screen, then Lamborghini-style headlights ignite, then the page opens.
-  Scrolling moves the camera around a matte black supercar on a wet night
-  circuit through five chapters, then the info sections.
-- three.js r186 (`js/stage.js`), GSAP 3.15 + ScrollTrigger and Lenis
-  (`js/main.js`). `?debug` exposes `window.__simnow`; `?debug=pause` freezes
-  the intro.
+- The owner's references: a photo of a matte black Aventador SVJ on a wet
+  street, and a "car polish website" reel (dark studio, spotlights switching
+  on one by one, haze, wet mirror floor, macro detail shots scrubbed by
+  scroll). The site follows both.
+- Black screen, the headlights come on, the spotlights hit, then the hero.
+  Scrolling scrubs a pre-rendered camera move around the car (headlight,
+  wheel, flank, rear, side profile), holding on each shot for a chapter, then
+  the info sections.
+- The car is rendered, not real-time: Blender 5.2 Cycles via the `bpy` pip
+  package (`sites/simnow/render/`), graded by `post.py` into WebP frames under
+  `assets/film/`. A 1280x720 frame takes about 30 s on this 4-core box, so a
+  full re-render is a couple of hours; run it in the background and resume
+  (existing frames are skipped). Keep the light tree off and emission
+  sampling at NONE: the emissive headlight meshes otherwise double the time.
+- `js/main.js` draws frames on a canvas (GSAP ScrollTrigger + Lenis).
+  `?skip` skips the intro, `?debug` exposes `window.__simnow` (call
+  `setStory(p)` to jump to a scroll position).
 - Run: `cd sites/simnow && python3 -m http.server 8000`.
-- Test with Playwright against Chromium at `/opt/pw-browsers/chromium`
-  (`.playwright/cli.config.json`). Software GL is slow (about 1 s a frame):
-  use long timeouts, and never return GSAP objects from `page.evaluate`.
-- The car is a stand-in (three.js example Ferrari 458, badges removed,
-  credited in the footer). The owner wants a real Lamborghini (photo
-  reference: matte black Aventador SVJ). It needs a licensed GLB or an
-  img2threejs rebuild.
+- Test with Playwright (node, CommonJS `require('playwright')`) against
+  Chromium at `/opt/pw-browsers/chromium`.
+- The car model is a Lamborghini Aventador from github.com/saikat111/car-3d
+  with SVJ parts added in code. Its licence is unknown: it's a placeholder
+  until a licensed SVJ (e.g. a CC BY one from Sketchfab, which this container
+  can't reach) is swapped in and re-rendered.
 - Still needed from SimNow: booking link, original logo file, phone and
   socials.
 

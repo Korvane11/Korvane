@@ -2,158 +2,219 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>SimNow | Salem's Sim Racing Destination</title>
   <meta name="description" content="SimNow is Salem's sim racing destination: professional racing simulators, premium gear, and a welcoming local community, built for first-time drivers and seasoned racers alike.">
-  <meta name="theme-color" content="#05060a">
+  <meta name="theme-color" content="#030304">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SimNow | Salem's Sim Racing Destination">
+  <meta property="og:description" content="Professional racing simulators, premium gear, and a welcoming local community in Salem, Oregon.">
+  <meta property="og:image" content="assets/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="assets/simnow-logo.png">
   <link rel="apple-touch-icon" href="assets/simnow-logo.png">
   <link rel="preload" href="assets/fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/models/supercar.glb" as="fetch" type="model/gltf-binary" crossorigin>
   <link rel="stylesheet" href="vendor/lenis/lenis.css">
   <link rel="stylesheet" href="styles.css">
   <script>document.documentElement.classList.add('js')</script>
-  <script type="importmap">
-    { "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }
-  </script>
 </head>
-<body class="intro-active">
+<body class="is-intro">
   <a class="skip-link" href="#main">Skip to main content</a>
 
-  <!-- Black screen while the car loads; the 3D scene then ignites the headlights. -->
+  <!-- Black screen while the first frames load; the film then plays the headlights on. -->
   <div class="loader" id="loader" aria-hidden="true">
-    <div class="loader__bar"><span id="loaderBar"></span></div>
-    <button class="loader__skip" type="button" id="skipIntro">Skip intro</button>
+    <div class="loader__meter"><span id="loaderBar"></span></div>
+    <p class="loader__label" id="loaderLabel">Warming up</p>
   </div>
+  <button class="skip-intro" type="button" id="skipIntro">Skip intro</button>
 
-  <canvas class="stage" id="stage" aria-hidden="true"></canvas>
-
-  <!-- Fallback backdrop when WebGL is unavailable -->
-  <div class="backdrop" aria-hidden="true">
-    <div class="track">
-      <div class="track__sky"></div>
-      <div class="track__road"><span class="track__curb track__curb--l"></span><span class="track__curb track__curb--r"></span></div>
-    </div>
-    <div class="backdrop__shade"></div>
+  <!-- The film: rendered frames drawn by scroll -->
+  <div class="film" aria-hidden="true">
+    <canvas class="film__canvas" id="film"></canvas>
+    <div class="film__shade" id="filmShade"></div>
   </div>
+  <div class="grain" aria-hidden="true"></div>
 
   <header class="nav" id="nav">
-    <div class="nav__inner">
-      <a class="logo" href="#top">
+    <div class="nav__pill">
+      <a class="nav__logo" href="#top" aria-label="SimNow home">
         <img src="assets/simnow-logo.png" alt="SimNow" width="358" height="200">
       </a>
-      <nav class="nav__links" id="navLinks" aria-label="Primary">
-        <a href="#race">How it works</a>
-        <a href="#events">Race nights</a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#experience">Experience</a>
         <a href="#shop">Gear shop</a>
         <a href="#visit">Visit</a>
       </nav>
-      <a class="btn btn--primary nav__cta" href="#visit">Book a sim</a>
-      <button class="nav__toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
+      <a class="btn btn--primary btn--sm nav__cta" href="#visit">
+        <span>Book a sim</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
+      </a>
+      <button class="nav__toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
         <span></span><span></span>
       </button>
     </div>
   </header>
 
+  <div class="menu" id="menu" hidden>
+    <nav class="menu__links" aria-label="Mobile">
+      <a href="#how">How it works</a>
+      <a href="#experience">Experience</a>
+      <a href="#shop">Gear shop</a>
+      <a href="#visit">Visit</a>
+    </nav>
+    <a class="btn btn--primary btn--lg menu__cta" href="#visit">
+      <span>Book a sim</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
+    </a>
+  </div>
+
   <main id="main">
-    <!-- Scroll story: the camera moves around the car as each chapter appears. -->
+    <!-- Scroll story: the camera moves around the car; each chapter holds on a shot. -->
     <section class="story" id="top" aria-label="SimNow">
       <div class="story__sticky">
         <div class="chapter chapter--hero" data-chapter="0">
-          <p class="eyebrow reveal"><span class="eyebrow__line" aria-hidden="true"></span>Salem's sim racing destination</p>
-          <h1 class="hero__title reveal">Your fastest lap<br><em>starts here</em></h1>
-          <p class="hero__lead reveal">Professional racing simulators, premium gear, and a welcoming local community&mdash;built for first-time drivers and seasoned racers alike.</p>
-          <div class="hero__ctas reveal">
-            <a class="btn btn--primary btn--lg" href="#visit">Book a sim</a>
-            <a class="btn btn--ghost btn--lg" href="#events">See race nights</a>
+          <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Salem's sim racing destination</p>
+          <h1 class="hero__title">
+            <span class="line"><span>Your fastest lap</span></span>
+            <span class="line line--red"><span>starts here.</span></span>
+          </h1>
+          <p class="hero__lead">Professional racing simulators, premium gear, and a welcoming local community, built for first-time drivers and seasoned racers alike.</p>
+          <div class="hero__ctas">
+            <a class="btn btn--primary btn--lg" href="#visit">
+              <span>Book a sim</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
+            </a>
+            <a class="btn btn--ghost btn--lg" href="#experience"><span>See race nights</span></a>
           </div>
         </div>
 
-        <div class="chapter chapter--right" data-chapter="1">
-          <h2 class="chapter__title">Lights out</h2>
+        <div class="chapter" data-chapter="1">
+          <p class="chapter__index"><span>01</span> / 05</p>
+          <h2 class="chapter__title">Lights <em>out.</em></h2>
           <p class="chapter__text">Strap into a professional racing simulator and feel every kerb, every brake zone, every corner.</p>
         </div>
 
-        <div class="chapter" data-chapter="2">
-          <h2 class="chapter__title">Rent by the hour</h2>
+        <div class="chapter chapter--right" data-chapter="2">
+          <p class="chapter__index"><span>02</span> / 05</p>
+          <h2 class="chapter__title">Rent by <em>the hour.</em></h2>
           <p class="chapter__text">Solo practice, head-to-head with friends, or a whole night chasing a personal best.</p>
         </div>
 
-        <div class="chapter chapter--right" data-chapter="3">
-          <h2 class="chapter__title">Race nights</h2>
+        <div class="chapter" data-chapter="3">
+          <p class="chapter__index"><span>03</span> / 05</p>
+          <h2 class="chapter__title">Every driver <em>welcome.</em></h2>
+          <p class="chapter__text">First time in a seat or hunting tenths, we get you set up with the wheel and pedals dialled in.</p>
+        </div>
+
+        <div class="chapter chapter--right" data-chapter="4">
+          <p class="chapter__index"><span>04</span> / 05</p>
+          <h2 class="chapter__title">Race <em>nights.</em></h2>
           <p class="chapter__text">Every week, Salem's sim drivers line up on the same grid.</p>
         </div>
 
-        <div class="chapter" data-chapter="4">
-          <h2 class="chapter__title">Take it home</h2>
+        <div class="chapter chapter--end" data-chapter="5">
+          <p class="chapter__index"><span>05</span> / 05</p>
+          <h2 class="chapter__title">Take it <em>home.</em></h2>
           <p class="chapter__text">New and pre-owned sim racing gear, with delivery and set-up available.</p>
         </div>
 
-        <div class="story__rail" aria-hidden="true"><span id="storyRail"></span></div>
-        <p class="story__hint" aria-hidden="true">Scroll</p>
+        <div class="story__progress" aria-hidden="true"><span id="storyBar"></span></div>
+        <p class="story__hint" aria-hidden="true"><span></span>Scroll</p>
       </div>
     </section>
 
     <div class="after">
-      <section class="section" id="race" aria-labelledby="race-title">
-        <div class="container">
-          <h2 class="section__title" id="race-title">From the door to the grid</h2>
+      <section class="section how" id="how" aria-labelledby="how-title">
+        <div class="container how__grid">
+          <div class="how__head reveal">
+            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>How it works</p>
+            <h2 class="section__title" id="how-title">From the door<br>to the <em>grid.</em></h2>
+          </div>
           <ol class="steps">
-            <li class="step"><span class="step__num">1</span><h3>Book your time</h3><p>Reserve a simulator by the hour for yourself or your crew.</p></li>
-            <li class="step"><span class="step__num">2</span><h3>Strap in</h3><p>Get set up in the seat with the wheel and pedals dialled in.</p></li>
-            <li class="step"><span class="step__num">3</span><h3>Go racing</h3><p>Pick a car and circuit, then hunt down lap time against the clock or each other.</p></li>
+            <li class="step reveal"><span class="step__num">01</span><div><h3>Book your time</h3><p>Reserve a simulator by the hour for yourself or your crew.</p></div></li>
+            <li class="step reveal"><span class="step__num">02</span><div><h3>Strap in</h3><p>Get set up in the seat with the wheel and pedals dialled in.</p></div></li>
+            <li class="step reveal"><span class="step__num">03</span><div><h3>Go racing</h3><p>Pick a car and circuit, then hunt down lap time against the clock or each other.</p></div></li>
           </ol>
         </div>
       </section>
 
-      <section class="section" id="events" aria-labelledby="events-title">
+      <section class="section experience" id="experience" aria-labelledby="exp-title">
         <div class="container">
-          <div class="banner">
-            <div class="banner__flag" aria-hidden="true"></div>
-            <div class="banner__body">
-              <h2 class="section__title" id="events-title">Weekly community racing</h2>
-              <p>Every week, Salem's sim drivers share the same grid. Ask at the counter or get in touch for this week's event.</p>
-            </div>
-            <a class="btn btn--primary btn--lg" href="#visit">Get the schedule</a>
+          <div class="experience__head reveal">
+            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>The experience</p>
+            <h2 class="section__title" id="exp-title">Built for <em>racers.</em></h2>
+          </div>
+          <div class="bento">
+            <article class="card card--wide reveal">
+              <div class="card__core">
+                <img class="card__img" src="assets/stills/rear.webp" alt="" loading="lazy" width="1600" height="900">
+                <div class="card__body">
+                  <p class="card__tag">Weekly</p>
+                  <h3>Community race nights</h3>
+                  <p>Every week, Salem's sim drivers share the same grid. Ask at the counter or get in touch for this week's event.</p>
+                </div>
+              </div>
+            </article>
+            <article class="card reveal">
+              <div class="card__core">
+                <img class="card__img" src="assets/stills/wheel.webp" alt="" loading="lazy" width="1600" height="900">
+                <div class="card__body">
+                  <p class="card__tag">By the hour</p>
+                  <h3>Simulator rental</h3>
+                  <p>Solo practice or head-to-head with friends, on professional racing simulators.</p>
+                </div>
+              </div>
+            </article>
+            <article class="card reveal">
+              <div class="card__core">
+                <img class="card__img" src="assets/stills/headlight.webp" alt="" loading="lazy" width="1600" height="900">
+                <div class="card__body">
+                  <p class="card__tag">All levels</p>
+                  <h3>First lap to fastest lap</h3>
+                  <p>A welcoming spot for first-time drivers and seasoned racers alike.</p>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <section class="section" id="shop" aria-labelledby="shop-title">
-        <div class="container shop">
-          <div class="shop__intro">
-            <h2 class="section__title" id="shop-title">Build your home rig</h2>
-            <p>Try it in the lounge, then take it home. Our retail floor carries new and pre-owned sim racing gear, so you can test before you buy.</p>
-            <a class="btn btn--ghost" href="#visit">Visit the shop</a>
+      <section class="section shop" id="shop" aria-labelledby="shop-title">
+        <div class="container shop__grid">
+          <div class="shop__intro reveal">
+            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Gear shop</p>
+            <h2 class="section__title" id="shop-title">Build your<br><em>home rig.</em></h2>
+            <p class="shop__lead">Try it in the lounge, then take it home. Our retail floor carries new and pre-owned sim racing gear, so you can test before you buy.</p>
+            <a class="btn btn--ghost btn--lg" href="#visit"><span>Visit the shop</span></a>
           </div>
           <ul class="shop__list">
-            <li><h3>New gear</h3><p>Wheels, pedals, cockpits and accessories for every level of build.</p></li>
-            <li><h3>Pre-owned gear</h3><p>Quality used equipment for a fraction of the price.</p></li>
-            <li><h3>Delivery &amp; set-up</h3><p>We can deliver and set up your rig at home for an extra fee.</p></li>
+            <li class="shop__item reveal"><span class="shop__num">A</span><div><h3>New gear</h3><p>Wheels, pedals, cockpits and accessories for every level of build.</p></div></li>
+            <li class="shop__item reveal"><span class="shop__num">B</span><div><h3>Pre-owned gear</h3><p>Quality used equipment for a fraction of the price.</p></div></li>
+            <li class="shop__item reveal"><span class="shop__num">C</span><div><h3>Delivery &amp; set-up</h3><p>We can deliver and set up your rig at home for an extra fee.</p></div></li>
           </ul>
         </div>
       </section>
 
-      <section class="section" id="visit" aria-labelledby="visit-title">
-        <div class="container">
-          <div class="visit">
-            <div class="visit__info">
-              <h2 class="section__title" id="visit-title">Find us in Salem</h2>
-              <address>3790 Silverton Rd NE, Suite C<br>Salem, OR 97305</address>
-              <div class="visit__ctas">
-                <a class="btn btn--primary btn--lg" href="https://www.google.com/maps/search/?api=1&amp;query=3790+Silverton+Rd+NE+Suite+C+Salem+OR+97305" target="_blank" rel="noopener">Get directions</a>
-              </div>
-            </div>
-            <div class="hours">
+      <section class="section visit" id="visit" aria-labelledby="visit-title">
+        <img class="visit__bg" src="assets/stills/profile.webp" alt="" loading="lazy" width="1600" height="900">
+        <div class="container visit__grid">
+          <div class="visit__info reveal">
+            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Visit</p>
+            <h2 class="section__title" id="visit-title">Find us<br>in <em>Salem.</em></h2>
+            <address>3790 Silverton Rd NE, Suite C<br>Salem, OR 97305</address>
+            <a class="btn btn--primary btn--lg" href="https://www.google.com/maps/search/?api=1&amp;query=3790+Silverton+Rd+NE+Suite+C+Salem+OR+97305" target="_blank" rel="noopener">
+              <span>Get directions</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
+            </a>
+          </div>
+          <div class="hours reveal">
+            <div class="hours__core">
               <h3>Hours</h3>
               <dl>
-                <div><dt>Sunday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
-                <div><dt>Monday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
-                <div><dt>Tuesday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
-                <div><dt>Wednesday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
-                <div><dt>Thursday</dt><dd>9:00 AM &ndash; 9:00 PM</dd></div>
-                <div><dt>Friday</dt><dd>9:00 AM &ndash; 10:00 PM</dd></div>
-                <div><dt>Saturday</dt><dd>9:00 AM &ndash; 10:00 PM</dd></div>
+                <div><dt>Sunday</dt><dd>9 AM &ndash; 9 PM</dd></div>
+                <div><dt>Monday</dt><dd>9 AM &ndash; 9 PM</dd></div>
+                <div><dt>Tuesday</dt><dd>9 AM &ndash; 9 PM</dd></div>
+                <div><dt>Wednesday</dt><dd>9 AM &ndash; 9 PM</dd></div>
+                <div><dt>Thursday</dt><dd>9 AM &ndash; 9 PM</dd></div>
+                <div><dt>Friday</dt><dd>9 AM &ndash; 10 PM</dd></div>
+                <div><dt>Saturday</dt><dd>9 AM &ndash; 10 PM</dd></div>
               </dl>
             </div>
           </div>
@@ -162,9 +223,9 @@
 
       <footer class="footer">
         <div class="container footer__inner">
-          <a class="logo logo--footer" href="#top"><img src="assets/simnow-logo.png" alt="SimNow" width="358" height="200" loading="lazy"></a>
+          <a class="nav__logo footer__logo" href="#top"><img src="assets/simnow-logo.png" alt="SimNow" width="358" height="200" loading="lazy"></a>
           <p>Salem's sim racing destination. 3790 Silverton Rd NE, Suite C, Salem, OR 97305</p>
-          <p class="footer__credit">3D car: &ldquo;Ferrari 458 Italia&rdquo; by vicent091036, via the three.js examples.</p>
+          <p class="footer__credit" id="credit">Car renders made in Blender from a Lamborghini Aventador model (car-3d project by saikat111), modified to SVJ spec.</p>
           <p class="footer__copy">&copy; <span id="year">2026</span> SimNow</p>
         </div>
       </footer>
