@@ -56,6 +56,12 @@ near-black.
   SVJ parts added in code) has an unknown licence.
 - Still needed from SimNow: booking link, original logo file, phone and
   socials.
+- The current SimNow site (www.simnowusa.com) is blocked by this
+  environment's network policy (403 at the proxy; the web fetch tool can't
+  reach it either). Reading it needs the owner to add `simnowusa.com` and
+  `www.simnowusa.com` under Allowed domains in the environment's Network
+  access settings, plus any image CDN the site uses. Until then, use
+  screenshots or pasted text from the owner.
 
 ## Skills
 
