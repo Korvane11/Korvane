@@ -1,6 +1,6 @@
 ---
 id: 7
-title: "The existing site was unreachable, and the owner was asked to change network settings before the search route (which reached it) was tried"
+title: "The existing site was unreachable; the owner was asked to change settings before the search route was tried, and the search-derived facts then published on the new site were stale"
 status: open
 type: open-source
 skill: [redesign-existing-projects, design-taste-frontend]
@@ -9,7 +9,7 @@ target_file: []
 siblings_checked: "no family registry yet; skills that start from an existing site: redesign-existing-projects (Design Audit, read: assumes the current site can be opened) added; design-taste-frontend §11 REDESIGN PROTOCOL added, assumed to share the assumption, not read for it; impeccable excluded: audits the build in hand, not a third-party site, assumed"
 area: "redesign audit: getting the current site's content when the sandbox blocks it"
 date: 2026-10-12
-session_context: "SimNow site rebuild in a sandboxed cloud container: the owner asked why the agent couldn't read their current site to see everything that must carry over"
+session_context: "SimNow site rebuild in a sandboxed cloud container: the owner asked why the agent couldn't read their current site to see everything that must carry over; follow-up the same day once the owner opened network access"
 parked_until:
 resolved:
 resolution:
@@ -45,6 +45,22 @@ Only step 5 needs the owner, so try it last. Record each fact with its
 source, and mark search-derived facts as possibly stale. Keep a "still
 needed from the client" list only for facts that every route has failed to
 produce.
+
+**Follow-up (same day):** The owner then set network access to Full, and
+the site was rendered in a headless browser. It's a client-side app, so a
+plain fetch returned an empty shell. Two of the facts taken from search and
+already published on the new site were wrong:
+- The hours were 1-9 PM daily by appointment, not 9 AM-9 PM.
+- The email was a different address.
+
+The search index had kept an older version of the page. The rendered site
+also had a whole service line (event rentals), live prices and a booking
+system that the search summaries never mentioned. So the ladder above
+needs a second rule: a search-derived fact may stand in for a direct read
+in a draft, but it must not ship as fact. Either tag it for the client to
+confirm, or replace it once a direct read is possible. Also, when the
+direct read does become possible, render the page in a browser rather than
+fetching its HTML.
 
 **Principle:** When the direct path to a source is blocked, try the routes
 that don't share the blocked path before handing work to the user. A

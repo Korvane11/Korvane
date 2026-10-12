@@ -54,18 +54,23 @@ near-black.
   Chromium at `/opt/pw-browsers/chromium`.
 - The 3D fallback's car model (an Aventador from github.com/saikat111/car-3d,
   SVJ parts added in code) has an unknown licence.
-- Contact (from their current site, via web search): 971-345-2568,
-  Info@SimNowUSA.com; on the Visit section, footer and the JSON-LD listing.
-  Their site also lists consulting, weekly community races and a grand
-  opening on 5/15/2026.
-- Still needed from SimNow: booking link, hourly prices, original logo file,
-  socials (a TikTok account exists; handle not found).
-- The current SimNow site (www.simnowusa.com) is blocked by this
-  environment's network policy (403 at the proxy; the web fetch tool can't
-  reach it either). WebSearch does reach it (search summaries of the
-  homepage). Reading it directly needs the owner to add `simnowusa.com` and
-  `www.simnowusa.com` under Allowed domains in the environment's Network
-  access settings, plus any image CDN the site uses.
+- Facts come from their current site, read directly on 2026-10-12 (the
+  web-search summaries from earlier were stale: wrong hours and email).
+  Summary and links: README "Content from simnowusa.com".
+  - Phone 971-345-2568 (call or text), email SimNowOR@gmail.com,
+    facebook.com/SimNowOR.
+  - Hours: daily 1-9 PM, appointments only. 6 rigs, Fanatec direct-drive,
+    iRacing.
+  - Booking lives on their site (Angular app, live calendar, Stripe):
+    simnowusa.com/book#booking. Our "Book" buttons link there.
+  - They also run event rentals (Oregon and the Pacific Northwest) and a
+    retail paddock.
+- Still needed from SimNow: whether the new design replaces simnowusa.com
+  (if it does, booking has to keep running somewhere), and which of their
+  photos they want on it.
+- Network: the owner set this environment's Network access to Full on
+  2026-10-12, so simnowusa.com loads (it was blocked before, 403 at the
+  proxy).
 
 ## Skills
 

@@ -103,16 +103,41 @@ glTF, check its licence, and re-render. The part and material names in
 `svj_studio.py` (`car_materials`) and `night_drive.py` (`rig_wheels`,
 `add_beams`) will need mapping to the new model.
 
+## Content from simnowusa.com
+
+Read from their live site on 2026-10-12. It's an Angular app with its own
+API and Stripe payments, so booking stays there and our buttons link to it.
+
+- **Contact:** 971-345-2568 (call or text), SimNowOR@gmail.com,
+  https://www.facebook.com/SimNowOR/
+- **Hours:** daily 1-9 PM, appointments only (no walk-ins). 6 rigs.
+- **Hardware:** Fanatec direct-drive, iRacing.
+- **Booking:** https://simnowusa.com/book#booking. Per package it's
+  `book?session=11111111-1111-1111-1111-1111111111NN#booking`:
+
+  | Package | NN | Price | Time | Drivers |
+  | --- | --- | --- | --- | --- |
+  | Solo session | 01 | $25 | 1 hr 20 min | 1 |
+  | Bring a friend | 02 | $40 | 1 hr | 2 |
+  | Small group | 03 | $49 | 1 hr 30 min | 3 |
+  | Full grid | 04 | $99 | 1 hr 30 min | 6 |
+
+- **Event rentals:** delivered across Oregon and the Pacific Northwest, with
+  setup and race management included. Covers corporate events, dealership
+  events, private parties, and car shows and motorsports. Quotes go to
+  `mailto:SimNowOR@gmail.com?subject=SimNow Event Rental Quote`.
+- **Retail paddock:** try before you buy, Salem pickup, setup help included,
+  in stock and made to order. Nothing is listed yet; gear requests go by
+  email.
+- **Images:** their logo (now `assets/simnow-logo.webp|png`). Shop and event
+  photos are at `https://simnowusa.com/assets/HomePage/Images/` and
+  `/assets/EventDetails/Images/`, but none are used here yet.
+
 ## Still needed from SimNow
 
-- The booking link (the "Book a sim" buttons jump to the Visit section).
-- Hourly prices.
-- The original logo file (the current one was taken from a screenshot).
-- Social links, if they should appear.
-
-Phone and email (971-345-2568, Info@SimNowUSA.com) come from their current
-site and are on the Visit section, the footer and the JSON-LD listing in
-`index.html`.
+- Whether this design replaces simnowusa.com. If it does, the booking app
+  (API and Stripe) has to keep running somewhere.
+- Which of their photos, if any, they want on the new site.
 
 ## Licences
 
