@@ -62,6 +62,12 @@ near-black.
   `night_post.py`; Blender 5.2 via the `bpy` pip package, ~20-30 s a frame,
   light tree off, emission sampling NONE). Stock video sites, Sketchfab,
   Hugging Face and Poly Haven are blocked from this container.
+- Logo: their own badge (`assets/simnow-logo.webp`) stays the logo. The nav
+  shows only its SIMNOW lettering, traced to a vector
+  (`assets/simnow-wordmark.svg`, `render/trace_logo.py`), because the whole
+  badge was unreadable at nav size; the footer shows the full badge at 92px.
+  The owner asked for the logo to "look better" (2026-10-12); the design
+  itself was not changed, and redesigning it would be SimNow's call.
 - `?skip` skips the intro (for testing; there is no skip button), `?debug`
   exposes `window.__simnow`.
 - Playwright's Chromium has no H.264, so tests get the WebM; real browsers

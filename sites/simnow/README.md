@@ -49,6 +49,8 @@ Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
 | `render/night_drive.py`, `render/night_post.py` | A 3D night-drive render, kept as a fallback background (not used now) |
 | `render/svj_studio.py` | Car set-up shared by the renders (materials, SVJ wing and splitter); also an older studio scene |
 | `render/post.py` | The grade (contrast, bloom on the lamps, vignette) |
+| `assets/simnow-logo.webp`, `assets/simnow-wordmark.svg` | Their logo badge (footer, favicon), and the name from it traced to a vector for the nav, where the whole badge is too small to read |
+| `render/trace_logo.py` | Traces the SIMNOW lettering out of the badge into `simnow-wordmark.svg` (needs `pip install potracer`); rerun if they change their logo |
 | `render/clean_clip.py` | Prepares a TikTok clip: cuts the end card, paints out the watermark, turns it upright, encodes MP4 + WebM |
 | `render/upscale.py` | Real-ESRGAN 4x photo upscaler in plain numpy (used for `assets/drive/card.webp`) |
 

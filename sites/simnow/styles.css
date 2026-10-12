@@ -212,7 +212,9 @@ address { font-style: normal; }
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
-.nav__logo img { width: auto; height: 30px; }
+.nav__logo { display: block; padding: 4px 0; }
+.nav__logo img { display: block; width: auto; height: 22px; transition: transform 300ms var(--ease-out); }
+.nav__logo:hover img { transform: translateX(2px); }
 .nav__links { display: flex; gap: clamp(14px, 2vw, 28px); }
 .nav__links a {
   position: relative;
@@ -476,7 +478,8 @@ address { font-style: normal; }
 /* footer */
 .footer { padding: 70px 0 50px; border-top: 1px solid var(--hair); }
 .footer__inner { display: grid; gap: 14px; justify-items: start; color: var(--text-muted); font-size: 0.9rem; }
-.footer__logo img { height: 40px; width: auto; }
+.footer__logo { display: block; margin-bottom: 6px; }
+.footer__logo img { display: block; height: 92px; width: auto; }   /* the full badge, big enough to read */
 .footer__credit { font-size: 0.8rem; opacity: 0.8; }
 
 /* ---------- responsive ---------- */
