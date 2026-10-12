@@ -1,9 +1,9 @@
-/* SimNow: a black screen, the Lambo's headlights come on, the night comes in
+/* SimNow: a black screen, the car's tail lights come on, the night comes in
  * around them as it drives, and the site opens over it.
  *
  * The background is one looping clip (assets/drive/drive.mp4|webm; footage by
  * @supercar_driven, used with permission). The intro draws it through
- * js/lights.js (headlights first); where WebGL is missing it fades up from
+ * js/lights.js (tail lights first); where WebGL is missing it fades up from
  * black instead. Then the hero appears, and the chapters fade in and out over
  * the drive as you scroll.
  */
@@ -234,7 +234,7 @@ async function boot() {
   }
   if (introDone) return;   // skipped while the clip was starting
   if (lights) {
-    // black, the headlights come on, then the night around them; the site
+    // black, the tail lights come on, then the night around them; the site
     // opens as it does
     lights.run({
       onOpen: () => finishIntro(false),

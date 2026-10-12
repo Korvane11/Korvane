@@ -29,3 +29,8 @@
 2026-10-12 16:03 [Korvane] session-start scan: files=7 parsed=7 principles=0
 2026-10-12 16:48 [observation-log] session-start scan: files=7 parsed=7 principles=0
 2026-10-12 16:51 [Korvane] checkpoint after 3 tasks (photos, copy, contact): no new observations; applying 0005 (re-check the intro beats) and 0006 (hit-test every control) in the test pass
+2026-10-12 17:30 loaded task-observer — 1 open observations
+2026-10-12 17:30 [Korvane] workspace: created=none
+2026-10-12 17:30 [Korvane] session-start scan: files=7 parsed=7 principles=0
+2026-10-12 17:45 [Korvane] checkpoint after tasks 22-24 (clip clean, tail-light intro, layout): 0008 logged
+2026-10-12 17:45 [Korvane] session-start scan: files=8 parsed=8 principles=0

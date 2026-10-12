@@ -25,23 +25,30 @@ Sim racing lounge, 3790 Silverton Rd NE, Suite C, Salem, OR 97305.
 Live site: https://www.simnowusa.com. Brand red `#d0312c` / `#f0605a` on
 near-black.
 
-- What the owner wants (in their words): the site opens on black, the Lambo's
+- What the owner wants (in their words): the site opens on black, the car's
   lights come on "driving at night", then the whole site opens and "the
-  background is just the lambo driving around". The SVJ photo they sent
-  (their own) only identifies the car: do NOT put the photo on the site
-  ("Don't use that picture as the background"). Their earlier "car polish"
-  reel set the quality bar (cinematic, photographic).
-- The background is a clip the owner sent: night-drive footage by the TikTok
-  creator @supercar_driven, used with their permission (owner confirmed),
-  credited in the footer. TikTok watermark removed with ffmpeg delogo (left
-  box x10 y466 176x80 until t=5.0 s, then bottom-right x392 y710 174x80),
-  audio stripped: `assets/drive/drive.mp4|webm` (576x1024, vertical). Phones:
-  full screen; desktop: right-side panel feathered into the page. The intro
-  (`js/lights.js`, WebGL) shows only the headlights at first: they flicker on,
-  the night spreads out around them, the site opens, then it hands back to the
-  plain video (no WebGL: a fade from black). The lamp zone is measured for this
-  clip's first shot; a new clip needs it re-measured (README). If the creator's original file
-  turns up, swap it in (README "Replacing the clip").
+  background is just the lambo driving around". On 2026-10-12 they swapped
+  the clip and asked for the tail lights, not the headlights, to come on in
+  the opening. The SVJ photo they sent (their own) only identifies their
+  taste in cars: do NOT put the photo on the site ("Don't use that picture
+  as the background"). Their earlier "car polish" reel set the quality bar
+  (cinematic, photographic).
+- The background is a clip the owner sent: a black Porsche 911 GT3 RS at
+  night (they call it "the lambo"), by TikTok creator @nghtstlkr.idn, used
+  with permission (owner confirmed, including the watermark removal) and
+  credited in the footer.
+  - Prepared with `render/clean_clip.py`: first 12.7 s kept (TikTok end
+    card cut), watermark inpainted pixel by pixel (left until frame 150,
+    then bottom-right), rotated upright from sideways storage, audio
+    stripped. Result: `assets/drive/drive.mp4|webm`, 1024x576 landscape.
+  - Desktop: full-screen background. Phones: a band across the top.
+  - Intro (`js/lights.js`, WebGL): black, the red light bar blinks twice,
+    sweeps on from the middle, the night spreads out, the site opens. Then
+    it hands back to the plain video (no WebGL: a fade from black).
+  - `CLIP` in lights.js is measured on this clip's first shot; a new clip
+    needs it re-measured (README).
+- The previous clip (@supercar_driven, a Lamborghini, headlights intro) is
+  replaced; it's still in git history (commit c95d87d and earlier).
 - Fallback, not used: a 3D night-drive render (`render/night_drive.py`,
   `night_post.py`; Blender 5.2 via the `bpy` pip package, ~20-30 s a frame,
   light tree off, emission sampling NONE). Stock video sites, Sketchfab,
