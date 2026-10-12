@@ -6,3 +6,5 @@
 2026-10-12 01:19 [Korvane] workspace: created=none
 2026-10-12 01:19 [Korvane] session-start scan: files=2 parsed=2 principles=0
 2026-10-12 01:38 [Korvane] checkpoint after 3rd completed todo: no new observations (PyTorch-on-CPU friction judged environment-specific)
+2026-10-12 02:43 loaded task-observer — 0 open observations
+2026-10-12 02:43 [Korvane] session-start scan: files=2 parsed=2 principles=0
