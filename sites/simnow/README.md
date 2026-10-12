@@ -44,7 +44,7 @@ Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
 | `render/svj_studio.py` | Car set-up shared by the renders (materials, SVJ wing and splitter); also an older studio scene |
 | `render/post.py` | The grade (contrast, bloom on the lamps, vignette) |
 | `render/clean_clip.py` | Prepares a TikTok clip: cuts the end card, paints out the watermark, turns it upright, encodes MP4 + WebM |
-| `render/upscale.py` | Real-ESRGAN 4x photo upscaler in plain numpy (used for the card and social images) |
+| `render/upscale.py` | Real-ESRGAN 4x photo upscaler in plain numpy (used for `assets/drive/card.webp`) |
 
 ## The tail-lights intro
 
