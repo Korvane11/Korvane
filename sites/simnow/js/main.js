@@ -1,19 +1,15 @@
-/* SimNow: a black screen, the Lambo's lights come on, then the site opens
- * over the car driving at night.
+/* SimNow: a black screen, then a Lambo comes out of the dark with its lights
+ * on, driving at night, and the site opens over it.
  *
- * Two videos rendered by render/night_drive.py:
- *   intro  black, the running lights flicker on, the beams hit the road, the
- *          street lights switch on down the highway (plays once)
- *   loop   the car cruising down the wet highway (seamless, plays forever)
- * The loop's first frame matches the intro's last, so the hand-over is
- * invisible. The chapters fade in and out over the drive as you scroll.
+ * The background is one looping clip (assets/drive/drive.mp4|webm; footage by
+ * @supercar_driven, used with permission). It fades up from black, the hero
+ * appears, and the chapters fade in and out over the drive as you scroll.
  */
 const { gsap, ScrollTrigger, Lenis } = window;
 
 const $ = (s) => document.querySelector(s);
 const body = document.body;
-const intro = $('#introVideo');
-const loop = $('#loopVideo');
+const video = $('#driveVideo');
 const shade = $('#filmShade');
 const loader = $('#loader');
 const loaderBar = $('#loaderBar');
@@ -26,9 +22,8 @@ const chapters = [...document.querySelectorAll('.chapter')];
 
 const params = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const small = Math.min(screen.width, screen.height) < 700 || navigator.connection?.saveData;
-const ext = document.createElement('video').canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';
-const src = (name) => `assets/drive/${name}-${small ? 854 : 1280}.${ext}`;
+const ext = video.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';
+const FADE_IN = 1.6;   // seconds of black-to-drive before the site opens
 
 let lenis = null;
 let introDone = false;
@@ -77,7 +72,7 @@ function setStory(p) {
   storyBar.style.transform = `scaleX(${p.toFixed(4)})`;
 }
 
-/* ---------------------------------------------------------------- videos */
+/* ---------------------------------------------------------------- video */
 function ready(v) {
   return new Promise((resolve) => {
     if (v.readyState >= 3) { resolve(); return; }
@@ -88,21 +83,11 @@ function ready(v) {
   });
 }
 
-let loopStarted = false;
-function startLoop() {
-  if (loopStarted) return;
-  loopStarted = true;
-  loop.currentTime = 0;
-  const hideIntro = () => intro.classList.add('is-hidden');
-  loop.addEventListener('playing', hideIntro, { once: true });
-  loop.play().catch(hideIntro);
-}
-
 // Save battery: pause the drive when the tab is hidden.
 document.addEventListener('visibilitychange', () => {
-  if (!loopStarted || reduced) return;
-  if (document.hidden) loop.pause();
-  else loop.play().catch(() => {});
+  if (reduced) return;
+  if (document.hidden) video.pause();
+  else video.play().catch(() => {});
 });
 
 /* ---------------------------------------------------------------- intro */
@@ -127,10 +112,8 @@ function revealHero(instant) {
 function finishIntro(instant = false) {
   if (introDone) return;
   introDone = true;
-  if (instant) {
-    intro.pause();
-    startLoop();
-  }
+  video.classList.add('is-on');
+  if (instant) video.play().catch(() => {});
   setStory(0);
   body.classList.remove('is-intro');
   loader.classList.add('is-done');
@@ -191,7 +174,7 @@ document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 /* ---------------------------------------------------------------- boot */
 async function boot() {
   buildSegments(chapters.length);
-  loop.src = src('loop');
+  video.src = `assets/drive/drive.${ext}`;
 
   if (reduced) {
     // No intro and no motion: the poster frame sits behind stacked content.
@@ -200,34 +183,31 @@ async function boot() {
     loader.classList.add('is-done');
     nav.classList.add('is-visible');
     shade.classList.add('is-on');
-    intro.classList.add('is-hidden');
-    loop.preload = 'none';
+    video.classList.add('is-on');
+    video.preload = 'none';
     return;
   }
 
-  intro.src = src('intro');
   skipBtn.addEventListener('click', () => finishIntro(true));
   if (params.has('skip')) { finishIntro(true); return; }
 
   loaderBar.style.transform = 'scaleX(0.35)';
-  await Promise.all([ready(intro), ready(loop)]);
+  await ready(video);
   loaderBar.style.transform = 'scaleX(1)';
   loaderLabel.textContent = '';
   if (introDone) return;
   loader.classList.add('is-done');
 
   try {
-    await intro.play();
+    await video.play();
   } catch {
-    finishIntro(true);   // autoplay refused: go straight to the drive
+    finishIntro(true);   // autoplay refused: show the site with the poster
     return;
   }
-  intro.addEventListener('ended', () => { startLoop(); finishIntro(false); }, { once: true });
-  // open the site as the last street lights come on
-  intro.addEventListener('timeupdate', () => {
-    if (!introDone && intro.duration && intro.currentTime >= intro.duration - 0.5) finishIntro(false);
-  });
+  // black, then the car drives out of the dark; the site opens behind it
+  requestAnimationFrame(() => video.classList.add('is-on'));
+  setTimeout(() => finishIntro(false), FADE_IN * 1000);
 }
 
-if (params.has('debug')) window.__simnow = { setStory, intro, loop };
+if (params.has('debug')) window.__simnow = { setStory, video };
 boot();

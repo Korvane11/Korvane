@@ -21,17 +21,18 @@
 <body class="is-intro">
   <a class="skip-link" href="#main">Skip to main content</a>
 
-  <!-- Black screen while the video loads; the intro then turns the Lambo's lights on. -->
+  <!-- Black screen while the video loads; then the Lambo comes out of the dark. -->
   <div class="loader" id="loader" aria-hidden="true">
     <div class="loader__meter"><span id="loaderBar"></span></div>
     <p class="loader__label" id="loaderLabel">Warming up</p>
   </div>
   <button class="skip-intro" type="button" id="skipIntro">Skip intro</button>
 
-  <!-- The background: the Lambo driving at night (render/night_drive.py) -->
+  <!-- The background: a Lambo driving at night (footage: @supercar_driven, used with permission) -->
   <div class="film" aria-hidden="true">
-    <video class="film__video" id="loopVideo" muted playsinline loop preload="auto" poster="assets/drive/poster.webp"></video>
-    <video class="film__video film__video--intro" id="introVideo" muted playsinline preload="auto"></video>
+    <div class="film__frame">
+      <video class="film__video" id="driveVideo" muted playsinline loop preload="auto" poster="assets/drive/poster.webp"></video>
+    </div>
     <div class="film__shade" id="filmShade"></div>
   </div>
   <div class="grain" aria-hidden="true"></div>
@@ -146,7 +147,7 @@
           <div class="bento">
             <article class="card card--wide reveal">
               <div class="card__core">
-                <img class="card__img" src="assets/drive/card.webp" alt="A matte black Lamborghini driving on a wet highway at night" loading="lazy" width="1280" height="720">
+                <img class="card__img" src="assets/drive/card.webp" alt="A Lamborghini with its headlights on, driving at night" loading="lazy" width="1600" height="686">
                 <div class="card__body">
                   <p class="card__tag">Weekly</p>
                   <h3>Community race nights</h3>
@@ -225,6 +226,7 @@
         <div class="container footer__inner">
           <a class="nav__logo footer__logo" href="#top"><img src="assets/simnow-logo.png" alt="SimNow" width="358" height="200" loading="lazy"></a>
           <p>Salem's sim racing destination. 3790 Silverton Rd NE, Suite C, Salem, OR 97305</p>
+          <p class="footer__credit">Night drive footage: <a href="https://www.tiktok.com/@supercar_driven" target="_blank" rel="noopener">@supercar_driven</a>, used with permission.</p>
           <p class="footer__copy">&copy; <span id="year">2026</span> SimNow</p>
         </div>
       </footer>

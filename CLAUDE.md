@@ -31,27 +31,26 @@ near-black.
   (their own) only identifies the car: do NOT put the photo on the site
   ("Don't use that picture as the background"). Their earlier "car polish"
   reel set the quality bar (cinematic, photographic).
-- Stock video sites (Pexels, Pixabay, Mixkit, Coverr, Vimeo), Sketchfab,
-  Hugging Face and Poly Haven are all blocked from this container; the owner
-  chose a 3D render over sending a filmed clip.
-- The background is a Blender render: `render/night_drive.py` (matte black
-  Lamborghini on a wet highway at night, street lights, tracking camera,
-  motion blur), graded and encoded by `render/night_post.py` into
-  `assets/drive/` (intro plays once, loop is seamless; MP4 + WebM at 1280 and
-  854). `js/main.js` plays intro then loop under the page, chapters fade over
-  it on scroll. Blender 5.2 Cycles via the `bpy` pip package; ~20-30 s a frame
-  here, about an hour for all 192 frames; run in the background, existing
-  frames are skipped. Keep the light tree off and emission sampling at NONE.
+- The background is a clip the owner sent: night-drive footage by the TikTok
+  creator @supercar_driven, used with their permission (owner confirmed),
+  credited in the footer. TikTok watermark removed with ffmpeg delogo (left
+  box x10 y466 176x80 until t=5.0 s, then bottom-right x392 y710 174x80),
+  audio stripped: `assets/drive/drive.mp4|webm` (576x1024, vertical). Phones:
+  full screen; desktop: right-side panel feathered into the page. `js/main.js`
+  fades it up from black, then opens the site. If the creator's original file
+  turns up, swap it in (README "Replacing the clip").
+- Fallback, not used: a 3D night-drive render (`render/night_drive.py`,
+  `night_post.py`; Blender 5.2 via the `bpy` pip package, ~20-30 s a frame,
+  light tree off, emission sampling NONE). Stock video sites, Sketchfab,
+  Hugging Face and Poly Haven are blocked from this container.
 - `?skip` skips the intro, `?debug` exposes `window.__simnow`.
 - Playwright's Chromium has no H.264, so tests get the WebM; real browsers
   get the MP4 (chosen with `canPlayType`).
 - Run: `cd sites/simnow && python3 -m http.server 8000`.
 - Test with Playwright (node, CommonJS `require('playwright')`) against
   Chromium at `/opt/pw-browsers/chromium`.
-- The car model is a Lamborghini Aventador from github.com/saikat111/car-3d
-  with SVJ parts added in code. Its licence is unknown: it's a placeholder
-  until a licensed SVJ (e.g. a CC BY one from Sketchfab, which this container
-  can't reach) is swapped in and re-rendered.
+- The 3D fallback's car model (an Aventador from github.com/saikat111/car-3d,
+  SVJ parts added in code) has an unknown licence.
 - Still needed from SimNow: booking link, original logo file, phone and
   socials.
 
