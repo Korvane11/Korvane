@@ -25,30 +25,26 @@ Sim racing lounge, 3790 Silverton Rd NE, Suite C, Salem, OR 97305.
 Live site: https://www.simnowusa.com. Brand red `#d0312c` / `#f0605a` on
 near-black.
 
-- The owner's references: a photo of a matte black Aventador SVJ on a wet
-  street, and a "car polish website" reel (dark studio, spotlights switching
-  on one by one, haze, wet mirror floor, macro detail shots scrubbed by
-  scroll). The site follows both.
-- The SVJ photo is the owner's own (they confirmed) and is what the site
-  shows: `js/photo.js` puts it on a canvas with live headlight glow, rain, a
-  night grade and a camera per chapter. Black screen, the headlights flicker
-  on, the street fades up, then the hero. The copy they sent was 415x739; it
-  was upscaled 4x with Real-ESRGAN (`render/upscale.py`, numpy only; PyTorch
-  from PyPI pulls ~5 GB of CUDA libraries here) and graded by
-  `render/photo_prep.py`. Ask for the full-size original.
-- Optional second stage, off by default (`<html data-stage="film">` turns it
-  on): a Blender film scrubbed by scroll. The owner rejected the stand-in
-  Aventador model ("I want it to look like the picture"), so it waits for a
-  real SVJ model.
-- The film is rendered, not real-time: Blender 5.2 Cycles via the `bpy` pip
-  package (`sites/simnow/render/`), graded by `post.py` into WebP frames under
-  `assets/film/`. A 1280x720 frame takes about 30 s on this 4-core box, so a
-  full re-render is a couple of hours; run it in the background and resume
-  (existing frames are skipped). Keep the light tree off and emission
-  sampling at NONE: the emissive headlight meshes otherwise double the time.
-- `js/main.js` draws frames on a canvas (GSAP ScrollTrigger + Lenis).
-  `?skip` skips the intro, `?debug` exposes `window.__simnow` (call
-  `setStory(p)` to jump to a scroll position).
+- What the owner wants (in their words): the site opens on black, the Lambo's
+  lights come on "driving at night", then the whole site opens and "the
+  background is just the lambo driving around". The SVJ photo they sent
+  (their own) only identifies the car: do NOT put the photo on the site
+  ("Don't use that picture as the background"). Their earlier "car polish"
+  reel set the quality bar (cinematic, photographic).
+- Stock video sites (Pexels, Pixabay, Mixkit, Coverr, Vimeo), Sketchfab,
+  Hugging Face and Poly Haven are all blocked from this container; the owner
+  chose a 3D render over sending a filmed clip.
+- The background is a Blender render: `render/night_drive.py` (matte black
+  Lamborghini on a wet highway at night, street lights, tracking camera,
+  motion blur), graded and encoded by `render/night_post.py` into
+  `assets/drive/` (intro plays once, loop is seamless; MP4 + WebM at 1280 and
+  854). `js/main.js` plays intro then loop under the page, chapters fade over
+  it on scroll. Blender 5.2 Cycles via the `bpy` pip package; ~20-30 s a frame
+  here, about an hour for all 192 frames; run in the background, existing
+  frames are skipped. Keep the light tree off and emission sampling at NONE.
+- `?skip` skips the intro, `?debug` exposes `window.__simnow`.
+- Playwright's Chromium has no H.264, so tests get the WebM; real browsers
+  get the MP4 (chosen with `canPlayType`).
 - Run: `cd sites/simnow && python3 -m http.server 8000`.
 - Test with Playwright (node, CommonJS `require('playwright')`) against
   Chromium at `/opt/pw-browsers/chromium`.

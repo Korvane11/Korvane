@@ -21,16 +21,17 @@
 <body class="is-intro">
   <a class="skip-link" href="#main">Skip to main content</a>
 
-  <!-- Black screen while the first frames load; the film then plays the headlights on. -->
+  <!-- Black screen while the video loads; the intro then turns the Lambo's lights on. -->
   <div class="loader" id="loader" aria-hidden="true">
     <div class="loader__meter"><span id="loaderBar"></span></div>
     <p class="loader__label" id="loaderLabel">Warming up</p>
   </div>
   <button class="skip-intro" type="button" id="skipIntro">Skip intro</button>
 
-  <!-- The film: rendered frames drawn by scroll -->
+  <!-- The background: the Lambo driving at night (render/night_drive.py) -->
   <div class="film" aria-hidden="true">
-    <canvas class="film__canvas" id="film"></canvas>
+    <video class="film__video" id="loopVideo" muted playsinline loop preload="auto" poster="assets/drive/poster.webp"></video>
+    <video class="film__video film__video--intro" id="introVideo" muted playsinline preload="auto"></video>
     <div class="film__shade" id="filmShade"></div>
   </div>
   <div class="grain" aria-hidden="true"></div>
@@ -92,7 +93,7 @@
           <p class="chapter__text">Strap into a professional racing simulator and feel every kerb, every brake zone, every corner.</p>
         </div>
 
-        <div class="chapter chapter--right" data-chapter="2">
+        <div class="chapter" data-chapter="2">
           <p class="chapter__index"><span>02</span> / 05</p>
           <h2 class="chapter__title">Rent by <em>the hour.</em></h2>
           <p class="chapter__text">Solo practice, head-to-head with friends, or a whole night chasing a personal best.</p>
@@ -104,13 +105,13 @@
           <p class="chapter__text">First time in a seat or hunting tenths, we get you set up with the wheel and pedals dialled in.</p>
         </div>
 
-        <div class="chapter chapter--right" data-chapter="4">
+        <div class="chapter" data-chapter="4">
           <p class="chapter__index"><span>04</span> / 05</p>
           <h2 class="chapter__title">Race <em>nights.</em></h2>
           <p class="chapter__text">Every week, Salem's sim drivers line up on the same grid.</p>
         </div>
 
-        <div class="chapter chapter--end" data-chapter="5">
+        <div class="chapter" data-chapter="5">
           <p class="chapter__index"><span>05</span> / 05</p>
           <h2 class="chapter__title">Take it <em>home.</em></h2>
           <p class="chapter__text">New and pre-owned sim racing gear, with delivery and set-up available.</p>
@@ -145,10 +146,7 @@
           <div class="bento">
             <article class="card card--wide reveal">
               <div class="card__core">
-                <picture>
-                  <source media="(max-width: 900px)" srcset="assets/photo/svj-sm.webp">
-                  <img class="card__img" src="assets/photo/svj-card.webp" alt="A matte black Lamborghini Aventador SVJ parked on a wet street" loading="lazy" width="1600" height="686">
-                </picture>
+                <img class="card__img" src="assets/drive/card.webp" alt="A matte black Lamborghini driving on a wet highway at night" loading="lazy" width="1280" height="720">
                 <div class="card__body">
                   <p class="card__tag">Weekly</p>
                   <h3>Community race nights</h3>
@@ -197,7 +195,6 @@
       </section>
 
       <section class="section visit" id="visit" aria-labelledby="visit-title">
-        <img class="visit__bg" src="assets/photo/svj-sm.webp" alt="" loading="lazy" width="1080" height="1923">
         <div class="container visit__grid">
           <div class="visit__info reveal">
             <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Visit</p>
