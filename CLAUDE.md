@@ -54,14 +54,18 @@ near-black.
   Chromium at `/opt/pw-browsers/chromium`.
 - The 3D fallback's car model (an Aventador from github.com/saikat111/car-3d,
   SVJ parts added in code) has an unknown licence.
-- Still needed from SimNow: booking link, original logo file, phone and
-  socials.
+- Contact (from their current site, via web search): 971-345-2568,
+  Info@SimNowUSA.com; on the Visit section, footer and the JSON-LD listing.
+  Their site also lists consulting, weekly community races and a grand
+  opening on 5/15/2026.
+- Still needed from SimNow: booking link, hourly prices, original logo file,
+  socials (a TikTok account exists; handle not found).
 - The current SimNow site (www.simnowusa.com) is blocked by this
   environment's network policy (403 at the proxy; the web fetch tool can't
-  reach it either). Reading it needs the owner to add `simnowusa.com` and
+  reach it either). WebSearch does reach it (search summaries of the
+  homepage). Reading it directly needs the owner to add `simnowusa.com` and
   `www.simnowusa.com` under Allowed domains in the environment's Network
-  access settings, plus any image CDN the site uses. Until then, use
-  screenshots or pasted text from the owner.
+  access settings, plus any image CDN the site uses.
 
 ## Skills
 

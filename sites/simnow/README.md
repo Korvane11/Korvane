@@ -106,8 +106,13 @@ glTF, check its licence, and re-render. The part and material names in
 ## Still needed from SimNow
 
 - The booking link (the "Book a sim" buttons jump to the Visit section).
+- Hourly prices.
 - The original logo file (the current one was taken from a screenshot).
-- Phone number and social links, if they should appear.
+- Social links, if they should appear.
+
+Phone and email (971-345-2568, Info@SimNowUSA.com) come from their current
+site and are on the Visit section, the footer and the JSON-LD listing in
+`index.html`.
 
 ## Licences
 
