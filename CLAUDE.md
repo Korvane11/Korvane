@@ -19,6 +19,13 @@ and gets committed.
 - Don't install API proxies that reroute Claude Code's traffic (OmniRoute,
   Headroom and the like).
 
+## Starting a new site
+
+`prompts/site-blueprint.md` is the brief to open a new client site with
+(fill in the fields, paste it). It's our own, written from the SimNow
+lessons; the owner asked for one after seeing a creator's "master
+blueprint" reel, which was not copied.
+
 ## SimNow (`sites/simnow/`)
 
 Sim racing lounge, 3790 Silverton Rd NE, Suite C, Salem, OR 97305.
