@@ -1,8 +1,8 @@
 # SimNow website
 
 A one-page site for SimNow, Salem's sim racing lounge. It opens on a black
-screen, then a Lamborghini drives out of the dark with its headlights on, at
-night, and the site opens over it. The car keeps driving behind everything:
+screen, the Lamborghini's headlights flicker on in the dark, the night
+spreads out around them as the car drives, and the site opens over it. The car keeps driving behind everything:
 the hero, five scroll chapters, and (dimmed) the info sections: how it works,
 the experience, gear shop, visit.
 
@@ -30,12 +30,32 @@ Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
 | --- | --- |
 | `index.html` | Content: hero, five chapters, info sections |
 | `styles.css` | Layout and brand tokens (`--brand`, `--black`, …) |
-| `js/main.js` | Background clip (fade in from black), scroll chapters (GSAP ScrollTrigger + Lenis), nav, reveals |
+| `js/main.js` | Intro and background clip, scroll chapters (GSAP ScrollTrigger + Lenis), nav, reveals |
+| `js/lights.js` | The headlights-first intro: draws the clip through WebGL so only the headlights show (with a bloom), then reveals the scene and hands back to the `<video>` |
 | `assets/drive/` | The clip (MP4 + WebM), its poster frame and the race-nights card image |
 | `render/night_drive.py`, `render/night_post.py` | A 3D night-drive render, kept as a fallback background (not used now) |
 | `render/svj_studio.py` | Car set-up shared by the renders (materials, SVJ wing and splitter); also an older studio scene |
 | `render/post.py` | The grade (contrast, bloom on the lamps, vignette) |
 | `render/upscale.py` | Real-ESRGAN 4x photo upscaler in plain numpy, kept for future photos |
+
+## The headlights intro
+
+`js/lights.js` runs for the first ~4 seconds (the clip plays at 0.8x under
+it). Timeline: black, two blinks at 0.35 s, lamps up by 1.3 s, the scene
+spreads out from the lamps from 1.6 s, the site opens at 2.1 s, and at
+3.9 s the canvas fades out over the plain video, just before the clip's first
+cut (3.1 s of footage). On desktop the clip sits in the middle of the screen
+during the intro, then slides to the right as the site opens. On phones the
+crop starts on the car, so both lamps are in view, then pans to centre.
+Without WebGL the clip just fades up from black.
+
+The lamp zone in the shader (`zone()`, about 43-53% down the frame and 24-99%
+across) is where the headlights sit in this clip's first shot. A different
+clip needs it re-measured, or other bright lights will show through.
+
+To check the intro, `?debug` exposes `window.__simnow.lights.timeline`: pause
+it, seek, and set `video.currentTime` to 0.8x the timeline time. Headless
+screenshots are too slow to catch it in real time.
 
 ## The 3D night drive (fallback, not used now)
 
@@ -63,7 +83,8 @@ python3 -I night_post.py raw ../assets
 
 With a better copy of the footage (ideally the creator's original file, which
 has no watermark and a higher resolution), re-encode it as `drive.mp4` and
-`drive.webm` and replace the poster:
+`drive.webm` and replace the poster (and re-measure the lamp zone, see
+above):
 
 ```bash
 ffmpeg -i original.mp4 -an -c:v libx264 -preset slow -crf 21 -pix_fmt yuv420p -movflags +faststart assets/drive/drive.mp4

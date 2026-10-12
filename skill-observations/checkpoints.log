@@ -15,3 +15,5 @@
 2026-10-12 14:10 [Korvane] workspace: created=none
 2026-10-12 14:10 [Korvane] session-start scan: files=4 parsed=4 principles=0
 2026-10-12 14:11 [Korvane] no observations — post-compaction resume: protocol ran first; polish pass (desktop + phone screenshots) found nothing to fix
+2026-10-12 14:40 loaded webapp-testing — 0 open observations
+2026-10-12 14:40 loaded playwright-cli — 0 open observations

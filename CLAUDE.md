@@ -36,8 +36,11 @@ near-black.
   credited in the footer. TikTok watermark removed with ffmpeg delogo (left
   box x10 y466 176x80 until t=5.0 s, then bottom-right x392 y710 174x80),
   audio stripped: `assets/drive/drive.mp4|webm` (576x1024, vertical). Phones:
-  full screen; desktop: right-side panel feathered into the page. `js/main.js`
-  fades it up from black, then opens the site. If the creator's original file
+  full screen; desktop: right-side panel feathered into the page. The intro
+  (`js/lights.js`, WebGL) shows only the headlights at first: they flicker on,
+  the night spreads out around them, the site opens, then it hands back to the
+  plain video (no WebGL: a fade from black). The lamp zone is measured for this
+  clip's first shot; a new clip needs it re-measured (README). If the creator's original file
   turns up, swap it in (README "Replacing the clip").
 - Fallback, not used: a 3D night-drive render (`render/night_drive.py`,
   `night_post.py`; Blender 5.2 via the `bpy` pip package, ~20-30 s a frame,

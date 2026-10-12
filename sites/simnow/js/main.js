@@ -1,10 +1,14 @@
-/* SimNow: a black screen, then a Lambo comes out of the dark with its lights
- * on, driving at night, and the site opens over it.
+/* SimNow: a black screen, the Lambo's headlights come on, the night comes in
+ * around them as it drives, and the site opens over it.
  *
  * The background is one looping clip (assets/drive/drive.mp4|webm; footage by
- * @supercar_driven, used with permission). It fades up from black, the hero
- * appears, and the chapters fade in and out over the drive as you scroll.
+ * @supercar_driven, used with permission). The intro draws it through
+ * js/lights.js (headlights first); where WebGL is missing it fades up from
+ * black instead. Then the hero appears, and the chapters fade in and out over
+ * the drive as you scroll.
  */
+import { createLights } from './lights.js';
+
 const { gsap, ScrollTrigger, Lenis } = window;
 
 const $ = (s) => document.querySelector(s);
@@ -23,7 +27,10 @@ const chapters = [...document.querySelectorAll('.chapter')];
 const params = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ext = video.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';
-const FADE_IN = 1.6;   // seconds of black-to-drive before the site opens
+const FADE_IN = 1.6;   // seconds of black-to-drive before the site opens (no-WebGL path)
+const INTRO_RATE = 0.8; // the first shot plays a little slow under the intro
+
+let lights = null;
 
 let lenis = null;
 let introDone = false;
@@ -113,7 +120,11 @@ function finishIntro(instant = false) {
   if (introDone) return;
   introDone = true;
   video.classList.add('is-on');
-  if (instant) video.play().catch(() => {});
+  if (instant) {
+    lights?.stop();
+    video.playbackRate = 1;
+    video.play().catch(() => {});
+  }
   setStory(0);
   body.classList.remove('is-intro');
   loader.classList.add('is-done');
@@ -196,18 +207,33 @@ async function boot() {
   loaderBar.style.transform = 'scaleX(1)';
   loaderLabel.textContent = '';
   if (introDone) return;
-  loader.classList.add('is-done');
 
+  lights = createLights(video, $('#lightsCanvas'));
+  if (lights) {
+    video.playbackRate = INTRO_RATE;
+    loader.style.transitionDuration = '250ms';   // black on black: get out of the lamps' way
+  }
+  loader.classList.add('is-done');
   try {
     await video.play();
   } catch {
     finishIntro(true);   // autoplay refused: show the site with the poster
     return;
   }
-  // black, then the car drives out of the dark; the site opens behind it
-  requestAnimationFrame(() => video.classList.add('is-on'));
-  setTimeout(() => finishIntro(false), FADE_IN * 1000);
+  if (introDone) return;   // skipped while the clip was starting
+  if (lights) {
+    // black, the headlights come on, then the night around them; the site
+    // opens as it does
+    lights.run({
+      onOpen: () => finishIntro(false),
+      onDone: () => { video.playbackRate = 1; },
+    });
+  } else {
+    // black, then the car drives out of the dark; the site opens behind it
+    requestAnimationFrame(() => video.classList.add('is-on'));
+    setTimeout(() => finishIntro(false), FADE_IN * 1000);
+  }
 }
 
-if (params.has('debug')) window.__simnow = { setStory, video };
+if (params.has('debug')) window.__simnow = { setStory, video, get lights() { return lights; } };
 boot();
