@@ -1,6 +1,6 @@
 ---
 id: 2
-title: "Check the stand-in asset against the owner's reference before starting hours of renders"
+title: "Check the stand-in asset against the owner's reference, and ask for the owner's own photos, before starting hours of renders"
 status: open
 type: open-source
 skill: []
@@ -34,6 +34,14 @@ in the asset itself (shape, parts, proportions) versus what differs in
 lighting and materials. If the asset differs, stop and get the exact asset
 (owner download, purchase, or network allowance) before the long render;
 only render a stand-in when the owner has agreed to one.
+
+**Second instance (same session):** after the stand-in was rejected, asking
+whether the reference photo was the owner's own turned up the best asset of
+all: the photo itself, which (upscaled, graded and animated with headlight
+glow and rain) met "as realistic as the picture" in under an hour, where the
+render route was blocked on a model only the owner could fetch. The cheap
+question ("is this photo yours, and do you have more?") belonged before any
+synthetic imagery was built.
 
 **Principle:** When the brief names a specific real object, fidelity of the
 source asset is a gate, not a polish item. Check it against the reference
