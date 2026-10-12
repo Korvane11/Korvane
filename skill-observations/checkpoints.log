@@ -11,3 +11,7 @@
 2026-10-12 03:08 [Korvane] session-start scan: files=4 parsed=4 principles=0
 2026-10-12 03:46 loaded task-observer — 1 open observations
 2026-10-12 03:46 [Korvane] session-start scan: files=4 parsed=4 principles=0
+2026-10-12 14:10 loaded task-observer — 1 open observations
+2026-10-12 14:10 [Korvane] workspace: created=none
+2026-10-12 14:10 [Korvane] session-start scan: files=4 parsed=4 principles=0
+2026-10-12 14:11 [Korvane] no observations — post-compaction resume: protocol ran first; polish pass (desktop + phone screenshots) found nothing to fix
