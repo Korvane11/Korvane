@@ -65,9 +65,12 @@ near-black.
     simnowusa.com/book#booking. Our "Book" buttons link there.
   - They also run event rentals (Oregon and the Pacific Northwest) and a
     retail paddock.
-- Still needed from SimNow: whether the new design replaces simnowusa.com
-  (if it does, booking has to keep running somewhere), and which of their
-  photos they want on it.
+- The owner asked for everything on their current site to be carried over
+  into our design (2026-10-12). That's done: prices, booking links, event
+  rentals, retail paddock, FAQ, contact (mailto form) and their photos. Keep
+  the two in step if their site changes.
+- Still needed from SimNow: whether the new design replaces simnowusa.com.
+  If it does, booking and the staff log-in have to keep running somewhere.
 - Network: the owner set this environment's Network access to Full on
   2026-10-12, so simnowusa.com loads (it was blocked before, 403 at the
   proxy).

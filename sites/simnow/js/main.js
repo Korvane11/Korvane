@@ -100,7 +100,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------------------------------------------------------------- intro */
 function revealHero(instant) {
   const hero = chapters[0];
-  const parts = [hero.querySelector('.eyebrow'), hero.querySelector('.hero__lead'), hero.querySelector('.hero__ctas')];
+  const parts = [hero.querySelector('.eyebrow'), hero.querySelector('.hero__lead'), hero.querySelector('.hero__ctas'), hero.querySelector('.hero__facts')];
   if (instant) {
     gsap.set(hero.querySelectorAll('.line > span'), { yPercent: 0, y: 0 });
     gsap.set(parts, { opacity: 1 });
@@ -109,7 +109,8 @@ function revealHero(instant) {
       .to(parts[0], { opacity: 1, duration: 1.2 }, 0)
       .fromTo(hero.querySelectorAll('.line > span'), { yPercent: 110, y: 0 }, { yPercent: 0, y: 0, duration: 1.4, stagger: 0.12 }, 0.1)
       .fromTo(parts[1], { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 1.2 }, 0.5)
-      .fromTo(parts[2], { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 1.2 }, 0.62);
+      .fromTo(parts[2], { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 1.2 }, 0.62)
+      .fromTo(parts[3], { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 1.2 }, 0.74);
   }
   nav.classList.add('is-visible');
   body.classList.add('is-ready');
@@ -173,6 +174,17 @@ document.querySelectorAll('a[href^="#"]').forEach((a) => {
     else if (target === 0) scrollTo({ top: 0 });
     else target.scrollIntoView();
   });
+});
+
+// "Send a note": no server here, so it opens the visitor's email app with
+// the note filled in (the form's mailto action is the no-JS fallback).
+const noteForm = $('#noteForm');
+noteForm?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const f = new FormData(noteForm);
+  const name = String(f.get('name') || '').trim();
+  const body = `${String(f.get('message') || '').trim()}\n\n${name}\n${String(f.get('email') || '').trim()}`;
+  location.href = `mailto:SimNowOR@gmail.com?subject=${encodeURIComponent(`Message from ${name || 'the website'}`)}&body=${encodeURIComponent(body)}`;
 });
 
 const io = new IntersectionObserver((entries) => {

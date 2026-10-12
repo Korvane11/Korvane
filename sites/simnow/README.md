@@ -33,6 +33,7 @@ Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
 | `js/main.js` | Intro and background clip, scroll chapters (GSAP ScrollTrigger + Lenis), nav, reveals |
 | `js/lights.js` | The headlights-first intro: draws the clip through WebGL so only the headlights show (with a bloom), then reveals the scene and hands back to the `<video>` |
 | `assets/drive/` | The clip (MP4 + WebM), its poster frame and the race-nights card image |
+| `assets/photos/` | SimNow's own shop and event photos, from their current site |
 | `render/night_drive.py`, `render/night_post.py` | A 3D night-drive render, kept as a fallback background (not used now) |
 | `render/svj_studio.py` | Car set-up shared by the renders (materials, SVJ wing and splitter); also an older studio scene |
 | `render/post.py` | The grade (contrast, bloom on the lamps, vignette) |
@@ -129,15 +130,21 @@ API and Stripe payments, so booking stays there and our buttons link to it.
 - **Retail paddock:** try before you buy, Salem pickup, setup help included,
   in stock and made to order. Nothing is listed yet; gear requests go by
   email.
-- **Images:** their logo (now `assets/simnow-logo.webp|png`). Shop and event
-  photos are at `https://simnowusa.com/assets/HomePage/Images/` and
-  `/assets/EventDetails/Images/`, but none are used here yet.
+- **Images:** their logo (`assets/simnow-logo.webp|png`). In
+  `assets/photos/`: their shop photos (`cockpits`, `driver`) in the
+  experience cards and their event photos (`event-*`) in the event rentals
+  cards. All are resized and recompressed from
+  `https://simnowusa.com/assets/HomePage/Images/` and
+  `/assets/EventDetails/Images/`.
+- **Contact:** their contact form posts to their own API. Ours has no
+  server, so "Send a note" opens the visitor's email app with the note
+  filled in (`js/main.js`).
 
 ## Still needed from SimNow
 
 - Whether this design replaces simnowusa.com. If it does, the booking app
-  (API and Stripe) has to keep running somewhere.
-- Which of their photos, if any, they want on the new site.
+  (API and Stripe) has to keep running somewhere, and so does the staff
+  log-in.
 
 ## Licences
 
