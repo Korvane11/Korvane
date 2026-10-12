@@ -1,15 +1,20 @@
 # SimNow website
 
 A one-page site for SimNow, Salem's sim racing lounge. The page opens on a
-black screen, the Lamborghini's headlights come on, the studio spotlights hit
-one by one, and then the hero appears. Scrolling moves the camera around the
-car (headlight, wheel, flank, rear, side profile) with one chapter per shot,
-then the info sections: how it works, the experience, gear shop, and visit.
+black screen, the Lamborghini's headlights flicker on, then the street fades
+up around the car with rain falling. Scrolling moves a camera over the photo
+(headlight, rain on the windscreen, the wing, a night look, the whole
+street) with one chapter per shot, then the info sections: how it works, the
+experience, gear shop, and visit.
 
-The car is not real-time 3D. It is rendered in Blender (Cycles) into frame
-sequences, and the page draws the frames on a canvas as you scroll. This is
-the same technique as the cinematic car sites it is modelled on, and it looks
-photographic on every device.
+The car is the owner's own photo of a matte black Aventador SVJ
+(`assets/photo/`), brought to life on a canvas by `js/photo.js`: live
+headlight glow, animated rain, a night grade and camera moves. The photo was
+4x upscaled with Real-ESRGAN and graded (see `render/`).
+
+There is also a second, optional stage: a pre-rendered Blender film of a 3D
+car (see "Rendered film" below). It is switched off until a licensed SVJ
+model is available.
 
 ## Run it locally
 
@@ -27,13 +32,31 @@ Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
 | --- | --- |
 | `index.html` | Content: hero, five chapters, info sections |
 | `styles.css` | Layout and brand tokens (`--brand`, `--black`, …) |
-| `js/main.js` | Frame loading, intro playback, scroll story (GSAP ScrollTrigger + Lenis) |
-| `assets/film/lg/` | 1280×720 frames for larger screens |
-| `assets/film/sm/` | 960×540 frames for phones |
-| `assets/film/hd/` | Sharper stills of the six key shots, shown while a chapter holds |
-| `assets/film/manifest.json` | Frame counts, key frames, and where the car sits in each frame |
-| `assets/stills/` | Stills used in the section cards and the visit background |
-| `render/` | The Blender scene and post-processing that produce all of the above |
+| `js/main.js` | Intro, scroll story (GSAP ScrollTrigger + Lenis), nav, reveals |
+| `js/photo.js` | The photo stage: headlight glow, rain, night grade, camera per chapter (`SHOTS`) |
+| `assets/photo/` | The graded photo (full size, phone size, card crop) |
+| `render/upscale.py` | Real-ESRGAN 4x upscaler in plain numpy (no PyTorch) |
+| `render/photo_prep.py` | Grades the upscaled photo and writes `assets/photo/` and `assets/og.jpg` |
+| `render/svj_studio.py`, `shots.py`, `post.py` | The optional Blender film (below) |
+
+## Updating the photo
+
+A sharper original makes the biggest difference: the current photo came in at
+415×739 and was upscaled. With a new photo:
+
+```bash
+cd sites/simnow/render
+python3 -I upscale.py RealESRGAN_x4plus.pth photo.jpg photo_x4.png   # skip for a full-size original
+python3 -I photo_prep.py photo_x4.png ../assets
+```
+
+Then check the headlight positions (`LIGHTS`) and the camera shots (`SHOTS`)
+at the top of `js/photo.js`; both are in 0..1 photo coordinates.
+
+## Rendered film (optional)
+
+To use the Blender film instead of the photo, render the frames, run
+`post.py`, and add `data-stage="film"` to the `<html>` tag.
 
 ## Re-rendering
 

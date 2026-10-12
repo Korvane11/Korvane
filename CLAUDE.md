@@ -29,11 +29,18 @@ near-black.
   street, and a "car polish website" reel (dark studio, spotlights switching
   on one by one, haze, wet mirror floor, macro detail shots scrubbed by
   scroll). The site follows both.
-- Black screen, the headlights come on, the spotlights hit, then the hero.
-  Scrolling scrubs a pre-rendered camera move around the car (headlight,
-  wheel, flank, rear, side profile), holding on each shot for a chapter, then
-  the info sections.
-- The car is rendered, not real-time: Blender 5.2 Cycles via the `bpy` pip
+- The SVJ photo is the owner's own (they confirmed) and is what the site
+  shows: `js/photo.js` puts it on a canvas with live headlight glow, rain, a
+  night grade and a camera per chapter. Black screen, the headlights flicker
+  on, the street fades up, then the hero. The copy they sent was 415x739; it
+  was upscaled 4x with Real-ESRGAN (`render/upscale.py`, numpy only; PyTorch
+  from PyPI pulls ~5 GB of CUDA libraries here) and graded by
+  `render/photo_prep.py`. Ask for the full-size original.
+- Optional second stage, off by default (`<html data-stage="film">` turns it
+  on): a Blender film scrubbed by scroll. The owner rejected the stand-in
+  Aventador model ("I want it to look like the picture"), so it waits for a
+  real SVJ model.
+- The film is rendered, not real-time: Blender 5.2 Cycles via the `bpy` pip
   package (`sites/simnow/render/`), graded by `post.py` into WebP frames under
   `assets/film/`. A 1280x720 frame takes about 30 s on this 4-core box, so a
   full re-render is a couple of hours; run it in the background and resume

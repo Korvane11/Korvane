@@ -1,10 +1,14 @@
-/* SimNow: black screen, the headlights come on, then the scroll film.
+/* SimNow: black screen, the headlights come on, then the scroll story.
  *
- * The car is pre-rendered (Blender Cycles, see render/) into frame sequences:
- *   intro  plays on its own once the first frames are in (headlights, spotlights)
- *   story  is scrubbed by scroll, holding on each key shot while its chapter shows
- * Each hold swaps in a sharper HD still of that shot.
+ * Two stages can drive the story:
+ * - photo (default): the owner's photo of the SVJ with live headlights and
+ *   rain; scrolling moves a camera over it (js/photo.js)
+ * - film: pre-rendered frame sequences (Blender, see render/), used when
+ *   assets/film/manifest.json exists: the intro plays on its own, the story is
+ *   scrubbed by scroll and each hold swaps in a sharper HD still
  */
+import { createPhotoStage, SHOTS } from './photo.js';
+
 const { gsap, ScrollTrigger, Lenis } = window;
 
 const $ = (s) => document.querySelector(s);
@@ -41,6 +45,7 @@ const state = {
 };
 
 let manifest = null;
+let photo = null;
 const seqs = { intro: [], story: [] };
 const hd = [];
 let lenis = null;
@@ -96,6 +101,7 @@ function resize() {
     canvas.width = cw;
     canvas.height = ch;
   }
+  photo?.resize();
   state.dirty = true;
 }
 
@@ -162,7 +168,7 @@ function drawImg(img, focus, alpha) {
 }
 
 function draw() {
-  if (!state.dirty) return;
+  if (photo || !state.dirty) return;
   state.dirty = false;
   ctx.fillStyle = BLACK;
   ctx.fillRect(0, 0, cw, ch);
@@ -195,15 +201,14 @@ const HOLDS = [0.7, 1, 1, 1, 1, 1.4];
 const MOVE = 1.15;
 let segments = [];
 
-function buildSegments() {
-  const keys = manifest.storyKeys;
+function buildSegments(count) {
   const out = [];
   let total = 0;
-  keys.forEach((frame, k) => {
+  for (let k = 0; k < count; k++) {
     out.push({ type: 'hold', k, w: HOLDS[k] ?? 1 });
     total += HOLDS[k] ?? 1;
-    if (k < keys.length - 1) { out.push({ type: 'move', k, w: MOVE }); total += MOVE; }
-  });
+    if (k < count - 1) { out.push({ type: 'move', k, w: MOVE }); total += MOVE; }
+  }
   let acc = 0;
   segments = out.map((s) => { const seg = { ...s, a: acc / total, b: (acc + s.w) / total }; acc += s.w; return seg; });
 }
@@ -216,15 +221,19 @@ function chapterPresence(k, seg, t) {
 }
 
 function setStory(p) {
-  if (!manifest) return;
-  const keys = manifest.storyKeys;
+  if (!segments.length) return;
   const seg = segments.find((s) => p <= s.b) || segments[segments.length - 1];
   const t = clamp((p - seg.a) / (seg.b - seg.a), 0, 1);
-  if (seg.type === 'hold') {
+  if (photo) {
+    if (seg.type === 'hold') photo.between(seg.k, seg.k, 0);
+    else photo.between(seg.k, seg.k + 1, t);
+  } else if (seg.type === 'hold') {
+    const keys = manifest.storyKeys;
     state.storyFrame = keys[seg.k];
     state.hdKey = seg.k;
     state.hdAlpha = 1;
   } else {
+    const keys = manifest.storyKeys;
     state.storyFrame = keys[seg.k] + t * (keys[seg.k + 1] - keys[seg.k]);
     // ease out of the still leaving, into the next still arriving
     if (t < 0.5) { state.hdKey = seg.k; state.hdAlpha = 1 - smooth(t / 0.12); }
@@ -371,16 +380,19 @@ function staticPage() {
 async function boot() {
   resize();
   addEventListener('resize', resize);
-  try {
-    manifest = await (await fetch('assets/film/manifest.json')).json();
-  } catch {
-    manifest = null;
+  // The rendered film is opt-in: <html data-stage="film"> once assets/film exists.
+  if (document.documentElement.dataset.stage === 'film') {
+    try {
+      manifest = await (await fetch('assets/film/manifest.json')).json();
+    } catch {
+      manifest = null;
+    }
   }
   if (!manifest || !manifest.sequences?.story) {
-    staticPage();
+    await photoBoot();
     return;
   }
-  buildSegments();
+  buildSegments(manifest.storyKeys.length);
   const intro = manifest.sequences.intro?.frames || 0;
   const story = manifest.sequences.story.frames;
   seqs.intro = new Array(intro).fill(null);
@@ -429,5 +441,41 @@ async function boot() {
   finishIntro(false);
 }
 
-if (params.has('debug')) window.__simnow = { state, seqs, hd, setStory, get manifest() { return manifest; } };
+async function photoBoot() {
+  body.classList.add('is-photo');
+  const small = (coarse && Math.min(innerWidth, innerHeight) < 820) || navigator.connection?.saveData;
+  photo = createPhotoStage(canvas, { src: `assets/photo/svj${small ? '-sm' : ''}.webp`, reduced });
+  photo.resize();
+  buildSegments(SHOTS.length);
+  loaderBar.style.transform = 'scaleX(0.2)';
+  const ok = await photo.load();
+  loaderBar.style.transform = 'scaleX(1)';
+  if (!ok) { photo = null; staticPage(); return; }
+  // only animate while the story is on screen
+  new IntersectionObserver(([en]) => (en.isIntersecting ? photo.start() : photo.stop()), { rootMargin: '10% 0px' }).observe(storyEl);
+
+  if (reduced) {
+    staticPage();
+    photo.between(0, 0, 0);
+    photo.start();
+    return;
+  }
+  skipBtn.addEventListener('click', () => finishIntro(true));
+  if (params.has('skip')) { finishIntro(true); return; }
+
+  loaderLabel.textContent = '';
+  loader.classList.add('is-done');
+  photo.start();
+  const t0 = performance.now();
+  await new Promise((resolve) => {
+    const tick = (now) => {
+      if (introDone || photo.intro((now - t0) / 1000)) return resolve();
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  finishIntro(false);
+}
+
+if (params.has('debug')) window.__simnow = { state, seqs, hd, setStory, get manifest() { return manifest; }, get photo() { return photo; } };
 boot();

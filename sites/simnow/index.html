@@ -145,7 +145,10 @@
           <div class="bento">
             <article class="card card--wide reveal">
               <div class="card__core">
-                <img class="card__img" src="assets/stills/rear.webp" alt="" loading="lazy" width="1600" height="900">
+                <picture>
+                  <source media="(max-width: 900px)" srcset="assets/photo/svj-sm.webp">
+                  <img class="card__img" src="assets/photo/svj-card.webp" alt="A matte black Lamborghini Aventador SVJ parked on a wet street" loading="lazy" width="1600" height="686">
+                </picture>
                 <div class="card__body">
                   <p class="card__tag">Weekly</p>
                   <h3>Community race nights</h3>
@@ -153,9 +156,9 @@
                 </div>
               </div>
             </article>
-            <article class="card reveal">
+            <article class="card card--type reveal">
               <div class="card__core">
-                <img class="card__img" src="assets/stills/wheel.webp" alt="" loading="lazy" width="1600" height="900">
+                <p class="card__big" aria-hidden="true">60<span>min</span></p>
                 <div class="card__body">
                   <p class="card__tag">By the hour</p>
                   <h3>Simulator rental</h3>
@@ -163,9 +166,9 @@
                 </div>
               </div>
             </article>
-            <article class="card reveal">
+            <article class="card card--type reveal">
               <div class="card__core">
-                <img class="card__img" src="assets/stills/headlight.webp" alt="" loading="lazy" width="1600" height="900">
+                <p class="card__big" aria-hidden="true">1st<span>lap</span></p>
                 <div class="card__body">
                   <p class="card__tag">All levels</p>
                   <h3>First lap to fastest lap</h3>
@@ -194,7 +197,7 @@
       </section>
 
       <section class="section visit" id="visit" aria-labelledby="visit-title">
-        <img class="visit__bg" src="assets/stills/profile.webp" alt="" loading="lazy" width="1600" height="900">
+        <img class="visit__bg" src="assets/photo/svj-sm.webp" alt="" loading="lazy" width="1080" height="1923">
         <div class="container visit__grid">
           <div class="visit__info reveal">
             <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Visit</p>
@@ -225,7 +228,6 @@
         <div class="container footer__inner">
           <a class="nav__logo footer__logo" href="#top"><img src="assets/simnow-logo.png" alt="SimNow" width="358" height="200" loading="lazy"></a>
           <p>Salem's sim racing destination. 3790 Silverton Rd NE, Suite C, Salem, OR 97305</p>
-          <p class="footer__credit" id="credit">Car renders made in Blender from a Lamborghini Aventador model (car-3d project by saikat111), modified to SVJ spec.</p>
           <p class="footer__copy">&copy; <span id="year">2026</span> SimNow</p>
         </div>
       </footer>
