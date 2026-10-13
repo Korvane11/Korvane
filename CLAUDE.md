@@ -202,7 +202,17 @@ Eleven Cafē: every page is `noindex` until they agree.
 - Q asked the tucson.com writer not to photograph his face: never show him.
 - Logo: their "ELEVEN cafē" lettering traced from their 720 px Facebook
   profile logo (`render/trace_logo.py`); icons are its first E.
-- Tests: `sites/eleven-cafe/tests/behave.cjs` (serve the site on port 8790).
+- The pour renders offline (`render/render_all.sh`, about 1.5 h on 4
+  cores, then `encode.sh` and `make_og.cjs`). The intro's last frame is the
+  steam loop's first, and the page keeps the pour on screen until the loop
+  has a frame showing (no black flash). If the shot changes, re-measure
+  `OPEN_AT` and `SHOT.hole` in `js/home.js` and the cup fractions in the
+  test (README "Rendering the pour again").
+- Checked 2026-10-13 in Chromium, desktop and phone:
+  `sites/eleven-cafe/tests/behave.cjs`, 65 of 65 (serve the site on port
+  8790 first; `PAGES_ONLY=1` and `VIEWS=desk|mob` narrow it). README
+  "Checked" lists what it covers.
+- Live at https://korvane11.github.io/Korvane/sites/eleven-cafe/.
 
 ## Skills
 

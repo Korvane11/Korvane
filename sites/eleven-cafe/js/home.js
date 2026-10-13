@@ -24,7 +24,7 @@ const START_WAIT = 2500;     // no picture by then: open on the still
 const OPEN_MS = 1150;        // the opening widening (matches the CSS transition)
 
 // each render's size and the opening around its cup, as fractions of the frame (x0, y0, x1, y1)
-const SHOT = tall ? { name: 'p', w: 900, h: 1600, hole: [0.13, 0.03, 0.87, 0.6] }
+const SHOT = tall ? { name: 'p', w: 900, h: 1600, hole: [0.16, 0.03, 0.84, 0.6] }
                   : { name: 'l', w: 1600, h: 900, hole: [0.415, 0.06, 0.815, 0.9] };
 const EXT = intro && intro.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';
 const src = (kind) => `assets/pour/${kind}-${SHOT.name}.${EXT}`;

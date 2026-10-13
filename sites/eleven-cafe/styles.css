@@ -380,6 +380,9 @@ a.line:hover strong { color: var(--gold); }
 }
 @media (min-aspect-ratio: 1/1) and (max-width: 1280px) {
   .hero__media img, .hero__media video { object-position: 18% 50%; }   /* js/home.js reads this for the opening */
+  /* the pour is centred in its opening, then slides right as the opening widens, to make room for the words */
+  .intro:not(.is-opening) .hero__media video { object-position: 50% 50%; }
+  .hero__media video { transition: object-position 1150ms var(--ease); }   /* both videos, so the steam takes over mid-slide in step */
 }
 @media (max-aspect-ratio: 1/1) {
   /* phones and tall windows: the cup sits high, the words below it */

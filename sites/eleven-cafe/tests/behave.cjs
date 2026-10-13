@@ -84,6 +84,39 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     await ctx.close();
   }
 
+  /* 1b. at many screen sizes the cup sits inside the opening, and the two videos slide in step */
+  if (!PAGES_ONLY) {
+    // the cup in each render, as fractions of the frame (handle to far rim, rim to foot), measured on the rendered frames
+    const CUP = { l: [0.45, 0.247, 0.781, 0.812], p: [0.222, 0.201, 0.764, 0.49] };
+    const sizes = [[360, 640, 1], [390, 844, 1], [430, 932, 1], [768, 1024, 1], [820, 1180, 1], [1024, 1366, 1], [1024, 768, 0], [1180, 820, 0], [1280, 720, 0], [1366, 768, 0], [1440, 900, 0], [1920, 1080, 0], [2560, 1080, 0]];
+    const bad = [];
+    for (const [w, h, mob] of sizes) {
+      const ctx = await b.newContext({ viewport: { width: w, height: h }, isMobile: !!mob, hasTouch: !!mob });
+      const p = await ctx.newPage(); watch(p, `fit ${w}x${h}`);
+      await p.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
+        const l = document.querySelector('.hero__loop'), i = document.querySelector('.hero__intro');
+        l?.addEventListener('playing', () => { window.__slide = [getComputedStyle(i).objectPosition, getComputedStyle(l).objectPosition]; }, { once: true });
+      }));
+      await p.goto(BASE);
+      await p.waitForFunction(() => document.querySelector('.hero__intro')?.currentTime > 1.6, null, { timeout: 15000 });
+      const m = await p.evaluate((CUP) => {
+        const media = document.getElementById('heroMedia'), v = document.querySelector('.hero__intro');
+        const S = matchMedia('(max-aspect-ratio: 1/1)').matches ? { n: 'p', w: 900, h: 1600 } : { n: 'l', w: 1600, h: 900 };
+        const vw = media.clientWidth, vh = media.clientHeight, k = Math.max(vw / S.w, vh / S.h), dw = S.w * k, dh = S.h * k;
+        const pos = getComputedStyle(v).objectPosition.split(' ').map((x) => parseFloat(x) / 100);
+        const ox = (vw - dw) * pos[0], oy = (vh - dh) * pos[1], c = CUP[S.n];
+        const e = document.querySelector('.hero__edge').getBoundingClientRect();
+        return [ox + c[0] * dw - e.left, oy + c[1] * dh - e.top, e.right - (ox + c[2] * dw), e.bottom - (oy + c[3] * dh)].map(Math.round).concat(e.left >= 0 && e.right <= vw ? 1 : 0);
+      }, CUP);
+      await p.waitForFunction(() => window.__slide, null, { timeout: 15000 }).catch(() => {});
+      const slide = await p.evaluate(() => window.__slide || ['?', '!']);
+      if (m.slice(0, 4).some((x) => x < 16) || !m[4]) bad.push(`${w}x${h} margins ${m.slice(0, 4)}`);
+      if (slide[0] !== slide[1]) bad.push(`${w}x${h} videos out of step at the hand-over: ${slide}`);
+      await ctx.close();
+    }
+    ok(`the cup sits inside the opening (16px+ clear) at ${sizes.length} screen sizes, videos in step at the hand-over`, !bad.length, bad.join('; '));
+  }
+
   /* 2. when it plays: on opening and refresh, not coming back from inside the site */
   if (!PAGES_ONLY) {
     const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });

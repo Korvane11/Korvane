@@ -12,6 +12,20 @@ into the website make sure you have a separate tab for the menu and stuff",
 Not yet approved by Eleven Cafē: every page carries
 `<meta name="robots" content="noindex">` until they agree. Remove it at launch.
 
+Live at https://korvane11.github.io/Korvane/sites/eleven-cafe/ (GitHub Pages
+from `main`).
+
+## Run it locally
+
+```bash
+cd sites/eleven-cafe
+python3 -m http.server 8790
+# open http://localhost:8790
+```
+
+`?skip` skips the opening, `?intro` plays it even after it has played this
+visit.
+
 ## Facts and where each one came from
 
 Read directly on 2026-10-13. Their Facebook page is the only source that is
@@ -106,6 +120,10 @@ motion: the still, no video. No JavaScript: the still and every word.
 7. **Phones:** the render is reframed (a portrait version with the cup in
    the top third), so the words sit on the dark counter under it; the nav
    folds into a full-screen menu with Call and Directions.
+8. **Narrower landscape screens** (a tablet on its side, up to 1280 px
+   wide): the frame sits further right (`object-position: 18%`) so the
+   words clear the cup. During the pour the cup is centred in its opening;
+   as the opening widens, both videos slide right together.
 
 ## Pages
 
@@ -130,7 +148,41 @@ motion: the still, no video. No JavaScript: the still and every word.
 | `assets/photos/` | Their two Facebook photos (390 px, the size Facebook serves logged out) |
 | `assets/fonts/` | Playfair and Be Vietnam Pro (latin, latin-ext, vietnamese) with their OFL licences |
 | `assets/icons/` | Phosphor icons (MIT), inlined into the pages |
-| `render/` | The pour shader (`pour.html`), the frame renderer (`render_pour.cjs`), `render_all.sh`, `encode.sh`, the logo tracer and the icon maker |
+| `render/` | The pour shader (`pour.html`), the frame renderer (`render_pour.cjs`), `render_all.sh`, `encode.sh`, the logo tracer, the icon maker and the link-preview maker (`make_og.cjs`, `og.html`) |
+| `tests/behave.cjs` | The browser checks (Playwright, Chromium); see Checked |
+
+## Checked
+
+2026-10-13, in Chromium, desktop (1440 x 900) and phone (390 x 844):
+`tests/behave.cjs`, 65 of 65, no page errors. Serve the site on port 8790,
+then `NODE_PATH=$(npm root -g) node tests/behave.cjs` (or pass the live
+address). `PAGES_ONLY=1` leaves out the opening; `VIEWS=desk` or `VIEWS=mob`
+times the opening in one layout.
+
+- The opening, both layouts: the pour shows through an opening in the
+  dark wall with nothing else on screen; the site opens about 3.55 s in;
+  the steam loop takes over with no black frame; the pause button works.
+- At 13 screen sizes, from 360 x 640 to 2560 x 1080: the cup sits inside
+  the opening with 16 px or more to spare, and the two videos are in step
+  at the hand-over.
+- When it plays: on opening and refresh; not when coming back to home from
+  another page; it does play when home is first reached from another page.
+- No video, or one that takes 6 s: the still comes up within 3 s.
+- Reduced motion and no JavaScript, every page: nothing hidden, no video.
+- Open-now status and today's row at seven moments of the week (Tucson
+  time).
+- The Vietnamese and the macron load from the site's own fonts.
+- Every control is 44 px or taller and not covered by anything; nothing is
+  wider than the screen; the phone menu opens, takes focus and closes with
+  Escape.
+- Share tags, one h1 per page, noindex, structured data, every file and
+  internal link.
+
+Each check written for a bug was first seen failing on the code before
+the fix: the black frame at the hand-over, the still left hidden after a
+failed video, the cup 7 px from the opening's edge at 1024 x 768, the
+videos out of step, and the font check (with the Vietnamese subset
+blocked).
 
 ## Rendering the pour again
 
