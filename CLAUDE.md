@@ -186,6 +186,17 @@ The main ones:
   (borrow a brand's system, never its identity), `redesign-existing-projects`.
 - Motion and 3D: `gsap-*`, `threejs-*`, `img2threejs`.
 - Testing: `playwright-cli`, `webapp-testing`.
+- Review: `web-design-guidelines` (Vercel's, added 2026-10-13; it fetches
+  Vercel's Web Interface Guidelines from GitHub each time, with a dated copy
+  in its `references/` if the fetch fails; origin and licence in its
+  `SOURCE.md`).
+- The owner's second "plugins" video (2026-10-13) named five: Taste Skill
+  (`design-taste-frontend`), Vercel Web Design Guidelines
+  (`web-design-guidelines`), Awesome DESIGN.md (`awesome-design-md`), Image
+  to Code (`image-to-code`) and Playwright CLI (`playwright-cli`). All five
+  are in `.claude/skills/`. `image-to-code` starts by generating design
+  images, and this environment has no image-generation tool, so it can't run
+  as written here.
 - Components: `21st-ui` (the 21st MCP in `.mcp.json` needs `API_KEY_21ST`
   and network access to 21st.dev).
 - Setup: `claude-automation-recommender` (Anthropic's Claude Code Setup
