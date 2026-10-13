@@ -1,0 +1,12 @@
+{
+  "name": "Eleven Cafē",
+  "short_name": "Eleven",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#121212",
+  "background_color": "#121212",
+  "display": "browser",
+  "start_url": "../../index.html"
+}

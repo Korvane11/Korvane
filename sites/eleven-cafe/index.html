@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Eleven Cafē | Espresso bar in downtown Tucson</title>
+  <meta name="description" content="Eleven Cafē: coffee, espresso, teas and more, and the cà phê sữa đá people come for. 33 N Stone Ave, downtown Tucson.">
+  <!-- not live for Eleven Cafē yet: keep it out of search results until they approve it -->
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://korvane11.github.io/Korvane/sites/eleven-cafe/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Eleven Cafē">
+  <meta property="og:title" content="Eleven Cafē | Espresso bar in downtown Tucson">
+  <meta property="og:description" content="Eleven Cafē: coffee, espresso, teas and more, and the cà phê sữa đá people come for. 33 N Stone Ave, downtown Tucson.">
+  <meta property="og:url" content="https://korvane11.github.io/Korvane/sites/eleven-cafe/">
+  <meta property="og:image" content="https://korvane11.github.io/Korvane/sites/eleven-cafe/assets/brand/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A white ribbed espresso cup with a gold ring handle, full of espresso, steam rising, and the Eleven Cafē wordmark.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://korvane11.github.io/Korvane/sites/eleven-cafe/assets/brand/og.jpg">
+  <meta name="theme-color" content="#121212">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="assets/brand/favicon.ico" sizes="48x48">
+  <link rel="icon" href="assets/brand/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <link rel="manifest" href="assets/brand/site.webmanifest">
+  <link rel="preload" href="assets/fonts/be-vietnam-pro-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/playfair-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" as="image" href="assets/pour/hero-l.webp" media="(min-aspect-ratio: 1/1)" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/pour/hero-p.webp" media="(max-aspect-ratio: 1/1)" fetchpriority="high">
+  <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add('js');</script>
+  <script>
+    /* the opening pour: plays when the site is opened (link, new tab, refresh), not when
+       coming back to this page from another page of the site after seeing it */
+    (function () {
+      var d = document.documentElement;
+      try {
+        var q = location.search, seen = sessionStorage.getItem('e11:poured') === '1', inside = false;
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        var how = nav && nav.type;
+        if (how === 'back_forward') inside = true;
+        else if (how !== 'reload' && document.referrer) {
+          var r = new URL(document.referrer);
+          inside = r.origin === location.origin && r.pathname.indexOf(new URL('./', location.href).pathname) === 0;
+        }
+        var skip = /[?&]skip\b/.test(q) || (seen && inside && !/[?&]intro\b/.test(q));
+        if (!skip && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          d.classList.add('intro');
+          setTimeout(function () { d.classList.remove('intro'); }, 9000);   /* never stuck on the wall */
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CafeOrCoffeeShop",
+  "@id": "https://korvane11.github.io/Korvane/sites/eleven-cafe/#cafe",
+  "name": "Eleven Cafē",
+  "url": "https://korvane11.github.io/Korvane/sites/eleven-cafe/",
+  "image": "https://korvane11.github.io/Korvane/sites/eleven-cafe/assets/brand/og.jpg",
+  "description": "Espresso bar in downtown Tucson: coffee, espresso, teas and Vietnamese iced coffee (cà phê sữa đá).",
+  "telephone": "+1-520-624-8852",
+  "email": "elevncafe@gmail.com",
+  "priceRange": "$",
+  "servesCuisine": [
+    "Coffee",
+    "Vietnamese coffee",
+    "Tea"
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "33 N Stone Ave, Suite 150",
+    "addressLocality": "Tucson",
+    "addressRegion": "AZ",
+    "postalCode": "85701",
+    "addressCountry": "US"
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+      ],
+      "opens": "07:00",
+      "closes": "14:00"
+    }
+  ],
+  "sameAs": [
+    "https://www.facebook.com/elevncafe/"
+  ]
+}
+  </script>
+</head>
+<body data-page="index">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="nav" id="nav">
+    <div class="container nav__inner">
+      <a class="wordmark" href="index.html"><img src="assets/brand/wordmark.svg" alt="Eleven Cafē, home" width="63" height="40"></a>
+      <nav class="nav__links" aria-label="Main"><a href="menu.html">Menu</a><a href="story.html">Our story</a><a href="visit.html">Visit</a></nav>
+      <a class="btn btn--gold nav__call" href="tel:+15206248852"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"/></svg>(520) 624-8852</a>
+      <button class="nav__toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg></button>
+    </div>
+  </header>
+  <div class="menu" id="menu" hidden>
+    <button class="menu__close" id="menuClose" type="button" aria-label="Close menu"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button>
+    <nav aria-label="Menu"><a href="index.html" aria-current="page">Home</a><a href="menu.html">Menu</a><a href="story.html">Our story</a><a href="visit.html">Visit</a></nav>
+    <div class="menu__actions">
+      <a class="btn btn--gold" href="tel:+15206248852"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"/></svg>Call (520) 624-8852</a>
+      <a class="btn btn--line" href="https://www.google.com/maps/dir/?api=1&amp;destination=33+N+Stone+Ave+Suite+150,+Tucson,+AZ+85701" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Get directions</a>
+    </div>
+  </div>
+
+  <main id="main">
+    <section class="hero" id="top" aria-label="Eleven Cafē">
+      <div class="hero__media" id="heroMedia">
+        <picture>
+          <source media="(max-aspect-ratio: 1/1)" type="image/webp" srcset="assets/pour/hero-p.webp">
+          <source media="(max-aspect-ratio: 1/1)" srcset="assets/pour/hero-p.jpg">
+          <source type="image/webp" srcset="assets/pour/hero-l.webp">
+          <img src="assets/pour/hero-l.jpg" alt="A white ribbed espresso cup with a gold ring handle, full of espresso with crema, steam rising, on a dark counter" width="1600" height="900" fetchpriority="high">
+        </picture>
+        <video class="hero__intro" muted playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>
+        <video class="hero__loop" muted playsinline loop preload="none" aria-hidden="true" tabindex="-1"></video>
+      </div>
+      <div class="hero__edge" aria-hidden="true"></div>
+      <button class="hero__pause" id="steamToggle" type="button" aria-pressed="false" aria-label="Pause the steam" hidden><svg class="icon icon--pause" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M200,32H160a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16h40a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm0,176H160V48h40ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Zm0,176H56V48H96Z"/></svg><svg class="icon icon--play" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></button>
+      <div class="container hero__copy">
+        <h1 class="hero__title">The hole in the wall that fills the gaps in your&nbsp;day.</h1>
+        <p class="hero__lead">Coffee, espresso, teas and more, made one cup at a time in downtown Tucson.</p>
+        <div class="hero__ctas">
+          <a class="btn btn--gold" href="menu.html">See the menu</a>
+          <a class="btn btn--line" href="https://www.google.com/maps/dir/?api=1&amp;destination=33+N+Stone+Ave+Suite+150,+Tucson,+AZ+85701" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Get directions</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="sig-title">
+      <div class="container split">
+        <div class="photo reveal"><picture><source type="image/webp" srcset="assets/photos/phins.webp"><img src="assets/photos/phins.jpg" alt="Three phin filters dripping coffee into glasses with condensed milk at the bottom, on the wooden counter at Eleven Cafē" width="390" height="390" loading="lazy" decoding="async"></picture></div>
+        <div class="split__copy reveal">
+          <span class="kicker">Vietnamese iced coffee</span>
+          <h2 class="section__title" id="sig-title" lang="vi">Cà phê sữa đá</h2>
+          <p>The drink people come for: coffee dripped slowly through a traditional phin onto condensed milk, then poured over ice.</p>
+          <figure class="quote quote--small"><blockquote><p>“Q is great, highly recommend the Vietnamese special!”</p></blockquote><figcaption><strong>Casey Good</strong>, on Facebook, February 2018</figcaption></figure>
+          <a class="link" href="menu.html"><span>See the menu</span><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section band statement" aria-label="Why Eleven">
+      <div class="container reveal">
+        <p class="statement__text">Q is the eleventh of eleven children. That&rsquo;s the <em>Eleven</em> in Eleven&nbsp;Cafē.</p>
+        <p class="statement__sub">He makes every cup by hand and knows most of his regulars by name, and their order too.</p>
+        <a class="link" href="story.html"><span>Our story</span><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="say-title">
+      <div class="container">
+        <h2 class="section__title section__title--gap reveal" id="say-title">What people say</h2>
+        <div class="quotes">
+          <div class="reveal"><figure class="quote"><blockquote><p>“I love this place. Tucson has a vast amount of coffee shops, this one is on my top 3. Best cappuccino of my life!!”</p></blockquote><figcaption><strong>Sally Marie</strong>, on Facebook, March 2020</figcaption></figure></div>
+          <div class="quotes__side reveal">
+            <figure class="quote quote--small"><blockquote><p>“Best Chai Latte Ever! You have to try it”</p></blockquote><figcaption><strong>Valarie Williams</strong>, on Facebook, June 2021</figcaption></figure>
+            <figure class="quote quote--small"><blockquote><p>“Best lattes downtown. Custom made by the owner!”</p></blockquote><figcaption><strong>Ellen Schaeffer</strong>, on Facebook, April 2019</figcaption></figure>
+          </div>
+        </div>
+        <p class="quotes__note reveal">100% of 11 reviewers recommend Eleven Cafē on <a href="https://www.facebook.com/elevncafe/reviews/" rel="noopener">Facebook</a>.</p>
+      </div>
+    </section>
+
+    <section class="section band" id="visit" aria-labelledby="visit-title">
+      <div class="container visit">
+        <div class="reveal">
+          <h2 class="section__title" id="visit-title">Come by.</h2>
+          <div class="visit__status"><p class="status"><span class="status__dot" aria-hidden="true"></span><span data-status>Monday to Friday, 7am to 2pm</span></p></div>
+          <address>33 N Stone Ave, Suite 150<br>Tucson, AZ 85701</address>
+          <p class="visit__find">At the southeast corner of Church and Pennington. The door is on Pennington Street.</p>
+          <div class="visit__ctas">
+            <a class="btn btn--gold" href="https://www.google.com/maps/dir/?api=1&amp;destination=33+N+Stone+Ave+Suite+150,+Tucson,+AZ+85701" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Get directions</a>
+            <a class="btn btn--line" href="tel:+15206248852"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"/></svg>(520) 624-8852</a>
+          </div>
+        </div>
+        <div class="hours-card reveal">
+          <h3>Hours</h3>
+          <dl class="hours"><div data-day="1"><dt>Monday</dt><dd>7am to 2pm</dd></div><div data-day="2"><dt>Tuesday</dt><dd>7am to 2pm</dd></div><div data-day="3"><dt>Wednesday</dt><dd>7am to 2pm</dd></div><div data-day="4"><dt>Thursday</dt><dd>7am to 2pm</dd></div><div data-day="5"><dt>Friday</dt><dd>7am to 2pm</dd></div><div data-day="6"><dt>Saturday</dt><dd>Closed</dd></div><div data-day="0"><dt>Sunday</dt><dd>Closed</dd></div></dl>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div>
+          <a class="wordmark" href="index.html"><img src="assets/brand/wordmark.svg" alt="Eleven Cafē, home" width="82" height="52" loading="lazy"></a>
+          <p class="footer__line">The hole in the wall that fills the gaps in your day.</p>
+        </div>
+        <div>
+          <h2>Visit</h2>
+          <ul><li>33 N Stone Ave, Suite 150</li><li>Tucson, AZ 85701</li><li>Monday to Friday, 7am to 2pm</li></ul>
+        </div>
+        <div>
+          <h2>Say hello</h2>
+          <ul><li><a href="tel:+15206248852">(520) 624-8852</a></li><li><a href="mailto:elevncafe@gmail.com">elevncafe@gmail.com</a></li><li><a href="https://www.facebook.com/elevncafe/" rel="noopener">Facebook</a></li></ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>&copy; <span data-year>2026</span> Eleven Cafē, Tucson, Arizona</p>
+        <p>Photos by Eleven Cafē. The cup is a 3D render of the cup in their logo.</p>
+      </div>
+    </div>
+  </footer>
+  <script type="module" src="js/site.js"></script>
+</body>
+</html>

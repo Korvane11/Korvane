@@ -176,6 +176,34 @@ approved by RC Cleaning: every page is `noindex` until they agree.
 - Live at https://korvane11.github.io/Korvane/sites/rc-cleaning/ (the root
   address still goes to SimNow).
 
+## Eleven Cafē (`sites/eleven-cafe/`)
+
+Espresso bar at 33 N Stone Ave, Suite 150, downtown Tucson (the door is on
+Pennington Street), owned by Dung "Q" Hoang. Their only page online is
+Facebook (facebook.com/elevncafe). Started 2026-10-13. Not yet approved by
+Eleven Cafē: every page is `noindex` until they agree.
+
+- The owner's words (2026-10-13, for an earlier coffee place, then "the same
+  format" for this one): "I want the opening of the website to kind of be an
+  animation at an espresso being poured then it opens up into the website
+  make sure you have a separate tab for the menu and stuff", "great and
+  clean", "make no mistakes".
+- The opening: their line "The hole in the wall that fills the gaps in your
+  day!" made literal. A dark wall; through an opening, espresso pours into a
+  white ribbed cup with a gold ring handle (their logo's cup, rendered in
+  3D by `render/pour.html`, offline, frame by frame); at 3.55 s the opening
+  widens into the site; a seamless steam loop carries on, with a pause
+  button. Beats, timing and how to re-render: the site README.
+- Facts and their sources (Facebook first; the 2021 tucson.com article and
+  Google's hours via Wanderlog only where they agree), the gaps to ask
+  about (still open? hours, menu and prices, photo originals): the site
+  README. No menu or prices are published anywhere, so the Menu page lists
+  only drinks their page and reviewers name, with no prices.
+- Q asked the tucson.com writer not to photograph his face: never show him.
+- Logo: their "ELEVEN cafē" lettering traced from their 720 px Facebook
+  profile logo (`render/trace_logo.py`); icons are its first E.
+- Tests: `sites/eleven-cafe/tests/behave.cjs` (serve the site on port 8790).
+
 ## Skills
 
 `.claude/skills/` holds the skills the owner installed for building sites.
