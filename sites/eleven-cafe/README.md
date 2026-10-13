@@ -157,7 +157,11 @@ motion: the still, no video. No JavaScript: the still and every word.
 `tests/behave.cjs`, 65 of 65, no page errors. Serve the site on port 8790,
 then `NODE_PATH=$(npm root -g) node tests/behave.cjs` (or pass the live
 address). `PAGES_ONLY=1` leaves out the opening; `VIEWS=desk` or `VIEWS=mob`
-times the opening in one layout.
+times the opening in one layout. The live site passed 65 of 65 too, on the
+second run: the first, a minute after the deploy, timed out waiting for
+the pour (a cold first request through this container's proxy); a trace
+right after showed the video playing 0.76 s after load. A stalled wait
+now reports a failed check instead of stopping the run.
 
 - The opening, both layouts: the pour shows through an opening in the
   dark wall with nothing else on screen; the site opens about 3.55 s in;

@@ -52,6 +52,7 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     const ctx = await b.newContext({ viewport: vp, isMobile: mob, hasTouch: mob });
     const p = await ctx.newPage(); watch(p, `intro ${v}`);
     await trackIntro(p);
+    try {
     await p.goto(BASE);
     // while the pour plays: the wall, an opening around the cup, nothing else
     await p.waitForFunction(() => document.querySelector('.hero__intro')?.currentTime > 1.5, null, { timeout: 15000 });
@@ -81,6 +82,7 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     await p.click('#steamToggle'); await p.waitForTimeout(500);
     const again = await p.evaluate(() => !document.querySelector('.hero__loop').paused);
     ok(`${v}: the pause button stops the steam and starts it again`, paused.paused && paused.pressed === 'true' && paused.label === 'Play the steam' && again, JSON.stringify({ ...paused, again }));
+    } catch (e) { ok(`${v}: the opening ran to the end`, false, e.message.split('\n')[0]); }   // a stalled wait is a failed check, not a crashed run
     await ctx.close();
   }
 
@@ -93,6 +95,7 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     for (const [w, h, mob] of sizes) {
       const ctx = await b.newContext({ viewport: { width: w, height: h }, isMobile: !!mob, hasTouch: !!mob });
       const p = await ctx.newPage(); watch(p, `fit ${w}x${h}`);
+      try {
       await p.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
         const l = document.querySelector('.hero__loop'), i = document.querySelector('.hero__intro');
         l?.addEventListener('playing', () => { window.__slide = [getComputedStyle(i).objectPosition, getComputedStyle(l).objectPosition]; }, { once: true });
@@ -112,6 +115,7 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
       const slide = await p.evaluate(() => window.__slide || ['?', '!']);
       if (m.slice(0, 4).some((x) => x < 16) || !m[4]) bad.push(`${w}x${h} margins ${m.slice(0, 4)}`);
       if (slide[0] !== slide[1]) bad.push(`${w}x${h} videos out of step at the hand-over: ${slide}`);
+      } catch (e) { bad.push(`${w}x${h} ${e.message.split('\n')[0]}`); }
       await ctx.close();
     }
     ok(`the cup sits inside the opening (16px+ clear) at ${sizes.length} screen sizes, videos in step at the hand-over`, !bad.length, bad.join('; '));
