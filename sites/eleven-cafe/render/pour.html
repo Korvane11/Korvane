@@ -31,40 +31,51 @@ const float LOOP    = 6.0;    // the steam loop's length
 const float G = 981.0;        // cm/s^2
 
 // ------------------------------------------------------------------ cup geometry (cm)
-// a wide, round stoneware bowl on a low foot, about 10 cm across, with a loop handle on its right
-const float H = 5.6, FOOT = 0.35, WALL = 0.30, YIN = 0.62, LMAX = 5.18;   // LMAX: filled near the rim, or the low camera sees no coffee over the near rim
+// the owner's photo of a stoneware cup: a wide round bowl, widest at the rim (about 10 cm), half as tall,
+// on a small flat base (0.44 of the rim); the side is close to a quarter ellipse; a narrow loop handle on its right
+const float H = 4.95, RB = 2.23, RR = 5.07, WALL = 0.30, YIN = 0.62, LMAX = H - 0.42;   // LMAX: near the rim, or the low camera sees no coffee
 const float PI = 3.14159265;
-
-float rBase(float y) {
-  float foot = 2.20 + 0.16 * smoothstep(0.0, FOOT, y);                    // the foot ring
-  float h = clamp((y - FOOT) / (H - FOOT), 0.0, 1.0);
-  float bowl = 2.45 + 2.62 * (1.0 - pow(1.0 - h, 2.1));                   // out fast, then nearly upright at the rim
-  return mix(foot, bowl, smoothstep(FOOT - 0.02, FOOT + 0.10, y));       // no step where they meet: a step breaks the distance estimate
-}
-float rOut(float y) { return rBase(y); }
-float rIn(float y) { return rBase(y) - WALL; }
 
 float smax(float a, float b, float k) { float h = clamp(0.5 + 0.5 * (a - b) / k, 0.0, 1.0); return mix(b, a, h) + k * h * (1.0 - h); }
 float smin(float a, float b, float k) { return -smax(-a, -b, k); }
 
-float sdCav(vec3 p) {                         // the inside of the bowl (negative inside)
-  float rho = length(p.xz), y = p.y, e = 0.01;
-  float ri = rIn(y), dri = (rIn(y + e) - rIn(y - e)) / (2.0 * e);
-  return smax((rho - ri) / sqrt(1.0 + dri * dri), YIN - y, 0.45);
+// exact distance to an ellipse (iterating on the nearest point, trig-free; three steps are plenty here):
+// an approximate one put rings into the occlusion, which reads the distance's size
+float sdEll(vec2 p, vec2 ab) {
+  vec2 pa = abs(p), t = vec2(0.70710678);
+  for (int i = 0; i < 3; i++) {
+    vec2 c = ab * t;
+    vec2 ev = vec2(ab.x * ab.x - ab.y * ab.y, ab.y * ab.y - ab.x * ab.x) * t * t * t / ab;   // the evolute
+    vec2 r = c - ev, q = pa - ev;
+    t = clamp((q * length(r) / max(length(q), 1e-6) + ev) / ab, 0.0, 1.0);
+    t /= max(length(t), 1e-6);
+  }
+  float d = length(pa - ab * t);
+  return dot(pa / ab, pa / ab) < 1.0 ? -d : d;
 }
-const vec3 HND_C = vec3(5.45, 3.30, 0.0);     // the loop's centre, right of the bowl
-const float HND_R = 1.12, HND_r = 0.30;
+float sdSide(vec3 p) {        // the bowl's outside, not yet cut at the rim: the flat base, and the quarter ellipse up to the rim
+  vec2 q = vec2(length(p.xz), p.y);
+  float e = sdEll(q - vec2(RB, H), vec2(RR - RB, H));
+  vec2 bq = abs(q - vec2(0.0, 0.5 * H)) - vec2(RB, 0.5 * H);
+  return min(e, length(max(bq, 0.0)) + min(max(bq.x, bq.y), 0.0));
+}
+float rOut(float y) { float s = clamp((y - H) / H, -1.0, 0.0); return RB + (RR - RB) * sqrt(1.0 - s * s); }
+float rIn(float y) { return rOut(y) - WALL; }   // close enough near the rim, where the coffee and the shading use it
+float sdCav(vec3 p) { return smax(sdSide(p) + WALL, YIN - p.y, 0.45); }   // the inside of the bowl (negative inside): an even wall
+const vec3 HND_C = vec3(5.68, 2.87, 0.0);     // the loop's centre: from just under the rim to about 70% of the way down
+const vec2 HND_AB = vec2(0.94, 1.14);         // taller than wide, as in the photo
+const float HND_r = 0.22;
 float sdHandle(vec3 p) {
   vec3 q = p - HND_C;
-  vec2 t = vec2(length(q.xy * vec2(1.0, 0.92)) - HND_R, q.z * 0.95);
-  return length(t) - HND_r;
+  float e = length(q.xy / HND_AB);
+  float g = max(length(q.xy / (HND_AB * HND_AB)) / max(e, 1e-4), 1.0 / HND_AB.y);
+  float dp = e < 1.0 ? (e - 1.0) * HND_AB.x : (e - 1.0) / g;   // inside the loop: a safe underestimate
+  return length(vec2(dp, q.z)) - HND_r;
 }
 float sdCup(vec3 p) {
-  float rho = length(p.xz), y = p.y, e = 0.01;
-  float ro = rOut(y), dro = (rOut(y + e) - rOut(y - e)) / (2.0 * e);
-  float body = smax((rho - ro) / sqrt(1.0 + dro * dro), max(-y, y - H), 0.07);
-  body = smin(body, sdHandle(p), 0.22);       // the handle grows out of the wall
-  return smax(body, -sdCav(p), 0.10);         // and nothing of it shows inside
+  float body = smax(sdSide(p), p.y - H, 0.05);
+  body = smin(body, sdHandle(p), 0.15);       // the handle grows out of the wall
+  return smax(body, -sdCav(p), 0.10);         // and nothing of it shows inside; the rim's lip comes out rounded
 }
 
 // ------------------------------------------------------------------ noise
@@ -85,6 +96,14 @@ float vnoiseW(vec3 x, float per) {
              mix(mix(hashW(i + vec3(0, 0, 1), per), hashW(i + vec3(1, 0, 1), per), f.x), mix(hashW(i + vec3(0, 1, 1), per), hashW(i + vec3(1, 1, 1), per), f.x), f.y), f.z);
 }
 float fbmW(vec3 p, float per) { float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * vnoiseW(p, per); p = vec3(p.x * 2.0 + 13.7, p.y * 2.0, p.z * 2.0 + 5.3); per *= 2.0; a *= 0.5; } return s; }
+// the glaze's specks: in some cells of a 0.2 cm lattice, one small round dot, 0.35-0.9 mm across
+float speck(vec3 p) {
+  vec3 c = floor(p * 5.0), f = p * 5.0 - c;
+  if (hash3(c + 11.3) > 0.55) return 0.0;
+  vec3 o = vec3(hash3(c + 1.7), hash3(c + 5.1), hash3(c + 9.4)) * 0.5 + 0.25;
+  float rd = 0.09 + 0.13 * pow(hash3(c + 3.3), 2.0);   // mostly small, a few larger
+  return smoothstep(rd, rd * 0.6, length(f - o));
+}
 float ign(vec2 px) { return fract(52.9829189 * fract(dot(px, vec2(0.06711056, 0.00583715)))); }   // interleaved gradient noise
 
 // ------------------------------------------------------------------ the pour over time
@@ -126,20 +145,18 @@ float sdDrips(vec3 p, float t, float L) {
   }
   return d;
 }
-float sdLiquid(vec3 p, float L) {
-  float rho = length(p.xz);
-  return max(max(rho - rIn(p.y) + 0.01, p.y - L), YIN - p.y);
-}
+float sdLiquid(vec3 p, float L) { return max(sdCav(p) + 0.01, p.y - L); }
 
 // ------------------------------------------------------------------ the cup's scene (raymarched)
 // materials: 1 stoneware, 3 coffee surface, 4 stream / drips
 bool gNoStream = false;   // shadow and occlusion rays ignore the thin stream (its bound shaded the crema)
+bool gOnlyHandle = false; // shadow rays from the bowl's outside: the bowl's own shading makes its terminator (see shadeHit)
 bool gExact = false;      // shadow rays need the cup's true distance: the bound's (smaller) one reads as a near miss, a false penumbra
 vec2 map(vec3 p, float t, float L) {
   vec2 r = vec2(1e3, 0.0);
   float bc = max(length(p.xz - vec2(0.85, 0.0)) - 6.6, max(-p.y - 0.1, p.y - H - 0.15));   // bound: the bowl and its handle
   if (bc < 0.6 || gExact) {
-    r = vec2(sdCup(p) * 0.8, 1.0);
+    r = vec2(gOnlyHandle ? sdHandle(p) : sdCup(p) * (gExact ? 1.0 : 0.8), 1.0);   // the 0.8 is a marching margin; shadows and occlusion want the true distance
     float l = sdLiquid(p, L);
     if (l < r.x) r = vec2(l, 3.0);
   } else r = vec2(bc, 1.0);
@@ -173,7 +190,7 @@ vec2 march(vec3 ro, vec3 rd, float t, float L, float tmax) {
   }
   return vec2(-1.0, 0.0);
 }
-float softShadow(vec3 ro, vec3 rd, float t, float L, float k) {
+float softShadow(vec3 ro, vec3 rd, float t, float L, float k, float jit) {
   // only the cup casts: skip rays that miss its bound
   vec3 bmin = vec3(-8.5, -0.2, -8.5), bmax = vec3(10.3, 9.0, 8.5);   // the cup and its penumbra
   vec3 inv = 1.0 / rd, t0 = (bmin - ro) * inv, t1 = (bmax - ro) * inv;
@@ -182,13 +199,14 @@ float softShadow(vec3 ro, vec3 rd, float t, float L, float k) {
   if (a >= b) return 1.0;
   gNoStream = true; gExact = true;
   // the closest pass between two samples, estimated from both
-  float res = 1.0, d = max(a, 0.03), ph = 1e10;
+  // the start and the steps are jittered per pass: rays skimming the cup's own surface otherwise step its shadow's edge
+  float res = 1.0, d = max(a, 0.03) + 0.03 * jit, ph = 1e10;
   for (int i = 0; i < 80; i++) {
     float h = map(ro + rd * d, t, L).x;
     float y = h * h / (2.0 * ph), e = sqrt(max(h * h - y * y, 0.0));
     res = min(res, k * e / max(d - y, 1e-4));
     ph = h;
-    d += clamp(h, 0.02, 0.5);
+    d += clamp(h, 0.02, 0.5) * (0.75 + 0.5 * fract(jit + float(i) * 0.618));
     if (res < 0.002 || d > b) break;
   }
   gNoStream = false; gExact = false;
@@ -196,9 +214,9 @@ float softShadow(vec3 ro, vec3 rd, float t, float L, float k) {
 }
 float ao(vec3 p, vec3 n, float t, float L) {
   float o = 0.0, s = 1.0;
-  gNoStream = true;
+  gNoStream = true; gExact = true;
   for (int i = 1; i <= 5; i++) { float h = 0.05 * float(i) * float(i); o += (h - map(p + n * h, t, L).x) * s; s *= 0.6; }
-  gNoStream = false;
+  gNoStream = false; gExact = false;
   return clamp(1.0 - 1.6 * o, 0.0, 1.0);
 }
 
@@ -405,21 +423,25 @@ vec3 shadeHit(vec3 p, vec3 rd, float m, float t, float L, float jit) {
   vec3 n = normalAt(p, t, L), v = -rd;
   float occ = ao(p, n, t, L);
   float sv = sunVis(p, jit);
-  float ss = sv > 0.002 ? softShadow(p + n * 0.012, SUN, t, L, 14.0) : 0.0;
+  // the bowl's outside takes shadow only from the handle: rays grazing the bowl (widest at the rim) banded its own shadow,
+  // and the wrapped light below already darkens it past the terminator; inside, the rim's shadow counts
+  bool outside = m < 1.5 && length(p.xz) > rIn(p.y) + 0.06 && dot(n.xz, p.xz) > 0.0;
+  gOnlyHandle = outside;
+  float ss = sv > 0.002 ? softShadow(p + n * 0.012, SUN, t, L, 10.0, jit) : 0.0;
+  gOnlyHandle = false;
   vec3 sun = SUNC * sv * ss;
   vec3 c;
-  if (m < 1.5) {                                  // speckled cream stoneware
-    vec3 alb = vec3(0.89, 0.87, 0.83) * (0.96 + 0.07 * vnoise(p * 1.4));
-    float fleck = max(smoothstep(0.74, 0.82, vnoise(p * 16.0)), 0.7 * smoothstep(0.80, 0.88, vnoise(p * 33.0 + 7.0)));
-    alb = mix(alb, vec3(0.40, 0.29, 0.20), fleck * 0.8);
-    float rim = smoothstep(H - 0.15, H - 0.05, p.y) * step(rIn(p.y) - 0.03, length(p.xz));   // the raw edge: unglazed clay
-    alb = mix(alb, vec3(0.62, 0.46, 0.32), rim);
+  if (m < 1.5) {                                  // white, finely speckled stoneware
+    vec3 alb = vec3(0.88, 0.885, 0.875) * (0.97 + 0.04 * vnoise(p * 1.2));   // a white glaze
+    alb = mix(alb, vec3(0.30, 0.25, 0.21), 0.85 * speck(p));                    // fine, sparse iron specks
+    float rim = smoothstep(H - 0.075, H - 0.025, p.y);                          // the lip: raw clay, a thin tan line
+    alb = mix(alb, vec3(0.72, 0.60, 0.46), rim);
     float wrap = max((dot(n, SUN) + 0.25) / 1.25, 0.0);
     float inside = step(length(p.xz), rIn(p.y) + 0.06) * step(dot(n.xz, p.xz), 0.0) * step(YIN, p.y);
     c = alb * (sun * wrap * 0.85 + ambient(n) * (1.0 + 0.6 * inside)) * occ;
     vec3 F = fres(vec3(0.04), max(dot(n, v), 0.0));
-    c += F * env(reflect(rd, n)) * occ * 0.75;
-    c += sun * ggx(n, v, SUN, 0.16) * 0.35;
+    c += F * env(reflect(rd, n)) * occ * 0.85 * (1.0 - rim);
+    c += sun * ggx(n, v, SUN, 0.10) * 0.60 * (1.0 - rim);                     // glossy, like the photo
   } else if (m < 3.5) {                           // the coffee in the cup
     vec3 sn = surfNormal(p, t);
     vec3 alb = cremaColor(p, t, L);
@@ -469,7 +491,7 @@ vec4 render(vec3 ro, vec3 rd, float t, float jit) {
       float nearK = smoothstep(30.0, 22.0, near);
       if (nearK > 0.0) {
         float sv = sunVis(p, jit);
-        float sh = sv > 0.002 ? softShadow(p + vec3(0, 0.01, 0), SUN, t, L, 5.0) : 1.0;
+        float sh = sv > 0.002 ? softShadow(p + vec3(0, 0.01, 0), SUN, t, L, 5.0, jit) : 1.0;
         float occ = mix(1.0, ao(p, vec3(0, 1, 0), t, L), smoothstep(7.0, 3.0, near));
         vec3 alb = woodAlb(p.xz);
         c -= alb * SUNC * sv * SUN.y * (1.0 - sh) * nearK;

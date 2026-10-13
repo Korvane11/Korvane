@@ -86,9 +86,11 @@ using". The scene's cup is modelled on it (the photo itself is not on the
 site).
 
 1. **The scene** (`render/pour.html`, a WebGL raymarcher rendered offline
-   frame by frame): that mug, a wide round bowl of speckled cream
-   stoneware with a thin raw brown rim, a low foot and a loop handle, on a
-   walnut counter by a tall window, late in the day. Low amber
+   frame by frame): that mug, a wide round bowl of white, finely speckled,
+   glossy stoneware, widest at the rim and half as tall, on a small flat
+   base, with a thin raw tan lip and a narrow loop handle (proportions
+   measured on the photo), on a walnut counter by a tall window, late in
+   the day. Low amber
    sun comes through the panes in stripes, the air is hazy with it, and
    everything but the cup is in soft focus. The light comes up from black
    (0.75 s), espresso pours in from above, crema rises, the stream stops
@@ -249,15 +251,24 @@ Depth is kept as the nearest value over the passes (an average at the
 cup's edge would belong to neither the cup nor the background, and the soft
 focus would spray the edge into the background).
 
-Shadow rays use the cup's exact distance (`gExact`), never the bounding
-cylinder's: the soft shadow reads a small distance as a near miss, so the
-bound drew a false, saw-toothed penumbra on the counter. The cup's profile
-(`rBase`) has no steps for the same reason: a jump in radius breaks the
-distance estimate and frays the silhouette.
+The cup (`sdSide`, `sdHandle`): a flat base of radius `RB` and a quarter
+ellipse up to the rim (`RR`, height `H`), measured on the owner's photo;
+the wall is an even offset of the outside (`sdCav`), and the coffee fills
+that cavity up to `LMAX`.
+
+Shadow and occlusion rays read the cup's exact distance (`gExact`): the
+ellipse distance is solved exactly, and neither the bounding cylinder's
+distance nor the 0.8 marching margin is used. Both effects read the
+distance's size, so an approximate one shows: the bound drew a false,
+saw-toothed penumbra on the counter, and an approximate ellipse put rings
+into the occlusion. The bowl's outside takes shadow only from the handle
+(`gOnlyHandle`): rays grazing the bowl, which is widest at the rim, banded
+its own shadow, and the wrapped light already darkens it past the
+terminator. Shadow rays are jittered per pass.
 
 The coffee is filled close to the rim (`LMAX`): the camera is low, and with
-a wide bowl the near rim hides the far wall below about 4.8 cm, so a lower
-level shows an empty-looking cup.
+a wide bowl the near rim hides the far wall's lower part, so a lower level
+shows an empty-looking cup.
 
 If the framing or the cup changes, re-measure the cup's fractions of the
 frame (`CUP_L`, `CUP_P` at the top of `tests/behave.cjs`): the test checks

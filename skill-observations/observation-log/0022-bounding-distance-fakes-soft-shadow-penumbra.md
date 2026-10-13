@@ -1,6 +1,6 @@
 ---
 id: 22
-title: "Raymarched soft shadow showed a saw-tooth edge: far from the object the scene returned a bounding volume's distance, and the soft shadow, which reads the distance's size as how near the ray passed, drew a false penumbra; shortening the step only made the teeth finer"
+title: "Raymarched effects that read the distance's size (soft shadow, occlusion) showed artefacts wherever the distance was only a bound or an approximation: a saw-toothed false penumbra from a bounding volume, rings from an approximate ellipse distance; shortening the step only made the teeth finer"
 status: open
 type: open-source
 skill: []
@@ -9,12 +9,12 @@ target_file: []
 siblings_checked: "reuses the open candidate scroll-film-renders (0001, 0002, 0005, 0008, 0009, 0019, 0021) as the home for rendered cinematic footage; threejs-* skills checked by name and description: real-time shadow maps, not signed-distance soft shadows, assumed not to cover this, not read; no other installed skill raymarches; checked, new-skill material"
 area: "Offline frame rendering: signed-distance soft shadows in a scene that skips the exact distance outside a bounding volume"
 date: 2026-10-13
-session_context: "Eleven Cafē site: swapping the cup in the opening scene for the owner's stoneware mug; the first full-size preview showed teeth along the mug's shadow on the counter"
+session_context: "Eleven Cafē site: swapping the cup in the opening scene for the owner's stoneware mug; the first full-size preview showed teeth along the mug's shadow on the counter; the photo-matched rebuild then showed rings from the occlusion"
 parked_until:
 resolved:
 resolution:
 reference: "sites/eleven-cafe/render/pour.html (map(): gExact; softShadow(): the wider box and the closest-pass estimate)"
-commands_verified: "run: the same 1600x900 frame three ways (scratch copies): reflection off, teeth stay; cup shadow on the counter off, teeth gone. run: step capped at 0.32 instead of 0.8 plus the closest-pass estimate: teeth about 2.5 times finer, not gone. run: shadow rays forced to the exact distance (gExact) in a box widened by 3 cm: teeth gone, frame time 7 s to 8 s"
+commands_verified: "run: the same 1600x900 frame three ways (scratch copies): reflection off, teeth stay; cup shadow on the counter off, teeth gone. run: step capped at 0.32 instead of 0.8 plus the closest-pass estimate: teeth about 2.5 times finer, not gone. run: shadow rays forced to the exact distance (gExact) in a box widened by 3 cm: teeth gone, frame time 7 s to 8 s. run (second instance): approximate ellipse distance, rings on the body; self-shadow off, rings stay; occlusion off, rings gone; exact ellipse distance with gExact during occlusion, rings gone"
 ---
 
 **Issue:** The scene's distance function returned a bounding cylinder's
@@ -31,6 +31,17 @@ shadow) found the layer in two renders.
 
 The same bounding box also clipped the penumbra: shadow rays that missed the
 box returned "fully lit" while the penumbra reached beyond it.
+
+**Second instance, same session:** the cup was rebuilt from the owner's
+photo with a quarter-ellipse profile, first using a common approximate
+ellipse distance (`k0 * (k0 - 1) / k1`). The cup came out with faint
+concentric rings on its body. Turning off self-shadow left them; turning
+off ambient occlusion removed them. The occlusion samples the field at set
+heights above the surface and compares the result with those heights, so
+it read the approximation's error as occlusion (and the 0.8 marching margin
+in the scene function biased it everywhere). Fixed with an exact ellipse
+distance (three iterations of a trig-free nearest-point solve) and the
+exact flag set while occlusion samples.
 
 **Suggested improvement:** For the candidate skill, in the post effects /
 lighting section for offline raymarched renders:
