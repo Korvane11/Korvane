@@ -55,7 +55,14 @@ function startLoop() {
   if (reduced || !loop) return;
   if (!loop.getAttribute('src')) loop.src = src('loop');   // the pour may have readied it already; setting it again reloads it
   loop.preload = 'auto';
-  loop.addEventListener('playing', () => { loop.classList.add('is-on'); intro?.classList.remove('is-on'); if (pauseBtn) pauseBtn.hidden = false; }, { once: true });
+  loop.addEventListener('playing', () => {
+    loop.classList.add('is-on');
+    if (pauseBtn) pauseBtn.hidden = false;
+    // the pour stays underneath until the loop has a frame on screen (the loop's first frame is the pour's last), so no black flash
+    const off = () => intro?.classList.remove('is-on');
+    if (loop.requestVideoFrameCallback) loop.requestVideoFrameCallback(() => requestAnimationFrame(off));
+    else setTimeout(off, 500);
+  }, { once: true });
   loop.play().catch(() => {});
   // keep it going: browsers pause muted video to save power; play again unless the tab is hidden or the visitor paused it
   loop.addEventListener('pause', () => { if (!userPaused && !document.hidden && !loop.ended) loop.play().catch(() => {}); });

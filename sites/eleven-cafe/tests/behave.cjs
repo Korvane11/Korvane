@@ -1,6 +1,7 @@
 // Browser checks for the Eleven Cafē site. Serve sites/eleven-cafe on port 8790, then:
 //   NODE_PATH=$(npm root -g) node tests/behave.cjs [base URL]
-// PAGES_ONLY=1 leaves out the opening (sections 1-3), for checking the pages before the pour is rendered.
+// PAGES_ONLY=1 leaves out the opening (sections 1-3), for checking the pages before the pour is rendered;
+// VIEWS=desk (or mob) times the opening in one layout only.
 const { chromium } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:8790/';
 const PAGES = ['index.html', 'menu.html', 'story.html', 'visit.html'];
@@ -20,7 +21,8 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
   // record when the opening's stages happen, from navigation start
   const trackIntro = (p) => p.addInitScript(() => {
     // intro: whether html.intro was ever set; done: when it was removed again (never, if it was never set)
-    window.__t = { intro: false, playing: null, opening: null, done: null, loop: null };
+    // loopFrame: the loop's first frame on screen once playing; pourOff: when the pour was hidden
+    window.__t = { intro: false, playing: null, opening: null, done: null, loop: null, loopFrame: null, pourOff: null };
     const watchRoot = (root) => {
       const see = () => {
         const t = performance.now();
@@ -37,13 +39,16 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     document.addEventListener('DOMContentLoaded', () => {
       const intro = document.querySelector('.hero__intro');
       if (intro) intro.addEventListener('playing', () => { if (window.__t.playing === null) window.__t.playing = performance.now(); });
+      if (intro) new MutationObserver(() => { if (!intro.classList.contains('is-on') && window.__t.playing !== null && window.__t.pourOff === null) window.__t.pourOff = performance.now(); }).observe(intro, { attributes: true });
       const loop = document.querySelector('.hero__loop');
       if (loop) loop.addEventListener('playing', () => { if (window.__t.loop === null) window.__t.loop = performance.now(); });
+      // the first frame the loop puts on screen once playing (a preloaded loop can show its first frame long before)
+      if (loop) loop.addEventListener('playing', () => loop.requestVideoFrameCallback?.(() => { if (window.__t.loopFrame === null) window.__t.loopFrame = performance.now(); }), { once: true });
     });
   });
 
   /* 1. the opening: the beats, in order, at the right times */
-  if (!PAGES_ONLY) for (const [v, vp, mob] of [['desk', { width: 1440, height: 900 }, false], ['mob', { width: 390, height: 844 }, true]]) {
+  if (!PAGES_ONLY) for (const [v, vp, mob] of [['desk', { width: 1440, height: 900 }, false], ['mob', { width: 390, height: 844 }, true]].filter(([v]) => !process.env.VIEWS || process.env.VIEWS.split(',').includes(v))) {
     const ctx = await b.newContext({ viewport: vp, isMobile: mob, hasTouch: mob });
     const p = await ctx.newPage(); watch(p, `intro ${v}`);
     await trackIntro(p);
@@ -68,6 +73,7 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     const opensAt = end.t.opening - end.t.playing;
     ok(`${v}: it opens up into the site about 3.5 s into the pour`, opensAt > 3000 && opensAt < 4300 && /inset\(0px( 0px)*( round 0px)?\)|none/.test(end.clip) && end.nav === '1' && end.copy === '1', JSON.stringify({ opensAt: Math.round(opensAt), clip: end.clip, nav: end.nav, copy: end.copy }));
     ok(`${v}: the steam loop takes over, with a pause button`, end.loopOn && end.loopPlaying && end.pause && end.t.loop > end.t.opening, JSON.stringify({ loopAt: Math.round(end.t.loop), opening: Math.round(end.t.opening) }));
+    ok(`${v}: no black frame at the hand-over: the pour stays up until the loop has a frame on screen`, end.t.loopFrame !== null && (end.t.pourOff === null || end.t.pourOff >= end.t.loopFrame), JSON.stringify({ loopFrame: Math.round(end.t.loopFrame), pourOff: Math.round(end.t.pourOff) }));
     // pause and play again
     await p.click('#steamToggle');
     await p.waitForTimeout(500);
@@ -101,17 +107,17 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     await ctx2.close();
   }
 
-  /* 3. no video: the site opens on the still, never stuck on the wall */
-  if (!PAGES_ONLY) {
+  /* 3. no video, or a slow one: the site opens on the still, never stuck on the wall */
+  if (!PAGES_ONLY) for (const how of ['fails', 'slow']) {
     const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
-    await ctx.route(/\/assets\/pour\/.*\.(webm|mp4)$/, (r) => r.abort());
+    await ctx.route(/\/assets\/pour\/.*\.(webm|mp4)$/, (r) => (how === 'fails' ? r.abort() : setTimeout(() => r.continue().catch(() => {}), 6000)));
     const p = await ctx.newPage();
     await trackIntro(p);
-    const t0 = Date.now();
     await p.goto(BASE);
     await p.waitForFunction(() => window.__t.done !== null, null, { timeout: 12000 }).catch(() => {});
-    const r = await p.evaluate(() => ({ done: window.__t.done, img: getComputedStyle(document.querySelector('.hero__media img')).opacity, title: getComputedStyle(document.querySelector('.hero__title')).opacity, clip: getComputedStyle(document.getElementById('heroMedia')).clipPath }));
-    ok('no video: opens on the still within 3 s', r.done !== null && r.done < 3200 && r.img === '1' && /none|inset\(0px\)/.test(r.clip), JSON.stringify(r));
+    await p.waitForTimeout(1200);   // the still and the words fade in
+    const r = await p.evaluate(() => ({ done: Math.round(window.__t.done), img: getComputedStyle(document.querySelector('.hero__media img')).opacity, title: getComputedStyle(document.querySelector('.hero__title')).opacity, clip: getComputedStyle(document.getElementById('heroMedia')).clipPath }));
+    ok(`video ${how}: opens on the still within 3 s`, r.done !== null && r.done < 3200 && r.img === '1' && r.title === '1' && /none|inset\(0px\)/.test(r.clip), JSON.stringify(r));
     await ctx.close();
   }
 

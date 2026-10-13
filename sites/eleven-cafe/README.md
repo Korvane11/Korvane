@@ -78,7 +78,9 @@ It plays whenever the site is opened (link, new tab, refresh) and not when
 coming back to the home page from another page of the site after seeing it.
 `?skip` skips it, `?intro` plays it even after it has played this visit.
 No loader, label or skip button. It starts on the first frame the browser
-can play; if none comes within 2.5 s the site opens on the still. Reduced
+can play; if none comes within 2.5 s (or the video fails) the still comes up
+out of the dark. The pour stays on screen under the steam loop until the
+loop has a frame showing, so the hand-over has no black frame. Reduced
 motion: the still, no video. No JavaScript: the still and every word.
 
 ## Design note
@@ -133,9 +135,11 @@ motion: the still, no video. No JavaScript: the still and every word.
 ## Rendering the pour again
 
 `bash render/render_all.sh <frames dir>` renders every frame in headless
-Chromium (SwiftShader, about 18 s a frame at 1600 x 900 with 4 samples on
-4 cores; about 1.5 hours for everything), then `bash render/encode.sh
-<frames dir>` writes `assets/pour/`. The shot's timing is at the top of the
+Chromium (SwiftShader, about 19 s a pour frame at 1600 x 900 with 4
+samples on 4 cores, 4 s a steam frame; about 1.5 hours for everything),
+then `bash render/encode.sh <frames dir>` writes `assets/pour/` (add `l` or
+`p` to encode one layout), and `node render/make_og.cjs` the link-preview
+image from the new still. The shot's timing is at the top of the
 shader (`T_START`, `T_STOP`, `T_END` = 103/24 s, `LOOP` = 6 s); the steam's
 noise wraps every loop, so loop frame 0 is the intro's last frame. If the
 timing changes, update `OPEN_AT` in `js/home.js`; if the framing changes,
@@ -149,7 +153,10 @@ update `SHOT.hole` there (the opening's corners as fractions of the frame).
   theirs to give); the article's photos (tucson.com, Ellice Lueders).
 - The cup, the stream and the steam are rendered (no stock footage).
 - Reviews are quoted word for word from their Facebook reviews, with each
-  reviewer's name and the month, as Facebook shows them publicly.
+  reviewer's name and the month, as Facebook shows them publicly. One quote
+  on the Menu page ("The best Americano EVER.", Amy Taylor) is a comment on
+  their March 2020 post, not a review. Checked against the reviews page
+  again on 2026-10-13.
 
 ## Licences
 
