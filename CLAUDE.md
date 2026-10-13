@@ -155,6 +155,13 @@ approved by RC Cleaning: every page is `noindex` until they agree.
 
 - Pages: Home, Book Online, About, Hours (their nav labels). The opening
   wipes dusty glass off a Tucson sunset with a squeegee (`js/wipe.js`).
+- The owner likes the opening ("I like the opening like how the screen
+  gets cleaned"): keep the wipe and the hero it reveals as they are.
+  Second pass the same day, asked to be "better and even cleaner": each
+  fact said once, hairline rows instead of mixed cards, one closing per
+  page, the home message form folded into the one on Hours, and the
+  review on glass that clears as it scrolls in. Keep list and every change:
+  README "Second pass".
 - Their photos were Wix stock (Wix-only licence) and their online booking
   never worked, so neither was carried over: public-domain Library of
   Congress photos (Carol M. Highsmith) and a mailto request form instead.
@@ -163,7 +170,9 @@ approved by RC Cleaning: every page is `noindex` until they agree.
   seeked through), every page's screens, taps (44 px+), the menu, the
   phone call bar, forms (mailto URLs read from Playwright's `request`
   event), reduced motion, no JavaScript, share tags, structured data and
-  every internal link: 52 of 52.
+  every internal link: 52 of 52. After the second pass:
+  `sites/rc-cleaning/tests/behave.cjs`, 55 of 55 (serve the site on port
+  8780 first).
 - Live at https://korvane11.github.io/Korvane/sites/rc-cleaning/ (the root
   address still goes to SimNow).
 

@@ -68,8 +68,10 @@ Hours and the three service pages).
    line their customer wrote about them ("cloudy for months ... shine") is
    the same story. It runs once when the site is opened (about 2 s), never
    again while moving between pages.
-2. **What stays quiet:** everything after it. Plain type, one accent, no
-   other motion beyond things fading in as they scroll into view.
+2. **What stays quiet:** everything after it. Plain type, one accent,
+   hairlines rather than boxes, each fact said once. The only other
+   motion is things fading in as they scroll into view, and one echo of
+   the opening: the review's glass clearing.
 3. **Colour:** from their current site and the photo. Ink blue `#18213f`
    (their blue, deepened: text, the footer), terracotta `#b4503c` (their
    brick red, the one accent: buttons and links), a cool white `#f5f7fa`
@@ -87,13 +89,66 @@ Hours and the three service pages).
    bar at the bottom of the screen keeps "Call" and "Book online" under the
    thumb.
 
+## Second pass: cleaner (2026-10-13)
+
+The owner liked the site and the opening ("I like the opening like how the
+screen gets cleaned") and asked for the rest to be "better and even
+cleaner".
+
+Kept as they were, because the owner had seen and liked them:
+
+- The opening wipe: `js/wipe.js`, `js/home.js`, the inline script in the
+  home page head, the hero photo, the glint and the hero styles.
+- The hero it reveals: "Residential and commercial cleaning in Tucson",
+  "Local people. Great service.", the line under it and both buttons.
+- The nav labels (Home, Book Online, About, Hours) and the call button.
+- Every fact and the customer's review, word for word.
+- Colours, fonts, the photos and the phone call bar.
+- The two request forms (Book Online, Hours) and how they send.
+
+Changed, to say each thing once and let it breathe:
+
+- **Home, under the hero:** the four icon tiles became one quiet line of
+  facts. The tiles also sat against the left edge on wide screens (a
+  `margin: 0` cancelled the container's centring); the line is aligned.
+- **Home, services:** three differently styled cards (a pink panel, two
+  photo cards, pill tags, a big icon) became three plain rows: the name,
+  one or two sentences of their own copy, "Book online".
+- **Home, the review:** it now sits on frosted glass that wipes clear
+  from left to right as it scrolls into view, a quiet echo of the
+  opening (and of the review itself: "cloudy for months ... shine").
+  Reduced motion: clear from the start.
+- **Home, about:** the three-item checklist went (each item was already
+  said above or on About).
+- **Home, contact:** the second message form went (the same form is on
+  Hours). The page now ends on one closing: call, book online, the open
+  status, the email address and "Send a message", which goes to the form
+  on Hours.
+- **Book Online:** the service cards became the same rows as home; the
+  three identical tags on each ("1 hr", "Free consultation", "At your
+  place") and the icons went. The Hours line under the contact details
+  went (the open status already says it).
+- **About:** the four boxed facts became a plain list; Rosa's review lost
+  the big quote mark; the dark call band became the same light closing
+  as home.
+- **Hours:** the "Hours" line linking to the page itself went.
+- **Everywhere:** fewer icons, hairlines instead of boxes, less space
+  between sections, softer shadows, text selection and the text cursor
+  in the palette, text links with a 44 px tap area.
+
+Checked in Chromium, desktop and phone: `tests/behave.cjs`, 55 of 55
+(each new check was first seen failing on the previous version or on a
+copy with the change taken out). The opening's files are byte for byte
+the same (`js/wipe.js`, `js/home.js`, the inline script and the hero
+styles), and frames through the wipe match the earlier ones.
+
 ## Pages
 
 Their nav labels are kept: Home, Book Online, About, Hours.
 
 | Page | Purpose | Main action |
 | --- | --- | --- |
-| `index.html` | Who they are in five seconds: the wipe, the tagline, services, the review, the contact form | Call for a free estimate |
+| `index.html` | Who they are in five seconds: the wipe, the tagline, services, the review, about, one closing | Call for a free estimate |
 | `book-online.html` | The three services and a consultation request form | Book online (the form) |
 | `about.html` | Their story since 2016, Rosa, what they stand behind | Call for a free estimate |
 | `hours.html` | Every day 8 to 8, open-now status, phone, email, the contact form | Call |
@@ -107,6 +162,7 @@ Their nav labels are kept: Home, Book Online, About, Hours.
 | `js/site.js` | Every page: menu, reveals, the email forms, open-now status (Tucson time), the year |
 | `js/home.js` | Home only, loaded by `site.js`: runs the wipe when the inline script in the page head says to |
 | `js/wipe.js` | The home page's opening: dusty glass wiped clean (canvas 2D) |
+| `tests/behave.cjs` | The browser checks (Playwright, Chromium): the wipe, forms, taps, menu, call bar, the review glass, reduced motion, no JavaScript, share tags, links |
 | `assets/photos/` | Web versions of the two Highsmith photos, made by `render/export_photos.py` (see Photos) |
 | `assets/fonts/` | Bricolage Grotesque and Figtree (latin subsets, woff2) with their OFL licences |
 | `assets/icons/` | Phosphor icons (MIT), inlined into the pages |
