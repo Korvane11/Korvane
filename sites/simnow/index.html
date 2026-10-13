@@ -12,7 +12,7 @@
   <meta property="og:site_name" content="SimNow">
   <meta property="og:url" content="https://korvane11.github.io/Korvane/sites/simnow/">
   <meta property="og:title" content="SimNow | Salem's Sim Racing Destination">
-  <meta property="og:description" content="Professional racing simulators, premium gear, and a welcoming local community in Salem, Oregon.">
+  <meta property="og:description" content="SimNow is Salem's sim racing destination: professional racing simulators, premium gear, and a welcoming local community, built for first-time drivers and seasoned racers alike.">
   <meta property="og:image" content="https://korvane11.github.io/Korvane/sites/simnow/assets/og.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -46,13 +46,13 @@
   }
   </script>
 </head>
-<body class="is-intro">
+<body class="is-intro" data-page="home">
   <a class="skip-link" href="#main">Skip to main content</a>
 
   <!-- Black until the clip starts (2.5 s at most); then the car's tail lights come on in the dark. -->
   <div class="loader" id="loader" aria-hidden="true"></div>
 
-  <!-- The background: a black Porsche 911 GT3 RS driving at night (footage: @nghtstlkr.idn, used with permission) -->
+  <!-- The background on every page: a black Porsche 911 GT3 RS driving at night (footage: @nghtstlkr.idn, used with permission) -->
   <div class="film" aria-hidden="true">
     <div class="film__frame">
       <video class="film__video" id="driveVideo" muted playsinline loop preload="auto" poster="assets/drive/poster.webp"></video>
@@ -72,12 +72,12 @@
         <img src="assets/simnow-wordmark.svg" alt="SimNow" width="540" height="91">
       </a>
       <nav class="nav__links" aria-label="Primary">
-        <a href="#drive">Prices</a>
-        <a href="#events">Events</a>
-        <a href="#shop">Gear</a>
-        <a href="#contact">Contact</a>
+        <a href="experience.html">Experience</a>
+        <a href="events.html">Events</a>
+        <a href="gear.html">Gear</a>
+        <a href="visit.html">Visit</a>
       </nav>
-      <a class="btn btn--primary btn--sm nav__cta" href="https://simnowusa.com/book#booking">
+      <a class="btn btn--primary btn--sm nav__cta" href="book.html">
         <span>Book<span class="nav__cta-more"> a sim</span></span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
       </a>
       <button class="nav__toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
@@ -88,21 +88,20 @@
 
   <div class="menu" id="menu" hidden>
     <nav class="menu__links" aria-label="Mobile">
-      <a href="#drive">Prices</a>
-      <a href="#events">Event rentals</a>
-      <a href="#shop">Gear</a>
-      <a href="#faq">FAQ</a>
-      <a href="#contact">Contact</a>
-      <a href="#visit">Visit</a>
+      <a href="book.html">Book &amp; prices</a>
+      <a href="experience.html">Experience</a>
+      <a href="events.html">Event rentals</a>
+      <a href="gear.html">Gear</a>
+      <a href="visit.html">Visit &amp; contact</a>
     </nav>
-    <a class="menu__call" href="tel:+19713452568">Questions? 971-345-2568</a>
-    <a class="btn btn--primary btn--lg menu__cta" href="https://simnowusa.com/book#booking">
+    <a class="menu__call" href="tel:+19713452568">Questions? Call or text 971-345-2568</a>
+    <a class="btn btn--primary btn--lg menu__cta" href="book.html">
       <span>Book a sim</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
     </a>
   </div>
 
   <main id="main">
-    <!-- Scroll story: the camera moves around the car; each chapter holds on a shot. -->
+    <!-- Scroll story over the drive: the hero, then four chapters, each pointing to its page. -->
     <section class="story" id="top" aria-label="SimNow">
       <div class="story__sticky">
         <div class="chapter chapter--hero" data-chapter="0">
@@ -113,10 +112,8 @@
           </h1>
           <p class="hero__lead">Professional racing simulators, premium gear, and a welcoming local community, built for first-time drivers and seasoned racers alike.</p>
           <div class="hero__ctas">
-            <a class="btn btn--primary btn--lg" href="https://simnowusa.com/book#booking">
-              <span>Book a session</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
-            </a>
-            <a class="btn btn--ghost btn--lg" href="#drive"><span>See prices</span></a>
+            <a class="btn btn--primary btn--lg" href="book.html"><span>Book a session</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span></a>
+            <a class="btn btn--ghost btn--lg" href="book.html#prices"><span>See prices</span></a>
           </div>
           <ul class="hero__facts">
             <li><strong>$25</strong> per driver / hour</li>
@@ -126,33 +123,31 @@
         </div>
 
         <div class="chapter" data-chapter="1">
-          <p class="chapter__index"><span>01</span> / 05</p>
+          <p class="chapter__index"><span>01</span> / 04</p>
           <h2 class="chapter__title">Lights <em>out.</em></h2>
           <p class="chapter__text">Strap into a Fanatec direct-drive simulator running iRacing, and feel every kerb, every brake zone, every corner.</p>
+          <a class="chapter__link" href="experience.html">Inside the experience<span aria-hidden="true">&rarr;</span></a>
         </div>
 
         <div class="chapter" data-chapter="2">
-          <p class="chapter__index"><span>02</span> / 05</p>
+          <p class="chapter__index"><span>02</span> / 04</p>
           <h2 class="chapter__title">Rent by <em>the hour.</em></h2>
           <p class="chapter__text">From $25 per driver. Race solo, bring a friend, or put six on the grid.</p>
+          <a class="chapter__link" href="book.html">Prices &amp; booking<span aria-hidden="true">&rarr;</span></a>
         </div>
 
         <div class="chapter" data-chapter="3">
-          <p class="chapter__index"><span>03</span> / 05</p>
-          <h2 class="chapter__title">Every driver <em>welcome.</em></h2>
-          <p class="chapter__text">No experience needed. We get you comfortable in the seat, then you build pace at your own speed.</p>
+          <p class="chapter__index"><span>03</span> / 04</p>
+          <h2 class="chapter__title">We bring <em>the race.</em></h2>
+          <p class="chapter__text">Simulators delivered to your event, anywhere in Oregon and the Pacific Northwest. You bring the crowd.</p>
+          <a class="chapter__link" href="events.html">Event rentals<span aria-hidden="true">&rarr;</span></a>
         </div>
 
         <div class="chapter" data-chapter="4">
-          <p class="chapter__index"><span>04</span> / 05</p>
-          <h2 class="chapter__title">Race with <em>Salem.</em></h2>
-          <p class="chapter__text">Chase lap times and share the grid with local drivers at community races and private events.</p>
-        </div>
-
-        <div class="chapter" data-chapter="5">
-          <p class="chapter__index"><span>05</span> / 05</p>
+          <p class="chapter__index"><span>04</span> / 04</p>
           <h2 class="chapter__title">Take it <em>home.</em></h2>
           <p class="chapter__text">New and pre-owned sim racing gear. Test any rig in the shop, then take it home.</p>
+          <a class="chapter__link" href="gear.html">Shop gear<span aria-hidden="true">&rarr;</span></a>
         </div>
 
         <div class="story__progress" aria-hidden="true"><span id="storyBar"></span></div>
@@ -161,271 +156,71 @@
     </section>
 
     <div class="after">
-      <section class="section drive" id="drive" aria-labelledby="drive-title">
+      <section class="section lanes" aria-labelledby="lanes-title">
         <div class="container">
-          <div class="drive__head reveal">
-            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Sessions &amp; prices</p>
-            <h2 class="section__title" id="drive-title">Pick a rig.<br>Chase <em>the clock.</em></h2>
-            <p class="drive__lead">Every session includes SimNow's professional racing equipment. Pick a package to see live times and book online.</p>
+          <div class="lanes__head reveal">
+            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Pick your lane</p>
+            <h2 class="section__title section__title--md" id="lanes-title">Where to <em>next?</em></h2>
           </div>
-          <ul class="packages">
-            <li class="pkg reveal">
-              <div class="pkg__core">
-                <p class="pkg__tag">Most popular</p>
-                <h3>Solo session</h3>
-                <p class="pkg__price"><span>$</span>25</p>
-                <p class="pkg__meta">1 hr 20 min &middot; 1 driver</p>
-                <p class="pkg__text">Your cockpit, your track, your pace. For first laps, practice, or chasing a personal best.</p>
-                <a class="btn btn--primary pkg__btn" href="https://simnowusa.com/book?session=11111111-1111-1111-1111-111111111101#booking"><span>View times &amp; book</span></a>
-              </div>
-            </li>
-            <li class="pkg reveal">
-              <div class="pkg__core">
-                <p class="pkg__tag">Two drivers</p>
-                <h3>Bring a friend</h3>
-                <p class="pkg__price"><span>$</span>40</p>
-                <p class="pkg__meta">1 hr &middot; 2 drivers</p>
-                <p class="pkg__text">Share the session and trade fast laps, tips, and a little friendly competition.</p>
-                <a class="btn btn--ghost pkg__btn" href="https://simnowusa.com/book?session=11111111-1111-1111-1111-111111111102#booking"><span>View times &amp; book</span></a>
-              </div>
-            </li>
-            <li class="pkg reveal">
-              <div class="pkg__core">
-                <p class="pkg__tag">Three drivers</p>
-                <h3>Small group</h3>
-                <p class="pkg__price"><span>$</span>49</p>
-                <p class="pkg__meta">1 hr 30 min &middot; 3 drivers</p>
-                <p class="pkg__text">A longer test-and-race format, with time to settle in before the green flag.</p>
-                <a class="btn btn--ghost pkg__btn" href="https://simnowusa.com/book?session=11111111-1111-1111-1111-111111111103#booking"><span>View times &amp; book</span></a>
-              </div>
-            </li>
-            <li class="pkg reveal">
-              <div class="pkg__core">
-                <p class="pkg__tag">Six drivers</p>
-                <h3>Full grid</h3>
-                <p class="pkg__price"><span>$</span>99</p>
-                <p class="pkg__meta">1 hr 30 min &middot; 6 drivers</p>
-                <p class="pkg__text">Our biggest test-and-race session. Ideal for birthdays, teams, and race-night bragging rights.</p>
-                <a class="btn btn--ghost pkg__btn" href="https://simnowusa.com/book?session=11111111-1111-1111-1111-111111111104#booking"><span>View times &amp; book</span></a>
-              </div>
-            </li>
-          </ul>
-          <p class="drive__note reveal">Appointments only, daily from 1 to 9 PM. Questions? Call or text <a href="tel:+19713452568">971-345-2568</a> or email <a href="mailto:SimNowOR@gmail.com">SimNowOR@gmail.com</a>.</p>
-        </div>
-      </section>
-
-      <section class="section how" id="how" aria-labelledby="how-title">
-        <div class="container how__grid">
-          <div class="how__head reveal">
-            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Your first visit</p>
-            <h2 class="section__title" id="how-title">From booking<br>to braking <em>point.</em></h2>
-          </div>
-          <ol class="steps">
-            <li class="step reveal"><span class="step__num">01</span><div><h3>Reserve online</h3><p>Choose your session, pick an open simulator and start time, and complete the reservation.</p></div></li>
-            <li class="step reveal"><span class="step__num">02</span><div><h3>Meet your rig</h3><p>Check in at the paddock and get comfortable with the seat, wheel, pedals and controls.</p></div></li>
-            <li class="step reveal"><span class="step__num">03</span><div><h3>Take the green</h3><p>Pick your track, settle into the car, and start putting down laps.</p></div></li>
-          </ol>
-        </div>
-      </section>
-
-      <section class="section experience" id="experience" aria-labelledby="exp-title">
-        <div class="container">
-          <div class="experience__head reveal">
-            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>More than an arcade</p>
-            <h2 class="section__title" id="exp-title">Built by racers,<br>for <em>everyone.</em></h2>
-          </div>
-          <div class="bento">
-            <article class="card card--wide reveal">
+          <div class="bento lanes__grid">
+            <a class="card card--photo card--7 lane reveal" href="book.html">
               <div class="card__core">
-                <img class="card__img" src="assets/drive/card.webp" alt="The red light bar across the back of a black Porsche 911 GT3 RS at night" loading="lazy" width="1600" height="686">
+                <img class="card__img" src="assets/photos/driver.webp" alt="" loading="lazy" width="1100" height="1100">
                 <div class="card__body">
-                  <p class="card__tag">Every level</p>
-                  <h3>Race with Salem</h3>
-                  <p>Chase lap times, meet local drivers, and share the grid at community races and private events.</p>
+                  <p class="card__tag">From $25 per driver</p>
+                  <h3>Book a session</h3>
+                  <p class="lane__text">Four packages, solo to a full grid of six. Live times, booked online.</p>
+                  <p class="lane__go">Prices &amp; booking<span aria-hidden="true">&rarr;</span></p>
                 </div>
               </div>
-            </article>
-            <article class="card card--photo card--7 reveal">
-              <div class="card__core">
-                <img class="card__img" src="assets/photos/cockpits.webp" alt="A row of professional simulator cockpits at SimNow" loading="lazy" width="1400" height="1019">
-                <div class="card__body">
-                  <p class="card__tag">Real hardware</p>
-                  <h3>Six professional rigs</h3>
-                  <p>Fanatec direct-drive wheels and pedals, running iRacing, the world's premier sim racing platform.</p>
-                </div>
-              </div>
-            </article>
-            <article class="card card--type card--5 reveal">
-              <div class="card__core">
-                <p class="card__big" aria-hidden="true">$25<span>/hr</span></p>
-                <div class="card__body">
-                  <p class="card__tag">Per driver</p>
-                  <h3>Rent by the hour</h3>
-                  <p>Daily from 1 to 9 PM, by appointment. Race solo, bring a friend, or fill the grid with six.</p>
-                </div>
-              </div>
-            </article>
-            <article class="card card--type card--5 reveal">
-              <div class="card__core">
-                <p class="card__big" aria-hidden="true">1st<span>lap</span></p>
-                <div class="card__body">
-                  <p class="card__tag">All levels</p>
-                  <h3>No experience needed</h3>
-                  <p>Serious equipment without the intimidating atmosphere: beginner-friendly guidance, private and group sessions.</p>
-                </div>
-              </div>
-            </article>
-            <article class="card card--photo card--7 reveal">
-              <div class="card__core">
-                <img class="card__img" src="assets/photos/driver.webp" alt="A driver racing on a SimNow simulator" loading="lazy" width="1100" height="1100">
-                <div class="card__body">
-                  <p class="card__tag">From the first corner</p>
-                  <h3>Get comfortable, get faster</h3>
-                  <p>Our team helps every driver settle in, find pace, and enjoy the race.</p>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section events" id="events" aria-labelledby="events-title">
-        <div class="container">
-          <div class="events__head reveal">
-            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Event rentals</p>
-            <h2 class="section__title" id="events-title">We bring<br><em>the race.</em></h2>
-            <p class="events__lead">Professional racing simulators delivered to your event, anywhere in Oregon and the Pacific Northwest: corporate events, car shows, dealerships, trade shows, schools, fundraisers, festivals and private parties. You bring the crowd.</p>
-            <ul class="facts">
-              <li><strong>Delivered</strong><span>To your venue</span></li>
-              <li><strong>Hosted</strong><span>Race management</span></li>
-              <li><strong>Turnkey</strong><span>Setup included</span></li>
-            </ul>
-          </div>
-          <div class="bento event-list">
-            <article class="card card--event reveal">
-              <div class="card__core">
-                <img class="card__img" src="assets/photos/event-corporate.webp" alt="A guest racing on a professional simulator at a corporate event" loading="lazy" width="1200" height="600">
-                <div class="card__body">
-                  <p class="card__tag">Team engagement</p>
-                  <h3>Corporate events</h3>
-                  <p>Employee appreciation, holiday parties, sales kickoffs, conferences and customer days, with fastest-lap competitions and live leaderboards.</p>
-                </div>
-              </div>
-            </article>
-            <article class="card card--event reveal">
-              <div class="card__core">
-                <img class="card__img" src="assets/photos/event-dealership.webp" alt="Performance cars on display inside a dealership showroom" loading="lazy" width="1200" height="600">
-                <div class="card__body">
-                  <p class="card__tag">Showroom attraction</p>
-                  <h3>Dealership events</h3>
-                  <p>Grand openings, customer appreciation and sales events: an interactive motorsports draw for car, powersports and RV dealers.</p>
-                </div>
-              </div>
-            </article>
-            <article class="card card--event reveal">
-              <div class="card__core">
-                <img class="card__img" src="assets/photos/event-party.webp" alt="Guests gathering around sports cars at a private celebration" loading="lazy" width="1200" height="600">
-                <div class="card__body">
-                  <p class="card__tag">Competition for everyone</p>
-                  <h3>Private parties</h3>
-                  <p>Birthdays, graduations, retirements, bachelor parties and family reunions. No racing experience required, just show up and have fun.</p>
-                </div>
-              </div>
-            </article>
-            <article class="card card--event reveal">
-              <div class="card__core">
-                <img class="card__img" src="assets/photos/event-carshow.webp" alt="Crowds at a busy indoor car show" loading="lazy" width="1200" height="600">
-                <div class="card__body">
-                  <p class="card__tag">Crowd-drawing action</p>
-                  <h3>Car shows &amp; motorsports</h3>
-                  <p>Famous tracks, head-to-head racing and live leaderboards for car shows, track days and motorsports expos.</p>
-                </div>
-              </div>
-            </article>
-          </div>
-          <p class="events__prompt reveal">Tell us your date, venue, guest count and event goals, and we&rsquo;ll shape a simulator experience that fits the space and keeps the competition moving.</p>
-          <div class="events__cta reveal">
-            <a class="btn btn--primary btn--lg" href="mailto:SimNowOR@gmail.com?subject=SimNow%20Event%20Rental%20Quote">
-              <span>Request an event quote</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
             </a>
-            <a class="btn btn--ghost btn--lg" href="tel:+19713452568"><span>Call 971-345-2568</span></a>
+            <a class="card card--type card--5 lane reveal" href="experience.html">
+              <div class="card__core">
+                <p class="card__big" aria-hidden="true">6<span>rigs</span></p>
+                <div class="card__body">
+                  <p class="card__tag">The experience</p>
+                  <h3>Built by racers</h3>
+                  <p class="lane__text">Fanatec direct-drive, iRacing, and help from the first corner.</p>
+                  <p class="lane__go">Inside SimNow<span aria-hidden="true">&rarr;</span></p>
+                </div>
+              </div>
+            </a>
+            <a class="card card--type card--5 lane reveal" href="gear.html">
+              <div class="card__core">
+                <p class="card__big" aria-hidden="true">Gear<span>shop</span></p>
+                <div class="card__body">
+                  <p class="card__tag">Retail paddock</p>
+                  <h3>Build your home rig</h3>
+                  <p class="lane__text">New and pre-owned gear. Drive it in the shop before you buy.</p>
+                  <p class="lane__go">Shop gear<span aria-hidden="true">&rarr;</span></p>
+                </div>
+              </div>
+            </a>
+            <a class="card card--photo card--7 lane reveal" href="events.html">
+              <div class="card__core">
+                <img class="card__img" src="assets/photos/event-carshow.webp" alt="" loading="lazy" width="1200" height="600">
+                <div class="card__body">
+                  <p class="card__tag">Event rentals</p>
+                  <h3>We bring the race</h3>
+                  <p class="lane__text">Corporate events, dealerships, car shows and parties across the Pacific Northwest.</p>
+                  <p class="lane__go">Plan an event<span aria-hidden="true">&rarr;</span></p>
+                </div>
+              </div>
+            </a>
           </div>
         </div>
       </section>
 
-      <section class="section shop" id="shop" aria-labelledby="shop-title">
-        <div class="container shop__grid">
-          <div class="shop__intro reveal">
-            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Retail paddock</p>
-            <h2 class="section__title" id="shop-title">Build your<br><em>home rig.</em></h2>
-            <p class="shop__lead">The same professional-grade equipment we run in the shop, for your setup at home: rigs, wheel bases, pedal sets and accessories, sourced and supported locally in Salem. Come sit in it, drive it, and take it home the same day.</p>
-            <div class="shop__ctas">
-              <a class="btn btn--ghost btn--lg" href="mailto:SimNowOR@gmail.com?subject=SimNow%20Gear%20Request"><span>Request an item</span></a>
-              <a class="shop__link" href="mailto:SimNowOR@gmail.com?subject=SimNow%20Retail%20Paddock">Talk to us about gear</a>
-            </div>
-          </div>
-          <ul class="shop__list">
-            <li class="shop__item reveal"><span class="shop__num">A</span><div><h3>Try it first</h3><p>Test any rig on track in the shop before you buy.</p></div></li>
-            <li class="shop__item reveal"><span class="shop__num">B</span><div><h3>New &amp; pre-owned</h3><p>Wheels, pedals, cockpits and complete custom builds, in stock or made to order.</p></div></li>
-            <li class="shop__item reveal"><span class="shop__num">C</span><div><h3>Built around you</h3><p>Tell us your space and budget, and we'll spec the build: wheel, pedals and display.</p></div></li>
-            <li class="shop__item reveal"><span class="shop__num">D</span><div><h3>Setup help included</h3><p>Pick up in Salem, and get help setting it up at home.</p></div></li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="section faq" id="faq" aria-labelledby="faq-title">
-        <div class="container faq__grid">
-          <div class="faq__head reveal">
-            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Quick answers</p>
-            <h2 class="section__title" id="faq-title">Before<br>you <em>race.</em></h2>
-          </div>
-          <div class="faq__list">
-            <details class="faq__item reveal"><summary>Do I need sim racing experience?</summary><p>No. New drivers can get comfortable with the controls and build pace at their own speed.</p></details>
-            <details class="faq__item reveal"><summary>Can I race with friends?</summary><p>Yes. Choose the two-, three- or six-driver session for the size of your group.</p></details>
-            <details class="faq__item reveal"><summary>Do you take walk-ins?</summary><p>Sessions are by appointment only, so book ahead online or call 971-345-2568.</p></details>
-            <details class="faq__item reveal"><summary>Where is SimNow?</summary><p>3790 Silverton Rd NE, Suite C, Salem, Oregon 97305.</p></details>
-          </div>
-        </div>
-      </section>
-
-      <section class="section contact" id="contact" aria-labelledby="contact-title">
-        <div class="container contact__grid">
-          <div class="contact__info reveal">
-            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Contact SimNow</p>
-            <h2 class="section__title" id="contact-title">Let&rsquo;s talk<br><em>racing.</em></h2>
-            <p class="contact__lead">A question about a session, a group booking, an event rental, or the right gear for your rig? Send a note or reach out directly. We&rsquo;re happy to help.</p>
-            <ul class="contact__ways">
-              <li><a href="tel:+19713452568"><span class="contact__num">01</span><span><small>Call or text</small><strong>971-345-2568</strong></span></a></li>
-              <li><a href="mailto:SimNowOR@gmail.com"><span class="contact__num">02</span><span><small>Email</small><strong>SimNowOR@gmail.com</strong></span></a></li>
-            </ul>
-          </div>
-          <form class="note reveal" id="noteForm" action="mailto:SimNowOR@gmail.com" method="post" enctype="text/plain">
-            <div class="note__core">
-              <h3>Send a note</h3>
-              <p class="note__sub">We usually reply within a day.</p>
-              <label>Name<input name="name" required autocomplete="name"></label>
-              <label>Email<input type="email" name="email" required autocomplete="email"></label>
-              <label>Message<textarea name="message" rows="5" required></textarea></label>
-              <button class="btn btn--primary btn--lg" type="submit"><span>Send message</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span></button>
-              <p class="note__hint">Opens your email app with the note ready to send.</p>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <section class="section visit" id="visit" aria-labelledby="visit-title">
+      <section class="section visit-strip" aria-labelledby="home-visit-title">
         <div class="container visit__grid">
           <div class="visit__info reveal">
             <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Visit the paddock</p>
-            <h2 class="section__title" id="visit-title">Find us<br>in <em>Salem.</em></h2>
+            <h2 class="section__title section__title--md" id="home-visit-title">Find us<br>in <em>Salem.</em></h2>
             <address>3790 Silverton Rd NE, Suite C<br>Salem, OR 97305</address>
-            <p class="visit__lead">Appointments only. Book ahead so your cockpit is ready when you arrive.</p>
-            <p class="visit__contact"><a href="tel:+19713452568">Call or text 971-345-2568</a><a href="mailto:SimNowOR@gmail.com">SimNowOR@gmail.com</a></p>
+            <p class="status status--inline"><span class="status__dot" aria-hidden="true"></span><span data-status>Open daily, 1 to 9 PM</span><span class="status__note">By appointment</span></p>
             <div class="visit__ctas">
-              <a class="btn btn--primary btn--lg" href="https://simnowusa.com/book#booking">
-                <span>Book a session</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
-              </a>
-              <a class="btn btn--ghost btn--lg" href="https://www.google.com/maps/search/?api=1&amp;query=3790+Silverton+Rd+NE+Suite+C+Salem+OR+97305" target="_blank" rel="noopener"><span>Get directions</span></a>
+            <a class="btn btn--primary btn--lg" href="book.html"><span>Book a session</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span></a>
+            <a class="btn btn--ghost btn--lg" href="visit.html"><span>Visit &amp; contact</span></a>
             </div>
           </div>
           <div class="hours reveal">
@@ -452,15 +247,16 @@
           <p>SimNow Community Racing &amp; Driving Center. 3790 Silverton Rd NE, Suite C, Salem, OR 97305</p>
           <p class="footer__contact"><a href="tel:+19713452568">971-345-2568</a> &middot; <a href="mailto:SimNowOR@gmail.com">SimNowOR@gmail.com</a> &middot; <a href="https://www.facebook.com/SimNowOR/" target="_blank" rel="noopener">Facebook</a></p>
           <nav class="footer__links" aria-label="Footer">
-            <a href="https://simnowusa.com/book#booking">Book online</a>
-            <a href="#drive">Prices</a>
-            <a href="#events">Event rentals</a>
-            <a href="#shop">Retail paddock</a>
-            <a href="#contact">Contact</a>
+            <a href="book.html">Book &amp; prices</a>
+            <a href="experience.html">Experience</a>
+            <a href="events.html">Event rentals</a>
+            <a href="gear.html">Gear</a>
+            <a href="visit.html">Visit &amp; contact</a>
+            <a href="https://simnowusa.com/book#booking">Booking calendar</a>
             <a href="https://simnowusa.com/login">Staff log in</a>
           </nav>
           <p class="footer__credit">Night drive footage: <a href="https://www.tiktok.com/@nghtstlkr.idn" target="_blank" rel="noopener">@nghtstlkr.idn</a>, used with permission.</p>
-          <p class="footer__copy">&copy; <span id="year">2026</span> SimNow LLC</p>
+          <p class="footer__copy">&copy; <span data-year>2026</span> SimNow LLC</p>
         </div>
       </footer>
     </div>
@@ -469,6 +265,6 @@
   <script src="vendor/gsap/gsap.min.js"></script>
   <script src="vendor/gsap/ScrollTrigger.min.js"></script>
   <script src="vendor/lenis/lenis.min.js"></script>
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/site.js"></script>
 </body>
 </html>

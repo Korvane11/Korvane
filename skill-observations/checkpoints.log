@@ -53,3 +53,7 @@
 2026-10-13 01:37 [Korvane] session-start scan: files=11 parsed=11 principles=0
 2026-10-13 01:44 loaded task-observer — 1 open observations
 2026-10-13 01:44 [Korvane] session-start scan: files=11 parsed=11 principles=0
+2026-10-13 04:16 [Korvane] workspace: created=none
+2026-10-13 04:16 [Korvane] session-start scan: files=11 parsed=11 principles=0
+2026-10-13 04:16 loaded redesign-existing-projects — 4 open observations
+2026-10-13 04:44 [Korvane] checkpoint after tasks 40-42: extended 0006 (hit-test pitfalls, mailto capture), wrote 0012 (vacuous overflow check)

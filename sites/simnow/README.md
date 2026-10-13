@@ -1,10 +1,10 @@
 # SimNow website
 
-A one-page site for SimNow, Salem's sim racing lounge. It opens on a black
-screen, a car's tail lights blink and then sweep on in the dark, the night
+A six-page site for SimNow, Salem's sim racing lounge. The home page opens
+on a black screen, a car's tail lights sweep on in the dark, the night
 spreads out around them as it drives, and the site opens over it. The car
-keeps driving behind everything: the hero, five scroll chapters, and (dimmed)
-the info sections.
+keeps driving behind every page: full screen behind each page's header, and
+dimmed behind the sections below.
 
 The background is one looping clip, `assets/drive/drive.mp4` (H.264, with
 `drive.webm` for browsers without H.264): a black Porsche 911 GT3 RS at night,
@@ -20,7 +20,7 @@ and credited in the footer. From the TikTok download:
 Layout: on wide screens the clip fills the whole background. On phones it's
 a band across the top that fades into the page.
 
-It never stops: the clip loops, and `js/main.js` restarts it if the browser
+It never stops: the clip loops, and `js/site.js` restarts it if the browser
 pauses it (power saving, a stalled download, coming back to the tab) and on
 the first tap or scroll where autoplay was refused. It pauses only while the
 tab is hidden, and doesn't play at all for visitors who ask for reduced
@@ -34,15 +34,58 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
-Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
+On the home page: `?skip` jumps past the intro, `?intro` plays it even if
+it has already played this visit, `?debug` exposes `window.__simnow`.
+
+## Pages
+
+The owner asked for separate pages ("tabs") instead of one long scroll
+(2026-10-13). Each page is a plain HTML file sharing the same nav, menu,
+footer and background clip; there is no build step, so a change to the nav
+or footer is made in all six files.
+
+| Page | What's on it |
+| --- | --- |
+| `index.html` | Home: the intro, the hero, a short scroll story whose four chapters each link to a page, "Where to next?" cards, hours and address |
+| `book.html` | Sessions and prices (the four packages, each linking to its booking calendar), how a first visit works, FAQ, hours |
+| `experience.html` | The rigs, the hardware, who it's for |
+| `events.html` | Event rentals: the four kinds of event, how it works, and a quote form |
+| `gear.html` | The retail paddock, and a gear request form |
+| `visit.html` | Address and map, directions, hours, contact details and a note form, FAQ |
+
+How the pages hang together:
+- **The nav** marks the current page (`aria-current`). Phones get a menu
+  plus a Book button that is always visible.
+- **One drive across the site:** leaving a page saves where the clip was
+  (`sessionStorage`, `simnow:drive`), and the next page carries on from
+  there, so changing pages doesn't restart the car. Page changes cross-fade
+  in browsers that support cross-document view transitions; others just
+  load the page.
+- **The intro plays once per visit** (`sessionStorage`, `simnow:intro`).
+  Coming back to the home page from another page opens straight onto the
+  drive.
+- **Old links still work:** the site used to be one page, so links to its
+  sections (`.../simnow/#events`, `#drive`, `#contact`, ...) are sent to the
+  page that now holds them (`MOVED` in `js/site.js`).
+- **Opening hours** are worked out in Salem's time zone: today's row is
+  highlighted, and the status line says "Open now, until 9 PM", "Opens today
+  at 1 PM" or "Opens tomorrow at 1 PM".
+- **Forms** (event quote, gear request, note) have no server: sending one
+  opens the visitor's email app addressed to SimNowOR@gmail.com, with the
+  subject and every filled-in field laid out (`form[data-mailto]` in
+  `js/site.js`).
+- **Booking stays on simnowusa.com.** Their booking app (live calendar,
+  Stripe payments) could be embedded, since their site allows framing, but
+  it isn't: payments can't be tested from here, and it needs SimNow's say.
 
 ## Files
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | Content: hero, five chapters, info sections |
-| `styles.css` | Layout and brand tokens (`--brand`, `--black`, …) |
-| `js/main.js` | Intro and background clip, scroll chapters (GSAP ScrollTrigger + Lenis), nav, reveals |
+| `index.html`, `book.html`, `experience.html`, `events.html`, `gear.html`, `visit.html` | The six pages (see Pages) |
+| `styles.css` | Layout and brand tokens (`--brand`, `--black`, …), shared by every page |
+| `js/site.js` | Every page: the background clip (source, keep-alive, carry-over between pages), nav and menu, smooth scroll (Lenis), reveals, the email forms, opening hours, old-link redirects |
+| `js/home.js` | Home only, loaded by `site.js`: the intro and the scroll story (GSAP ScrollTrigger) |
 | `js/lights.js` | The tail-lights-first intro: draws the clip through WebGL so only the red tail lights show (with a bloom), then reveals the scene and hands back to the `<video>` |
 | `assets/drive/` | The clip (MP4 + WebM, plus `drive-phone`: the same frames at about half the bitrate, which the phone layout plays), its poster frame and the race-nights card image |
 | `assets/photos/` | SimNow's own shop and event photos, from their current site |
@@ -60,11 +103,13 @@ Add `?skip` to jump past the intro, `?debug` to expose `window.__simnow`.
 ## Sharing, icons and the address
 
 Link previews (texts, Facebook, X) only work with absolute URLs, so the
-share tags in `index.html` and in the repo root's `index.html` (the address
-that gets shared, which forwards here) name the current address,
-`https://korvane11.github.io/Korvane/sites/simnow/`. So do the canonical
-link and the root `404.html`'s `<base href="/Korvane/sites/simnow/">`. If
-the site moves to SimNow's own domain, update all of them.
+share tags (og:url, og:image, twitter:image) and the canonical link in every
+page, and in the repo root's `index.html` (the address that gets shared,
+which forwards here), name the current address,
+`https://korvane11.github.io/Korvane/sites/simnow/` plus the page's file
+name. Each page has its own title and description. The root `404.html`'s
+`<base href="/Korvane/sites/simnow/">` names it too. If the site moves to
+SimNow's own domain, update all of them.
 
 Phones get a short Book button in the nav, beside the menu, on every
 screen. Below 370px wide the logo shrinks and the button drops its arrow so
@@ -74,7 +119,7 @@ all three still fit.
 
 The page opens on plain black: no loading bar, no label, no skip button (the
 owner asked for all three to go). `index.html` sets the clip's source as soon
-as the `<video>` is parsed, and `js/main.js` plays it straight away instead
+as the `<video>` is parsed, and `js/home.js` plays it straight away instead
 of waiting for it to buffer. The intro starts on the first frame that plays.
 If the clip hasn't started within 2.5 s (`START_WAIT`: a slow connection, or
 autoplay refused), the site opens on the poster frame and the keep-alive
@@ -197,7 +242,7 @@ API and Stripe payments, so booking stays there and our buttons link to it.
   `/assets/EventDetails/Images/`.
 - **Contact:** their contact form posts to their own API. Ours has no
   server, so "Send a note" opens the visitor's email app with the note
-  filled in (`js/main.js`).
+  filled in (`js/site.js`).
 
 ## Still needed from SimNow
 

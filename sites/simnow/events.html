@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Racing simulator event rentals | SimNow</title>
+  <meta name="description" content="Professional racing simulators delivered to your event across Oregon and the Pacific Northwest: corporate events, dealerships, car shows and private parties.">
+  <meta name="theme-color" content="#030304">
+  <!-- Link previews (texts, Facebook, X) need absolute URLs: these name the current address and change with the domain (CLAUDE.md) -->
+  <link rel="canonical" href="https://korvane11.github.io/Korvane/sites/simnow/events.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SimNow">
+  <meta property="og:url" content="https://korvane11.github.io/Korvane/sites/simnow/events.html">
+  <meta property="og:title" content="Racing simulator event rentals | SimNow">
+  <meta property="og:description" content="Professional racing simulators delivered to your event across Oregon and the Pacific Northwest: corporate events, dealerships, car shows and private parties.">
+  <meta property="og:image" content="https://korvane11.github.io/Korvane/sites/simnow/assets/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The red light bar across the back of a black Porsche 911 GT3 RS at night">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://korvane11.github.io/Korvane/sites/simnow/assets/og.jpg">
+  <!-- icons: render/make_icons.py (an SN monogram from their lettering for tabs, the whole badge for home screens) -->
+  <link rel="icon" href="assets/icons/favicon.ico" sizes="48x48">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="assets/icons/site.webmanifest">
+  <link rel="preload" href="assets/fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/lenis/lenis.css">
+  <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="is-page" data-page="events">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- The background on every page: a black Porsche 911 GT3 RS driving at night (footage: @nghtstlkr.idn, used with permission) -->
+  <div class="film" aria-hidden="true">
+    <div class="film__frame">
+      <video class="film__video is-on" id="driveVideo" muted playsinline loop preload="auto" poster="assets/drive/poster.webp"></video>
+      <!-- start the download now, not when the scripts at the end have run (no clip at all with reduced motion);
+           the phone layout (taller than wide) gets the lighter encode, drive-phone -->
+      <script>(function (v) { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; v.src = 'assets/drive/drive' + (matchMedia('(max-aspect-ratio: 1/1)').matches ? '-phone.' : '.') + (v.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm'); })(document.getElementById('driveVideo'));</script>
+    </div>
+    <div class="film__shade is-on" id="filmShade"></div>
+  </div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="nav is-visible" id="nav">
+    <div class="nav__pill">
+      <a class="nav__logo" href="index.html" aria-label="SimNow home">
+        <!-- the name from their badge, traced to a vector (render/trace_logo.py): the whole badge is too small to read here -->
+        <img src="assets/simnow-wordmark.svg" alt="SimNow" width="540" height="91">
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="experience.html">Experience</a>
+        <a href="events.html" aria-current="page">Events</a>
+        <a href="gear.html">Gear</a>
+        <a href="visit.html">Visit</a>
+      </nav>
+      <a class="btn btn--primary btn--sm nav__cta" href="book.html">
+        <span>Book<span class="nav__cta-more"> a sim</span></span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
+      </a>
+      <button class="nav__toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="menu" id="menu" hidden>
+    <nav class="menu__links" aria-label="Mobile">
+      <a href="book.html">Book &amp; prices</a>
+      <a href="experience.html">Experience</a>
+      <a href="events.html" aria-current="page">Event rentals</a>
+      <a href="gear.html">Gear</a>
+      <a href="visit.html">Visit &amp; contact</a>
+    </nav>
+    <a class="menu__call" href="tel:+19713452568">Questions? Call or text 971-345-2568</a>
+    <a class="btn btn--primary btn--lg menu__cta" href="book.html">
+      <span>Book a sim</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span>
+    </a>
+  </div>
+
+  <main id="main">
+    <header class="page-hero">
+      <div class="container">
+        <div class="page-hero__copy">
+          <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Event rentals</p>
+          <h1 class="page-hero__title">We bring<br><em>the race.</em></h1>
+          <p class="page-hero__lead">Professional racing simulators delivered to your event, anywhere in Oregon and the Pacific Northwest: corporate events, car shows, dealerships, trade shows, schools, fundraisers, festivals and private parties. You bring the crowd.</p>
+          <div class="page-hero__ctas">
+            <a class="btn btn--primary btn--lg" href="#quote"><span>Request a quote</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span></a>
+            <a class="btn btn--ghost btn--lg" href="tel:+19713452568"><span>Call 971-345-2568</span></a>
+          </div>
+          <ul class="facts">
+            <li><strong>Delivered</strong><span>To your venue</span></li>
+            <li><strong>Hosted</strong><span>Race management</span></li>
+            <li><strong>Turnkey</strong><span>Setup included</span></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="after">
+      <section class="section section--first" aria-label="Events we do">
+        <div class="container">
+          <div class="bento event-list">
+            <article class="card card--event reveal">
+              <div class="card__core">
+                <img class="card__img" src="assets/photos/event-corporate.webp" alt="A guest racing on a professional simulator at a corporate event" loading="lazy" width="1200" height="600">
+                <div class="card__body">
+                  <p class="card__tag">Team engagement</p>
+                  <h3>Corporate events</h3>
+                  <p>Employee appreciation, holiday parties, sales kickoffs, conferences and customer days, with fastest-lap competitions and live leaderboards.</p>
+                </div>
+              </div>
+            </article>
+            <article class="card card--event reveal">
+              <div class="card__core">
+                <img class="card__img" src="assets/photos/event-dealership.webp" alt="Performance cars on display inside a dealership showroom" loading="lazy" width="1200" height="600">
+                <div class="card__body">
+                  <p class="card__tag">Showroom attraction</p>
+                  <h3>Dealership events</h3>
+                  <p>Grand openings, customer appreciation and sales events: an interactive motorsports draw for car, powersports and RV dealers.</p>
+                </div>
+              </div>
+            </article>
+            <article class="card card--event reveal">
+              <div class="card__core">
+                <img class="card__img" src="assets/photos/event-party.webp" alt="Guests gathering around sports cars at a private celebration" loading="lazy" width="1200" height="600">
+                <div class="card__body">
+                  <p class="card__tag">Competition for everyone</p>
+                  <h3>Private parties</h3>
+                  <p>Birthdays, graduations, retirements, bachelor parties and family reunions. No racing experience required, just show up and have fun.</p>
+                </div>
+              </div>
+            </article>
+            <article class="card card--event reveal">
+              <div class="card__core">
+                <img class="card__img" src="assets/photos/event-carshow.webp" alt="Crowds at a busy indoor car show" loading="lazy" width="1200" height="600">
+                <div class="card__body">
+                  <p class="card__tag">Crowd-drawing action</p>
+                  <h3>Car shows &amp; motorsports</h3>
+                  <p>Famous tracks, head-to-head racing and live leaderboards for car shows, track days and motorsports expos.</p>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section how" aria-labelledby="ev-how-title">
+        <div class="container how__grid">
+          <div class="how__head reveal">
+            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>How it works</p>
+            <h2 class="section__title section__title--md" id="ev-how-title">Your crowd,<br>our <em>grid.</em></h2>
+          </div>
+          <ol class="steps">
+            <li class="step reveal"><span class="step__num">01</span><div><h3>Tell us about it</h3><p>Your date, venue, guest count and event goals.</p></div></li>
+            <li class="step reveal"><span class="step__num">02</span><div><h3>We shape the setup</h3><p>A simulator experience that fits the space and keeps the competition moving.</p></div></li>
+            <li class="step reveal"><span class="step__num">03</span><div><h3>We bring the race</h3><p>Delivered to your venue, with setup and race management included.</p></div></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section contact" id="quote" aria-labelledby="quote-title">
+        <div class="container contact__grid">
+          <div class="contact__info reveal">
+            <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Get a quote</p>
+            <h2 class="section__title section__title--md" id="quote-title">Plan your<br><em>event.</em></h2>
+            <p class="contact__lead">Tell us what you have in mind and we'll come back with a plan and a quote. Prefer to talk it through? Call or text.</p>
+            <ul class="contact__ways">
+              <li><a href="tel:+19713452568"><span class="contact__num">01</span><span><small>Call or text</small><strong>971-345-2568</strong></span></a></li>
+              <li><a href="mailto:SimNowOR@gmail.com?subject=SimNow%20Event%20Rental%20Quote"><span class="contact__num">02</span><span><small>Email</small><strong>SimNowOR@gmail.com</strong></span></a></li>
+            </ul>
+          </div>
+          <form class="note reveal" data-mailto="SimNowOR@gmail.com" data-subject="SimNow Event Rental Quote: {name}" action="mailto:SimNowOR@gmail.com?subject=SimNow%20Event%20Rental%20Quote" method="post" enctype="text/plain">
+            <div class="note__core">
+              <h3>Request a quote</h3>
+              <p class="note__sub">The more you tell us, the better the plan.</p>
+              <div class="form__row">
+                <label>Name<input name="name" required autocomplete="name"></label>
+                <label>Email<input type="email" name="email" required autocomplete="email"></label>
+              </div>
+              <div class="form__row">
+                <label>Phone<input type="tel" name="phone" autocomplete="tel" placeholder="Optional"></label>
+                <label>Event date<input type="date" name="date"></label>
+              </div>
+              <div class="form__row">
+                <label>Type of event<select name="type">
+                  <option value="">Choose one</option>
+                  <option>Corporate event</option>
+                  <option>Dealership event</option>
+                  <option>Private party</option>
+                  <option>Car show or motorsports</option>
+                  <option>School, fundraiser or festival</option>
+                  <option>Trade show</option>
+                  <option>Something else</option>
+                </select></label>
+                <label>Guests (about)<input type="number" name="guests" min="1" inputmode="numeric"></label>
+              </div>
+              <label>Venue or city<input name="venue" autocomplete="address-level2"></label>
+              <label>Anything else<textarea name="message" rows="4" placeholder="Goals, timing, space, questions"></textarea></label>
+              <button class="btn btn--primary btn--lg" type="submit"><span>Send request</span><span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M5 11 11 5M6 5h5v5"/></svg></span></button>
+              <p class="note__hint">Opens your email app with the request ready to send.</p>
+              <p class="form__sent" hidden>Your email app should be opening with the request. If it didn't, email SimNowOR@gmail.com or call 971-345-2568.</p>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="container footer__inner">
+          <a class="footer__logo" href="index.html" aria-label="SimNow home"><img src="assets/simnow-logo.webp" alt="SimNow" width="585" height="330" loading="lazy"></a>
+          <p>SimNow Community Racing &amp; Driving Center. 3790 Silverton Rd NE, Suite C, Salem, OR 97305</p>
+          <p class="footer__contact"><a href="tel:+19713452568">971-345-2568</a> &middot; <a href="mailto:SimNowOR@gmail.com">SimNowOR@gmail.com</a> &middot; <a href="https://www.facebook.com/SimNowOR/" target="_blank" rel="noopener">Facebook</a></p>
+          <nav class="footer__links" aria-label="Footer">
+            <a href="book.html">Book &amp; prices</a>
+            <a href="experience.html">Experience</a>
+            <a href="events.html" aria-current="page">Event rentals</a>
+            <a href="gear.html">Gear</a>
+            <a href="visit.html">Visit &amp; contact</a>
+            <a href="https://simnowusa.com/book#booking">Booking calendar</a>
+            <a href="https://simnowusa.com/login">Staff log in</a>
+          </nav>
+          <p class="footer__credit">Night drive footage: <a href="https://www.tiktok.com/@nghtstlkr.idn" target="_blank" rel="noopener">@nghtstlkr.idn</a>, used with permission.</p>
+          <p class="footer__copy">&copy; <span data-year>2026</span> SimNow LLC</p>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script src="vendor/lenis/lenis.min.js"></script>
+  <script type="module" src="js/site.js"></script>
+</body>
+</html>

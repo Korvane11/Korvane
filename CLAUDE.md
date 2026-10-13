@@ -60,7 +60,7 @@ near-black.
     them removed and wanted less time on black. The clip plays as soon as it
     can (not after buffering); after 2.5 s without it the site opens on the
     poster. The site opens ~2 s into the intro.
-  - The owner wants the video playing the whole time on loop: `js/main.js`
+  - The owner wants the video playing the whole time on loop: `js/site.js`
     restarts it whenever the browser pauses it (except a hidden tab or
     reduced motion).
   - `CLIP` in lights.js is measured on this clip's first shot; a new clip
@@ -78,10 +78,24 @@ near-black.
   The owner asked for the logo to "look better" (2026-10-12); the design
   itself was not changed, and redesigning it would be SimNow's call.
 - Address-bound files, to update if the site moves to SimNow's domain: the
-  absolute share URLs (og:url, og:image, twitter:image, canonical) in
-  `sites/simnow/index.html` and the root `index.html` (the link that gets
-  shared; it carries SimNow's preview too), and the root `404.html`'s
+  absolute share URLs (og:url, og:image, twitter:image, canonical) in all
+  six pages and the root `index.html` (the link that gets shared; it carries
+  SimNow's preview too), and the root `404.html`'s
   `<base href="/Korvane/sites/simnow/">`.
+- Six pages since 2026-10-13: the owner asked for separate "tabs" for
+  booking and the rest instead of one long scroll. `index.html` (home:
+  intro, short story whose chapters link to the pages, "Where to next?"
+  cards, hours), `book.html` (prices and booking links, first visit, FAQ),
+  `experience.html`, `events.html` (quote form), `gear.html` (request form),
+  `visit.html` (map, contact, note form). No build step: the nav, menu and
+  footer are repeated in each file, so change all six. `js/site.js` runs on
+  every page (clip, nav, forms, hours, redirects from the old one-page
+  anchors); `js/home.js` adds the intro and story on home. The intro plays
+  once per visit (sessionStorage) and the clip carries on from page to
+  page. README "Pages" has the details.
+- Booking stays a link to simnowusa.com, not embedded (their site allows
+  framing): it takes payments, which can't be tested from here, and
+  embedding is SimNow's call.
 - Added 2026-10-12 after an audit the owner approved: those share tags,
   square icons (`assets/icons/`, `render/make_icons.py`: an SN monogram
   from their lettering for tabs, the badge for home screens), a Book
@@ -90,13 +104,18 @@ near-black.
   Still open from that audit, all needing SimNow or the owner: launch on
   their domain, real reviews (never invented), a clip filmed in their
   shop, and visitor stats (the owner makes the account).
-- `?skip` skips the intro (for testing; there is no skip button), `?debug`
-  exposes `window.__simnow`.
+- `?skip` skips the intro (for testing; there is no skip button), `?intro`
+  forces it after it has played this visit, `?debug` exposes
+  `window.__simnow`.
 - Playwright's Chromium has no H.264, so tests get the WebM; real browsers
   get the MP4 (chosen with `canPlayType`).
 - Run: `cd sites/simnow && python3 -m http.server 8000`.
 - Test with Playwright (node, CommonJS `require('playwright')`) against
-  Chromium at `/opt/pw-browsers/chromium`.
+  Chromium at `/opt/pw-browsers/chromium`. Phone overflow: compare
+  `scrollWidth` with `documentElement.clientWidth`, not `innerWidth` (with
+  `isMobile` emulation wide content widens `innerWidth` too, so that check
+  always passes). Mailto forms: read the URL from Playwright's `request`
+  event; stubbing `location.href` silently does nothing.
 - The 3D fallback's car model (an Aventador from github.com/saikat111/car-3d,
   SVJ parts added in code) has an unknown licence.
 - Facts come from their current site, read directly on 2026-10-12 (the
