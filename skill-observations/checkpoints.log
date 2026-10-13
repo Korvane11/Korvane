@@ -64,3 +64,5 @@
 2026-10-13 06:02 [Korvane] checkpoint after tasks 43-45: wrote 0014 (redesign audit: asset licences and dead flows)
 2026-10-13 06:20 [Korvane] checkpoint after tasks 46-49 (RC Cleaning built, 52/52 live): no new observations
 2026-10-13 06:32 [observation-log] session-start scan: files=15 parsed=15 principles=3
+2026-10-13 06:36 loaded task-observer — 1 open observations
+2026-10-13 06:36 [Korvane] session-start scan: files=15 parsed=15 principles=3
