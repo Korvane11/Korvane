@@ -1,9 +1,12 @@
 <!doctype html>
-<!-- Eleven Cafē: the espresso pour, rendered offline frame by frame (see render_pour.cjs).
-     A white ribbed tulip cup with a gold ring handle (their logo's cup, in 3D) on a dark
-     counter; espresso pours in, crema rises, the pour stops, steam rises.
-     window.renderFrame(t, layout, passes, mode) -> PNG data URL.
-     mode 0 = the intro shot (t from 0), mode 1 = the steam loop (t in [0, LOOP)). -->
+<!-- Eleven Cafē: the opening scene, rendered offline frame by frame (see render_pour.cjs).
+     Morning sun through a tall window lies across a varnished plank counter in stripes;
+     the air is hazy with it. On the counter, their logo's cup (white, ribbed, a gold ring
+     handle): espresso pours in from above, crema rises, the pour stops, steam rises into
+     the light. Soft focus everywhere but the cup.
+     window.renderFrame(t, layout, passes, mode, w, h, basePasses) -> PNG data URL.
+     mode 0 = the intro shot (t from 0), mode 1 = the steam loop (t in [0, LOOP)),
+     mode 2 (internal) = the still scene the loop's steam is laid over. -->
 <meta charset="utf-8">
 <style>html,body{margin:0;background:#000}canvas{display:block}</style>
 <canvas id="c"></canvas>
@@ -11,11 +14,13 @@
 precision highp float;
 uniform vec2 uRes;
 uniform float uT;        // shot time, seconds
-uniform int uMode;       // 0 intro, 1 loop
+uniform int uMode;       // 0 intro, 1 loop, 2 the still scene for the loop
 uniform int uLayout;     // 0 landscape, 1 portrait
 uniform vec2 uJit;
-uniform sampler2D uBase;   // mode 1: the still scene (linear rgb, alpha = hit distance)
-out vec4 outC;
+uniform float uSeed;     // per pass: jitters the haze, the soft reflections and the soft shadows
+uniform sampler2D uBase; // mode 1: the still scene (linear rgb, alpha = depth), summed over uBaseN passes
+uniform float uBaseN;
+out vec4 outC;           // linear rgb, alpha = depth along the ray (cm)
 
 // ------------------------------------------------------------------ timing
 const float T_START = 0.55;   // the stream leaves the spout (off frame)
@@ -45,7 +50,6 @@ float rOut(float y) { return rBase(y) - grooves(y); }
 float rIn(float y) { return rBase(y) - WALL; }
 
 float smax(float a, float b, float k) { float h = clamp(0.5 + 0.5 * (a - b) / k, 0.0, 1.0); return mix(b, a, h) + k * h * (1.0 - h); }
-float smin(float a, float b, float k) { return -smax(-a, -b, k); }
 
 float sdCup(vec3 p) {
   float rho = length(p.xz);
@@ -68,6 +72,7 @@ float sdRing(vec3 p) {
 }
 
 // ------------------------------------------------------------------ noise
+float hash1(float n) { return fract(sin(n * 127.1) * 43758.5453); }
 float hash3(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float vnoise(vec3 x) {
   vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
@@ -75,6 +80,7 @@ float vnoise(vec3 x) {
              mix(mix(hash3(i + vec3(0, 0, 1)), hash3(i + vec3(1, 0, 1)), f.x), mix(hash3(i + vec3(0, 1, 1)), hash3(i + vec3(1, 1, 1)), f.x), f.y), f.z);
 }
 float fbm(vec3 p) { float a = 0.5, s = 0.0; for (int i = 0; i < 5; i++) { s += a * vnoise(p); p = p * 2.03 + 17.1; a *= 0.5; } return s; }
+float fbm3(vec3 p) { float a = 0.5, s = 0.0; for (int i = 0; i < 3; i++) { s += a * vnoise(p); p = p * 2.03 + 17.1; a *= 0.5; } return s; }
 // value noise whose lattice wraps every `per` cells in y, so steam rising by a whole period loops
 float hashW(vec3 i, float per) { i.y = mod(i.y, per); return hash3(i); }
 float vnoiseW(vec3 x, float per) {
@@ -83,11 +89,11 @@ float vnoiseW(vec3 x, float per) {
              mix(mix(hashW(i + vec3(0, 0, 1), per), hashW(i + vec3(1, 0, 1), per), f.x), mix(hashW(i + vec3(0, 1, 1), per), hashW(i + vec3(1, 1, 1), per), f.x), f.y), f.z);
 }
 float fbmW(vec3 p, float per) { float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * vnoiseW(p, per); p = vec3(p.x * 2.0 + 13.7, p.y * 2.0, p.z * 2.0 + 5.3); per *= 2.0; a *= 0.5; } return s; }
+float ign(vec2 px) { return fract(52.9829189 * fract(dot(px, vec2(0.06711056, 0.00583715)))); }   // interleaved gradient noise
 
 // ------------------------------------------------------------------ the pour over time
 float shotT() { return uMode == 0 ? uT : T_END; }   // modes 1 and 2: the settled cup
 float level(float t) {
-  // the narrow bottom fills fast; from this angle the coffee shows once it is within ~2.7 cm of the rim
   float k = clamp((t - (T_START + 0.15)) / (T_STOP - T_START), 0.0, 1.0);
   return YIN + (LMAX - YIN) * (1.0 - pow(1.0 - k, 2.4));
 }
@@ -109,7 +115,7 @@ float sdStream(vec3 p, float t, float L) {
   vec2 c = HIT + vec2(0.035 * sin(y * 0.9 + t * 7.0), 0.03 * cos(y * 0.7 + t * 5.0));
   float d = length(p.xz - c) - r;
   float cap = max(bottom - y, y - top);
-  return max(d, cap) - 0.0;
+  return max(d, cap);
 }
 // the last two drips
 float sdDrips(vec3 p, float t, float L) {
@@ -129,7 +135,7 @@ float sdLiquid(vec3 p, float L) {
   return max(max(rho - rIn(p.y) + 0.01, p.y - L), YIN - p.y);
 }
 
-// ------------------------------------------------------------------ scene
+// ------------------------------------------------------------------ the cup's scene (raymarched)
 // materials: 1 ceramic, 2 gold, 3 coffee surface, 4 stream / drips
 bool gNoStream = false;   // shadow and occlusion rays ignore the thin stream (its bound shaded the crema)
 vec2 map(vec3 p, float t, float L) {
@@ -156,25 +162,37 @@ vec3 normalAt(vec3 p, float t, float L) {
                         map(p + e.yxy, t, L).x - map(p - e.yxy, t, L).x,
                         map(p + e.yyx, t, L).x - map(p - e.yyx, t, L).x));
 }
+// march only where the cup can be: the ray's span inside a box around it
 vec2 march(vec3 ro, vec3 rd, float t, float L, float tmax) {
-  float d = 0.0;
-  for (int i = 0; i < 220; i++) {
+  vec3 bmin = vec3(-4.6, -0.2, -3.8), bmax = vec3(3.8, 62.0, 3.8);
+  vec3 inv = 1.0 / rd, t0 = (bmin - ro) * inv, t1 = (bmax - ro) * inv;
+  vec3 tn = min(t0, t1), tf = max(t0, t1);
+  float a = max(max(tn.x, tn.y), max(tn.z, 0.0)), b = min(min(tf.x, tf.y), min(tf.z, tmax));
+  if (a >= b) return vec2(-1.0, 0.0);
+  float d = a;
+  for (int i = 0; i < 200; i++) {
     vec3 p = ro + rd * d;
     vec2 h = map(p, t, L);
     if (h.x < 0.0008 * d) return vec2(d, h.y);
     d += h.x;
-    if (d > tmax) break;
+    if (d > b) break;
   }
   return vec2(-1.0, 0.0);
 }
 float softShadow(vec3 ro, vec3 rd, float t, float L, float k) {
+  // only the cup casts: skip rays that miss its bound
+  vec3 bmin = vec3(-4.6, -0.2, -3.8), bmax = vec3(3.8, 7.0, 3.8);
+  vec3 inv = 1.0 / rd, t0 = (bmin - ro) * inv, t1 = (bmax - ro) * inv;
+  vec3 tn = min(t0, t1), tf = max(t0, t1);
+  float a = max(max(tn.x, tn.y), max(tn.z, 0.0)), b = min(min(tf.x, tf.y), tf.z);
+  if (a >= b) return 1.0;
   gNoStream = true;
-  float res = 1.0, d = 0.03;
-  for (int i = 0; i < 32; i++) {
+  float res = 1.0, d = max(a, 0.03);
+  for (int i = 0; i < 40; i++) {
     float h = map(ro + rd * d, t, L).x;
     res = min(res, k * h / d);
-    d += clamp(h, 0.03, 0.9);
-    if (res < 0.002 || d > 30.0) break;
+    d += clamp(h, 0.03, 0.8);
+    if (res < 0.002 || d > b) break;
   }
   gNoStream = false;
   return clamp(res, 0.0, 1.0);
@@ -187,28 +205,119 @@ float ao(vec3 p, vec3 n, float t, float L) {
   return clamp(1.0 - 1.6 * o, 0.0, 1.0);
 }
 
-// ------------------------------------------------------------------ light and environment
-const vec3 KEY = normalize(vec3(-0.55, 0.85, -0.65));   // big softbox behind, left, above
-const vec3 FILL = normalize(vec3(0.75, 0.35, 0.85));    // small card front right
-const vec3 KEYC = vec3(1.0, 0.94, 0.86) * 2.6;
-const vec3 FILLC = vec3(0.86, 0.90, 1.0) * 0.55;
-vec3 envR(vec3 d, float blur);
-vec3 env(vec3 d) { return envR(d, 0.0); }
-vec3 envR(vec3 d, float blur) {
-  vec3 c = vec3(0.012, 0.011, 0.010) + vec3(0.03, 0.026, 0.022) * max(d.y, 0.0);
-  // the key softbox, a soft-edged rectangle
-  vec3 kx = normalize(cross(KEY, vec3(0, 1, 0))), ky = cross(kx, KEY);
-  float a = dot(d, KEY);
-  if (a > 0.0) { vec2 q = vec2(dot(d, kx), dot(d, ky)) / a; float m = smoothstep(0.62 + 0.5 * blur, 0.48 - 0.3 * blur, abs(q.x)) * smoothstep(0.42 + 0.5 * blur, 0.30 - 0.25 * blur, abs(q.y)); c += vec3(1.0, 0.95, 0.88) * 5.0 * m / (1.0 + 1.5 * blur); }
-  // the fill card
-  vec3 fx = normalize(cross(FILL, vec3(0, 1, 0))), fy = cross(fx, FILL);
-  float b = dot(d, FILL);
-  if (b > 0.0) { vec2 q = vec2(dot(d, fx), dot(d, fy)) / b; float m = smoothstep(0.30, 0.18, abs(q.x)) * smoothstep(0.55, 0.40, abs(q.y)); c += vec3(0.85, 0.9, 1.0) * 1.1 * m; }
-  // a warm practical light far behind, for the gold
-  float w = max(dot(d, normalize(vec3(0.35, 0.25, -1.0))), 0.0);
-  c += vec3(1.0, 0.62, 0.22) * 0.9 * pow(w, 40.0) * (1.0 - blur);
+// ------------------------------------------------------------------ the room: window wall, counter, walls
+const float XW = -26.0;          // the window wall's glass plane (the counter runs along it)
+const float PD = 2.5;            // the posts' depth, into the room
+const float SP = 40.7, PW = 17.0; // post spacing and width, along z: the cup in a beam, a post behind it
+const float Z0 = -3.6;            // post phase: the cup sits in a band of sun
+const float HEAD = 230.0;        // top of the glass; the counter is the sill
+const float XR = 170.0, YC = 290.0, ZF = -420.0;   // right wall, ceiling, far wall
+const vec3 SUN = normalize(vec3(-0.86, 0.34, -0.12));   // toward the sun: low, from the window's side
+const vec3 SUNC = vec3(1.0, 0.63, 0.32) * 4.2;          // low, amber           // golden
+const vec3 GLASS = vec3(1.0, 0.46, 0.15) * 0.46;          // late light outside: a dim amber sky
+const vec3 AMB = vec3(0.020, 0.013, 0.008);              // a dark room              // the room's warm bounce
+
+float postMask(float z, float soft) {
+  float u = mod(z - Z0, SP) - 0.5 * SP;
+  return smoothstep(0.5 * PW + soft, 0.5 * PW - soft, abs(u));
+}
+// how much sun reaches p through the window (0..1), soft-edged by distance
+float sunVis(vec3 p, float jit) {
+  if (p.x <= XW) return 1.0;
+  float s = (XW - p.x) / SUN.x;
+  vec3 q = p + SUN * s;
+  float soft = 0.35 + 0.014 * s;
+  q.z += (jit - 0.5) * soft * 0.8;
+  float win = smoothstep(-soft, soft, q.y) * smoothstep(HEAD + soft, HEAD - soft, q.y);
+  return win * (1.0 - postMask(q.z, soft));
+}
+vec3 woodAlb(vec2 xz) {
+  float pw = 10.5;
+  float u = (xz.x - XW) / pw, k = floor(u), f = fract(u);
+  float hk = hash1(k + 3.0);
+  float z = xz.y + hk * 400.0;
+  float grain = fbm3(vec3((xz.x - XW) * 0.55 + k * 7.0, z * 0.035, k * 1.7));
+  float fine = vnoise(vec3((xz.x - XW) * 3.2 + k * 3.0, z * 0.25, 4.0));
+  vec3 a = mix(vec3(0.26, 0.120, 0.050), vec3(0.40, 0.200, 0.090), hk);
+  vec3 c = a * (0.72 + 0.50 * grain) * (0.92 + 0.12 * fine);
+  float seam = smoothstep(0.0, 0.025, f) * smoothstep(1.0, 0.975, f);
+  float e = fract(z / 160.0);
+  seam *= smoothstep(0.0, 0.004, e) * smoothstep(1.0, 0.996, e);
+  return c * mix(0.30, 1.0, seam);
+}
+// what a ray from o in direction d sees of the room (no cup): returns linear colour, writes the distance
+vec3 room(vec3 o, vec3 d, float jit, out float dist, bool full);
+vec3 windowSeen(vec3 o, vec3 d, out float dist) {
+  // the posts' inner face, then the glass behind; a post's side if the ray crosses one in between
+  float ti = (XW + PD - o.x) / d.x, tg = (XW - o.x) / d.x;
+  vec3 pi = o + d * ti, pg = o + d * tg;
+  dist = ti;
+  if (pi.y > HEAD) return vec3(0.050, 0.034, 0.024);                 // the wall above the window
+  if (postMask(pi.z, 0.15) > 0.5) return vec3(0.030, 0.012, 0.005);  // a post, facing the room: in shadow
+  // a post's side, if the ray meets one between the posts' face and the glass
+  float hw = 0.5 * PW / SP, ui = (pi.z - Z0) / SP - 0.5, ug = (pg.z - Z0) / SP - 0.5, sg = sign(ug - ui);
+  float kb = sg > 0.0 ? floor(ui) + 1.0 : ceil(ui) - 1.0;
+  float ub = kb - sg * hw;
+  if ((ub - ui) * sg < abs(ug - ui)) {
+    dist = mix(ti, tg, (ub - ui) / (ug - ui));
+    return vec3(0.050, 0.020, 0.008) * (1.0 + 0.6 * smoothstep(0.0, 1.0, (ub - ui) / (ug - ui)));   // warmer toward the glass
+  }
+  dist = tg;
+  if (pg.y > HEAD) return vec3(0.050, 0.034, 0.024);
+  // outside: a bright morning, a soft hint of trees (out of focus anyway)
+  float grad = 0.85 + 0.25 * smoothstep(0.0, HEAD, pg.y);
+  float trees = fbm3(vec3(pg.z * 0.012, pg.y * 0.016, 3.0));
+  return GLASS * grad * mix(vec3(1.0), vec3(0.80, 0.72, 0.52), smoothstep(0.45, 0.75, trees) * smoothstep(HEAD, 40.0, pg.y) * 0.55);
+}
+vec3 room(vec3 o, vec3 d, float jit, out float dist, bool full) {
+  float best = 1e5; vec3 c = vec3(0);
+  // counter (the floor of this little world), at y = 0, between the window and the right wall
+  if (d.y < 0.0) {
+    float tc = -o.y / d.y;
+    vec3 p = o + d * tc;
+    if (p.x > XW && tc < best) {
+      best = tc;
+      vec3 alb = woodAlb(p.xz);
+      float sv = sunVis(p, jit);
+      c = alb * (SUNC * sv * SUN.y + AMB * 1.3 + GLASS * 0.010 * smoothstep(60.0, 0.0, p.x - XW));
+      if (full) {   // the varnish: a soft, warm reflection of the window
+        float g = (fbm3(vec3(p.xz * 0.12, 7.0)) - 0.5) * 0.05;
+        vec3 n = normalize(vec3(g, 1.0, g * 0.7));
+        vec3 r = reflect(d, n);
+        float F = 0.035 + 0.6 * pow(1.0 - max(dot(-d, n), 0.0), 5.0);
+        float td; vec3 rc = r.x < 0.0 ? windowSeen(p, r, td) : vec3(0.06, 0.04, 0.028);
+        c += rc * F * 0.20;
+      }
+    }
+  }
+  // the window wall
+  if (d.x < 0.0) {
+    float tw = (XW + PD - o.x) / d.x;
+    if (tw > 0.0 && tw < best) {
+      vec3 p = o + d * tw;
+      if (p.y > 0.0 && p.y < YC) { float td; vec3 wc = windowSeen(o, d, td); best = td; c = wc; }
+    }
+  }
+  // right wall, ceiling, far wall: plaster, with the sun's bands where they reach
+  float tr = d.x > 0.0 ? (XR - o.x) / d.x : 1e5;
+  float tcl = d.y > 0.0 ? (YC - o.y) / d.y : 1e5;
+  float tf = d.z < 0.0 ? (ZF - o.z) / d.z : 1e5;
+  float tb = d.z > 0.0 ? (260.0 - o.z) / d.z : 1e5;
+  float tw2 = min(min(tr, tcl), min(tf, tb));
+  if (tw2 < best) {
+    best = tw2;
+    vec3 p = o + d * tw2;
+    vec3 n = tw2 == tr ? vec3(-1, 0, 0) : tw2 == tcl ? vec3(0, -1, 0) : tw2 == tf ? vec3(0, 0, 1) : vec3(0, 0, -1);
+    vec3 alb = vec3(0.26, 0.20, 0.15);
+    float sv = sunVis(p, jit);
+    c = alb * (SUNC * sv * max(dot(n, SUN), 0.0) * 0.8 + AMB * 1.1);
+  }
+  dist = best;
   return c;
 }
+// the environment the cup reflects, seen from its middle
+vec3 env(vec3 d) { float dd; return room(vec3(0.0, 3.5, 0.0), d, 0.5, dd, false); }
+
 float ggx(vec3 n, vec3 v, vec3 l, float rough) {
   vec3 h = normalize(v + l); float a = rough * rough, a2 = a * a;
   float nh = max(dot(n, h), 0.0), nl = max(dot(n, l), 0.0), nv = max(dot(n, v), 0.001);
@@ -217,20 +326,14 @@ float ggx(vec3 n, vec3 v, vec3 l, float rough) {
   return D * Gs / (4.0 * nv + 0.001);
 }
 vec3 fres(vec3 f0, float c) { return f0 + (1.0 - f0) * pow(1.0 - c, 5.0); }
-
-// the background: dark, a warm wall glow and out-of-focus lights of the cafe behind
-vec3 background(vec2 s) {         // s: screen coords, y up, height = 1
-  vec3 c = vec3(0.010, 0.0095, 0.009);
-  c += vec3(0.030, 0.023, 0.016) * exp(-pow(length(s - vec2(-0.25, 0.25)) / 0.75, 2.0));
-  vec2 B[6] = vec2[6](vec2(-0.62, 0.30), vec2(-0.38, 0.40), vec2(0.70, 0.36), vec2(0.88, 0.12), vec2(-0.80, 0.05), vec2(0.42, 0.44));
-  float R[6] = float[6](0.062, 0.045, 0.052, 0.038, 0.034, 0.03);
-  for (int i = 0; i < 6; i++) {
-    vec2 b = B[i]; if (uLayout == 1) b = vec2(b.x * 0.45, b.y + 0.12);
-    float d = length(s - b) / R[i];
-    float m = smoothstep(1.0, 0.78, d) * (0.6 + 0.4 * smoothstep(0.3, 0.95, d));
-    c += vec3(1.0, 0.60, 0.22) * 0.085 * m * (i == 2 ? 0.7 : 1.0) * (i == 4 ? 0.0 : 1.0);
-  }
-  return c;
+// soft light on a surface from the room: the window to the left, the sunlit counter below, the room above
+vec3 ambient(vec3 n) {
+  vec3 wdir = normalize(vec3(-1.0, 0.35, -0.25));
+  vec3 fdir = normalize(vec3(0.35, 0.25, 0.90));
+  return GLASS * 0.05 * pow(max(dot(n, wdir) * 0.5 + 0.5, 0.0), 2.0)
+       + vec3(0.62, 0.55, 0.48) * 0.14 * pow(max(dot(n, fdir) * 0.5 + 0.5, 0.0), 2.0)
+       + vec3(0.30, 0.17, 0.08) * 0.28 * max(-n.y * 0.5 + 0.5, 0.0)
+       + AMB * (0.6 + 0.4 * n.y);
 }
 
 // ------------------------------------------------------------------ the coffee's surface
@@ -256,39 +359,36 @@ vec3 surfNormal(vec3 p, float t) {
   float amp = 0.05 * pourAmt(t) + 0.02 * exp(-4.0 * max(t - T_STOP, 0.0)) * step(T_STOP, t) * (1.0 - step(T_END - 0.001, t));
   float w = cos(r * 16.0 - t * 34.0) * exp(-r * 1.3) * amp * 16.0;
   vec2 g = d / r * w;
-  // meniscus: tilt up near the wall
   float rho = length(p.xz), ri = rIn(p.y);
   vec2 m = p.xz / max(rho, 1e-3) * 0.9 * smoothstep(ri - 0.35, ri, rho);
   return normalize(vec3(-g.x - m.x, 1.0, -g.y - m.y));
 }
 
-// ------------------------------------------------------------------ steam (loops every LOOP seconds)
-vec4 steam(vec3 ro, vec3 rd, float tHit, float t) {
+// ------------------------------------------------------------------ steam (loops every LOOP seconds), lit by the sun
+vec4 steam(vec3 ro, vec3 rd, float tHit, float t, float jit) {
   float k = uMode == 0 ? smoothstep(T_STOP - 0.6, T_END, uT) : 1.0;
   if (k <= 0.0) return vec4(0);
-  // march the column above the cup
-  float y0 = H - 0.6, y1 = H + 11.0;
+  float y0 = H - 0.6, y1 = H + 18.0;
   float acc = 0.0; vec3 col = vec3(0);
   float tau = uMode == 0 ? (uT - T_END) : uT;       // the intro ends where the loop starts
   float per = 6.0;                                  // lattice cells per period in y
   float rise = per / LOOP;                          // noise units per second: one period per loop
-  float n0 = 0.0, n1 = 30.0;
-  // ray range where y in [y0, y1]
+  float n0 = 0.0, n1 = 1e3;                        // a level ray: the cylinder bounds it below
   if (abs(rd.y) > 1e-4) { float a = (y0 - ro.y) / rd.y, b = (y1 - ro.y) / rd.y; n0 = max(min(a, b), 0.0); n1 = max(a, b); }
-  // and inside the cylinder rho < 5 around the cup's axis
-  vec2 oc = ro.xz, dd = rd.xz; float A = dot(dd, dd), Bq = dot(oc, dd), Cq = dot(oc, oc) - 25.0, D = Bq * Bq - A * Cq;
+  vec2 oc = ro.xz, dd = rd.xz; float A = dot(dd, dd), Bq = dot(oc, dd), Cq = dot(oc, oc) - 42.25, D = Bq * Bq - A * Cq;
   if (D <= 0.0) return vec4(0);
   float sq = sqrt(D); n0 = max(n0, (-Bq - sq) / A); n1 = min(n1, (-Bq + sq) / A);
   n1 = min(n1, tHit > 0.0 ? tHit : 1e3);
   if (n1 <= n0) return vec4(0);
-  float steps = 32.0, dt = (n1 - n0) / steps;
-  float ph = 0.5 + 0.5 * dot(rd, KEY);
-  float phase = 0.25 + 1.6 * pow(ph, 6.0);           // bright toward the backlight
+  float dt = (n1 - n0) / 32.0;
+  float mu = dot(rd, SUN);
+  float phase = 0.35 + 2.4 * pow(0.5 + 0.5 * mu, 5.0);        // bright looking toward the sun
   for (float i = 0.0; i < 32.0; i++) {
-    vec3 p = ro + rd * (n0 + (i + 0.5) * dt);
+    vec3 p = ro + rd * (n0 + (i + jit) * dt);
     float hy = p.y - (H - 0.3);
     float rad = length(p.xz - vec2(0.15 * sin(hy * 0.45), 0.0)) / (1.9 + hy * 0.22);
     float env = smoothstep(0.0, 0.9, hy) * exp(-hy / 4.2) * exp(-rad * rad * 2.4);
+    env *= smoothstep(6.5, 4.5, length(p.xz)) * smoothstep(y1, y1 - 5.0, p.y);   // nothing left at the march's edges
     if (env < 0.002) continue;
     float sw = 0.6 * sin(hy * 0.35 + 2.0 * PI * tau / LOOP);
     vec3 q = vec3(p.x * cos(sw) - p.z * sin(sw), p.y, p.x * sin(sw) + p.z * cos(sw));
@@ -296,120 +396,198 @@ vec4 steam(vec3 ro, vec3 rd, float tHit, float t) {
     float fil = 1.0 - abs(2.0 * n - 1.0);                       // ridges: wisps, not fog
     float dens = pow(smoothstep(0.62, 0.97, fil), 2.5) * env * 0.75 * k;
     float a = 1.0 - exp(-dens * dt * 1.4);
-    col += (1.0 - acc) * a * vec3(1.0, 0.88, 0.70) * phase * 1.3;
+    vec3 lit = SUNC * 0.34 * sunVis(p, 0.5) * phase + AMB * 2.5;
+    col += (1.0 - acc) * a * lit;
     acc += (1.0 - acc) * a;
   }
   return vec4(col, acc);
 }
 
-// ------------------------------------------------------------------ shading
-vec3 shade(vec3 ro, vec3 rd, float t, float L, out float hitDist, int depth);
-vec3 shadeHit(vec3 p, vec3 rd, float m, float t, float L) {
+// ------------------------------------------------------------------ shading the cup
+vec3 shadeHit(vec3 p, vec3 rd, float m, float t, float L, float jit) {
   vec3 n = normalAt(p, t, L), v = -rd;
   float occ = ao(p, n, t, L);
-  float sk = softShadow(p + n * 0.01, KEY, t, L, 10.0), sf = softShadow(p + n * 0.01, FILL, t, L, 8.0);
+  float sv = sunVis(p, jit);
+  float ss = sv > 0.002 ? softShadow(p + n * 0.012, SUN, t, L, 14.0) : 0.0;
+  vec3 sun = SUNC * sv * ss;
   vec3 c;
   if (m < 1.5) {                                  // glazed white ceramic
     vec3 alb = vec3(0.86, 0.85, 0.83);
-    float wrapK = max((dot(n, KEY) + 0.35) / 1.35, 0.0), wrapF = max((dot(n, FILL) + 0.2) / 1.2, 0.0);
+    float wrap = max((dot(n, SUN) + 0.25) / 1.25, 0.0);
     float inside = step(length(p.xz), rIn(p.y) + 0.06) * step(dot(n.xz, p.xz), 0.0) * step(YIN, p.y);
-    c = alb * (KEYC * wrapK * mix(0.25, 1.0, sk) * 0.32 + FILLC * wrapF * sf + vec3(0.05, 0.048, 0.046) + vec3(0.20, 0.19, 0.18) * inside) * occ;
+    c = alb * (sun * wrap * 0.85 + ambient(n) * (1.0 + 0.6 * inside)) * occ;
     vec3 F = fres(vec3(0.04), max(dot(n, v), 0.0));
-    c += F * envR(reflect(rd, n), 0.7) * occ * 0.6;
-    c += KEYC * ggx(n, v, KEY, 0.2) * sk * 0.3 + FILLC * ggx(n, v, FILL, 0.24) * sf * 0.35;
+    c += F * env(reflect(rd, n)) * occ * 0.75;
+    c += sun * ggx(n, v, SUN, 0.16) * 0.35;
   } else if (m < 2.5) {                           // gold ring
     vec3 gold = vec3(0.96, 0.66, 0.24);
     vec3 F = fres(gold, max(dot(n, v), 0.0));
-    vec3 r = reflect(rd, n);
-    c = F * (env(r) * 0.9 + 0.04) * occ;
-    c += gold * (KEYC * ggx(n, v, KEY, 0.25) * sk + FILLC * ggx(n, v, FILL, 0.3) * sf) * 0.6;
-    c += gold * 0.06 * occ;
+    c = F * (env(reflect(rd, n)) * 0.95 + 0.02) * occ;
+    c += gold * sun * ggx(n, v, SUN, 0.22) * 0.6;
+    c += gold * ambient(n) * 0.25 * occ;
   } else if (m < 3.5) {                           // the coffee in the cup
     vec3 sn = surfNormal(p, t);
     vec3 alb = cremaColor(p, t, L);
-    float dk = max(dot(sn, KEY), 0.0), df = max(dot(sn, FILL), 0.0);
-    float wallShade = smoothstep(rIn(L) * 0.2, rIn(L), length(p.xz - vec2(0.4, -0.5)));   // the wall shades the far side
-    c = alb * (KEYC * dk * 0.28 * mix(0.35, 1.0, sk) + FILLC * df * 0.6 * sf + 0.04) * mix(1.0, 0.6, wallShade) * occ;
+    float wallShade = smoothstep(rIn(L) * 0.2, rIn(L), length(p.xz - vec2(0.4, -0.5)));
+    c = alb * (sun * max(dot(sn, SUN), 0.0) * 0.75 + ambient(sn) * 0.9) * mix(1.0, 0.7, wallShade) * occ;
     vec3 F = fres(vec3(0.03), max(dot(sn, v), 0.0));
-    c += F * envR(reflect(rd, sn), cremaAmt(t)) * mix(1.0, 0.06, cremaAmt(t));
-  } else {                                        // the stream: dark, glossy, amber where the light comes through
+    c += F * env(reflect(rd, sn)) * mix(1.0, 0.08, cremaAmt(t));
+  } else {                                        // the stream: dark, glossy, amber where the sun comes through
     vec3 F = fres(vec3(0.045), max(dot(n, v), 0.0));
     float tiger = 0.6 + 0.4 * smoothstep(0.3, 0.8, vnoise(vec3(p.y * 3.5 + t * 55.0, p.x * 9.0, 2.0)));
     float facing = max(dot(n, v), 0.0);
-    vec3 amber = vec3(0.40, 0.16, 0.05) * tiger;
-    c = vec3(0.022, 0.010, 0.004) + amber * 0.42 * facing * facing;
+    float through = pow(max(dot(rd, SUN), 0.0), 2.0);
+    vec3 amber = vec3(0.50, 0.20, 0.05) * tiger;
+    c = vec3(0.016, 0.007, 0.003) + amber * (0.18 * facing * facing + 0.55 * through * sv);
     c += F * env(reflect(rd, n)) * 0.9;
-    c += KEYC * ggx(n, v, KEY, 0.07) * 0.25;
+    c += sun * ggx(n, v, SUN, 0.07) * 0.25;
   }
   return c;
 }
 
-vec3 render(vec3 ro, vec3 rd, vec2 s, float t) {
+// ------------------------------------------------------------------ the haze: the sun's beams in the air
+const float SIG = 0.00028;        // scattering per cm
+vec3 haze(vec3 ro, vec3 rd, float tEnd, float jit) {
+  float tE = min(tEnd, 900.0);
+  float mu = dot(rd, SUN), g = 0.50;
+  float ph = (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * mu, 1.5);   // Henyey-Greenstein, x 4 pi
+  float acc = 0.0, dt = tE / 28.0;
+  for (int i = 0; i < 28; i++) acc += sunVis(ro + rd * ((float(i) + jit) * dt), jit);
+  return (SUNC * ph * 0.33 * acc * dt + AMB * 1.5 * tE) * SIG;
+}
+
+// ------------------------------------------------------------------ one camera ray
+vec4 render(vec3 ro, vec3 rd, float t, float jit) {
   float L = level(t);
-  // bound: everything solid sits inside |x| < 6, y < 60
-  float tPlane = rd.y < 0.0 ? -ro.y / rd.y : -1.0;
-  vec2 h = march(ro, rd, t, L, tPlane > 0.0 ? tPlane : 120.0);
-  vec3 c; float hitD = -1.0;
+  float rDist; vec3 bg = room(ro, rd, jit, rDist, true);
+  vec2 h = march(ro, rd, t, L, rDist);
+  vec3 c; float dist;
   if (h.x > 0.0) {
-    hitD = h.x;
-    c = shadeHit(ro + rd * h.x, rd, h.y, t, L);
-  } else if (tPlane > 0.0) {
-    hitD = tPlane;
-    vec3 p = ro + rd * tPlane;
-    vec3 n = vec3(0, 1, 0);
-    float near = length(p.xz - vec2(-0.6, 0.0));
-    float sk = 1.0, sf = 1.0, occ = 1.0;
-    float nearK = smoothstep(9.0, 6.5, near);
-    if (nearK > 0.0) { sk = mix(1.0, softShadow(p + n * 0.01, KEY, t, L, 6.0), nearK); sf = mix(1.0, softShadow(p + n * 0.01, FILL, t, L, 6.0), nearK); occ = mix(1.0, ao(p, n, t, L), nearK); }
-    vec3 alb = vec3(0.020, 0.018, 0.017) * (0.9 + 0.2 * fbm(vec3(p.xz * 0.6, 1.0)));
-    float pool = exp(-pow(near / 7.0, 2.0));               // a soft pool of light around the cup
-    c = alb * (KEYC * max(dot(n, KEY), 0.0) * mix(0.2, 1.0, sk) * 0.5 * pool + FILLC * sf * 0.8 * pool + 0.03) * occ;
-    // a short, soft reflection of the cup in the counter
-    if (nearK > 0.0) {
-      vec3 rr = reflect(rd, n);
-      vec2 h2 = march(p + n * 0.02, rr, t, L, 14.0);
-      float F = 0.03 + 0.3 * pow(1.0 - max(dot(-rd, n), 0.0), 5.0);
-      if (h2.x > 0.0) c += shadeHit(p + rr * h2.x, rr, h2.y, t, L) * exp(-h2.x * 0.55) * F * nearK;
-    }
-    // fade the counter into the dark
-    float far = smoothstep(8.0, 30.0, length(p.xz));
-    c = mix(c, background(s), far);
+    dist = h.x;
+    c = shadeHit(ro + rd * h.x, rd, h.y, t, L, jit);
   } else {
-    c = background(s);
+    dist = rDist;
+    c = bg;
+    vec3 p = ro + rd * rDist;
+    if (rd.y < 0.0 && abs(p.y) < 0.01) {       // the counter near the cup: its shadow, its contact, its reflection
+      float near = length(p.xz);
+      float nearK = smoothstep(30.0, 22.0, near);
+      if (nearK > 0.0) {
+        float sv = sunVis(p, jit);
+        float sh = sv > 0.002 ? softShadow(p + vec3(0, 0.01, 0), SUN, t, L, 5.0) : 1.0;
+        float occ = mix(1.0, ao(p, vec3(0, 1, 0), t, L), smoothstep(7.0, 3.0, near));
+        vec3 alb = woodAlb(p.xz);
+        c -= alb * SUNC * sv * SUN.y * (1.0 - sh) * nearK;
+        c *= mix(1.0, occ, nearK);
+        vec3 rr = reflect(rd, vec3(0, 1, 0));
+        vec2 h2 = march(p + vec3(0, 0.02, 0), rr, t, L, 30.0);
+        float F = 0.035 + 0.6 * pow(1.0 - max(-rd.y, 0.0), 5.0);
+        if (h2.x > 0.0) c += shadeHit(p + rr * h2.x, rr, h2.y, t, L, jit) * exp(-h2.x * 0.18) * F * 0.9 * nearK;
+      }
+    }
   }
-  if (uMode == 0) { vec4 st = steam(ro, rd, hitD, t); c = c * (1.0 - st.a) + st.rgb * 0.55; }
-  return c;
+  if (uMode == 0) {
+    vec4 st = steam(ro, rd, dist, t, jit);
+    c = c * (1.0 - st.a) + st.rgb;
+    dist = mix(dist, length(ro) , smoothstep(0.02, 0.35, st.a));   // steam sits at the cup: in focus
+  }
+  float T = exp(-SIG * 1.25 * min(dist, 900.0));
+  c = c * T + haze(ro, rd, dist, jit);
+  return vec4(c, dist);
 }
-
-vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
 
 void main() {
   vec2 frag = gl_FragCoord.xy + uJit;
   float aspect = uRes.x / uRes.y;
   vec2 s = (frag - 0.5 * uRes) / uRes.y;            // y up, height 1
-  // camera: 24 degrees above the counter, long lens; the cup is moved off centre with lens shift
-  float elev = radians(24.0);
-  float dist = uLayout == 0 ? 40.0 : 46.0;
-  float vfov = uLayout == 0 ? radians(19.5) : radians(32.0);
-  vec3 target = vec3(-0.35, 3.0, 0.0);
-  vec3 ro = target + dist * vec3(0.0, sin(elev), cos(elev));
+  float jit = fract(ign(gl_FragCoord.xy) + uSeed);
+  // the camera: low over the counter, to the right of the cup, looking along the window
+  vec3 target = vec3(0.0, 3.0, 0.0);
+  vec3 ro = uLayout == 0 ? vec3(16.0, 8.8, 44.0) : vec3(10.0, 10.0, 54.0);
+  float vfov = uLayout == 0 ? radians(30.0) : radians(37.0);
+  float dist = length(target - ro);
   vec3 fw = normalize(target - ro), rt = normalize(cross(fw, vec3(0, 1, 0))), up = cross(rt, fw);
-  vec2 shift = uLayout == 0 ? vec2(-0.12 * aspect, 0.05) : vec2(0.0, -0.14);
+  vec2 shift = uLayout == 0 ? vec2(-0.20 * aspect, 0.07) : vec2(0.0, -0.21);   // portrait: the cup high, the words below it
   vec2 q = s + shift;                                // where the cup sits on screen
   float f = 0.5 / tan(vfov * 0.5);
   vec3 rd = normalize(rt * q.x + up * q.y + fw * f);
   float t = shotT();
-  if (uMode == 2) { float L = level(t); float tP = rd.y < 0.0 ? -ro.y / rd.y : -1.0; vec2 h = march(ro, rd, t, L, tP > 0.0 ? tP : 120.0);
-    outC = vec4(render(ro, rd, s, t), h.x > 0.0 ? h.x : (tP > 0.0 ? tP : 1e3)); return; }
-  vec3 c;
-  if (uMode == 1) { vec4 b = texelFetch(uBase, ivec2(gl_FragCoord.xy), 0); vec4 st = steam(ro, rd, b.a, t); c = b.rgb * (1.0 - st.a) + st.rgb * 0.55; }
-  else c = render(ro, rd, s, t);
-  float expo = uMode == 0 ? smoothstep(0.0, 0.75, uT) : 1.0;   // the lights come up
-  c *= expo * 1.15;
+  // positions are relative to the cup; the camera's distance to it is the focus distance (see the post pass)
+  if (uMode == 1) {
+    vec4 b = texelFetch(uBase, ivec2(gl_FragCoord.xy), 0); b.rgb /= uBaseN;
+    vec4 st = steam(ro, rd, b.a, t, jit);
+    float T = exp(-SIG * 1.25 * 50.0);
+    outC = vec4(b.rgb * (1.0 - st.a) + st.rgb * T, mix(b.a, dist, smoothstep(0.02, 0.35, st.a)));
+    return;
+  }
+  outC = render(ro, rd, t, jit);
+}
+</script>
+<script id="post" type="x-shader/x-fragment">#version 300 es
+// depth of field (gathered), from the averaged linear image with depth in alpha
+precision highp float;
+uniform sampler2D uTex; uniform float uN; uniform float uFocus; uniform float uAper; uniform float uMaxC; uniform int uDebug;
+out vec4 o;
+float coc(float d) { return min(uAper * abs(1.0 - uFocus / max(d, 1.0)), uMaxC); }
+void main() {
+  ivec2 P = ivec2(gl_FragCoord.xy), S = textureSize(uTex, 0);
+  vec4 c0 = texelFetch(uTex, P, 0); c0.rgb /= uN;     // alpha: the nearest depth, not a sum
+  float r0 = coc(c0.a);
+  if (uDebug == 1) { o = vec4(vec3(r0 / max(uAper, 1.0)) * 0.6, 1.0); return; }
+  if (uDebug == 2) { o = vec4(vec3(c0.a / 200.0) * 0.6, 1.0); return; }
+  float w0 = 1.0 / max(r0 * r0, 1.0);
+  vec3 acc = c0.rgb * w0; float wsum = w0;
+  const int N = 128;
+  float rot = 6.2831853 * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  for (int i = 1; i < N; i++) {
+    float r = sqrt(float(i) / float(N)) * uMaxC, a = float(i) * 2.39996323 + rot;
+    vec2 off = vec2(cos(a), sin(a)) * r;
+    ivec2 Q = clamp(P + ivec2(round(off)), ivec2(0), S - 1);
+    vec4 cs = texelFetch(uTex, Q, 0); cs.rgb /= uN;
+    float rs = coc(cs.a);
+    if (cs.a > c0.a) rs = min(rs, r0);              // what lies behind can't spread over what is in front
+    else if (rs < 1.5) continue;                    // and what is sharp in front doesn't spread at all
+    float w = smoothstep(r - 1.0, r + 1.0, rs) / max(rs * rs, 1.0);   // the sample's circle reaches this pixel
+    acc += cs.rgb * w; wsum += w;
+  }
+  vec3 col = acc / wsum;
+  // the in-focus centre keeps its own value where its circle is small
+  col = mix(c0.rgb, col, smoothstep(0.6, 2.0, r0));
+  o = vec4(col, 1.0);
+}
+</script>
+<script id="bright" type="x-shader/x-fragment">#version 300 es
+precision highp float; uniform sampler2D uTex; uniform vec2 uTexel; out vec4 o; in vec2 vUv;
+void main() {
+  vec3 s = vec3(0);
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) s += texture(uTex, vUv + vec2(i, j) * uTexel).rgb;
+  s /= 9.0;
+  vec3 e = max(s - vec3(1.6), 0.0);
+  o = vec4(e / (1.0 + e), 1.0);   // what glows, with a soft ceiling so big bright panes don't flood the room
+
+}
+</script>
+<script id="blur" type="x-shader/x-fragment">#version 300 es
+precision highp float; uniform sampler2D uTex; uniform vec2 uDir; out vec4 o; in vec2 vUv;
+void main() {
+  vec3 s = vec3(0); float w = 0.0;
+  for (int i = -24; i <= 24; i++) { float k = exp(-float(i * i) / 180.0); s += texture(uTex, vUv + uDir * float(i)).rgb * k; w += k; }
+  o = vec4(s / w, 1.0);
+}
+</script>
+<script id="final" type="x-shader/x-fragment">#version 300 es
+precision highp float; uniform sampler2D uImg; uniform sampler2D uBloom; uniform float uExpo; uniform float uSeed; uniform float uBloomK; out vec4 o; in vec2 vUv;
+vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+void main() {
+  vec3 c = texelFetch(uImg, ivec2(gl_FragCoord.xy), 0).rgb + texture(uBloom, vUv).rgb * vec3(1.0, 0.80, 0.58) * 0.30 * uBloomK;
+  c *= uExpo * 0.62;
   c = aces(c);
   c = pow(c, vec3(1.0 / 2.2));
-  c *= 1.0 - 0.28 * pow(length(s / vec2(aspect * 0.62, 0.62)), 2.2);
-  outC = vec4(c, 1.0);
+  vec2 s = vUv - 0.5;
+  c *= 1.0 - 0.45 * pow(length(s * vec2(1.0, 0.85)) * 1.25, 2.2);
+  float n = fract(sin(dot(gl_FragCoord.xy + uSeed * 91.7, vec2(12.9898, 78.233))) * 43758.5453);
+  c += (n - 0.5) * 0.010;
+  o = vec4(c, 1.0);
 }
 </script>
 <script>
@@ -417,92 +595,97 @@ const cv = document.getElementById('c');
 const gl = cv.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false });
 gl.getExtension('EXT_color_buffer_float');
 const vs = `#version 300 es
-in vec2 a; void main(){ gl_Position = vec4(a, 0, 1); }`;
+in vec2 a; out vec2 vUv; void main(){ vUv = a * 0.5 + 0.5; gl_Position = vec4(a, 0, 1); }`;
 function sh(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
-const prog = gl.createProgram();
-gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, document.getElementById('fs').textContent.trim()));
-gl.linkProgram(prog); if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-// a second program averages the accumulated passes
-const avgFs = `#version 300 es
-precision highp float; uniform sampler2D uTex; uniform float uN; uniform int uKeepA; out vec4 o;
-void main(){ vec4 v = texelFetch(uTex, ivec2(gl_FragCoord.xy), 0) / uN; o = uKeepA == 1 ? v : vec4(v.rgb, 1.0); }`;
-const avg = gl.createProgram();
-gl.attachShader(avg, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(avg, sh(gl.FRAGMENT_SHADER, avgFs)); gl.linkProgram(avg);
+function program(id) {
+  const p = gl.createProgram();
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, document.getElementById(id).textContent.trim()));
+  gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(id + ': ' + gl.getProgramInfoLog(p));
+  return p;
+}
+const prog = program('fs'), dofP = program('post'), brightP = program('bright'), blurP = program('blur'), finalP = program('final');
 const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-let fbo = null, tex = null, W = 0, Hh = 0;
+function texture(w, h, fmt, filter) {
+  const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texImage2D(gl.TEXTURE_2D, 0, fmt, w, h, 0, gl.RGBA, gl.FLOAT, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+  return { t, f, w, h };
+}
+let T = null, W = 0, Hh = 0;
 function setup(w, h) {
   if (w === W && h === Hh) return;
   W = w; Hh = h; cv.width = w; cv.height = h;
-  tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, w, h, 0, gl.RGBA, gl.FLOAT, null);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-  fbo = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  const bw = Math.ceil(w / 4), bh = Math.ceil(h / 4);
+  T = { acc: texture(w, h, gl.RGBA32F, gl.NEAREST), base: texture(w, h, gl.RGBA32F, gl.NEAREST), dof: texture(w, h, gl.RGBA16F, gl.LINEAR),
+        b1: texture(bw, bh, gl.RGBA16F, gl.LINEAR), b2: texture(bw, bh, gl.RGBA16F, gl.LINEAR) };
+  baseKey = '';
 }
 function draw(p) { const loc = gl.getAttribLocation(p, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
-// rotated-grid jitter offsets
+function target(x) { gl.bindFramebuffer(gl.FRAMEBUFFER, x ? x.f : null); gl.viewport(0, 0, x ? x.w : W, x ? x.h : Hh); }
+function bindTex(p, name, unit, x) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, x.t); gl.uniform1i(gl.getUniformLocation(p, name), unit); }
 const JIT = [[0.125, 0.375], [-0.375, 0.125], [0.375, -0.125], [-0.125, -0.375], [0.0, 0.0], [0.25, 0.25], [-0.25, -0.25], [0.25, -0.25], [-0.25, 0.25]];
-let baseTex = null, baseKey = '';
-function buildBase(layout, passes, w, h) {
-  const key = [layout, passes, w, h].join();
-  if (key === baseKey) return;
-  setup(w, h);
-  accumulate(0, layout, passes, 2, w, h);
-  // copy the averaged linear scene into its own texture
-  baseTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, baseTex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, w, h, 0, gl.RGBA, gl.FLOAT, null);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-  const f2 = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f2);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, baseTex, 0);
-  gl.viewport(0, 0, w, h); gl.useProgram(avg);
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.uniform1i(gl.getUniformLocation(avg, 'uTex'), 0); gl.uniform1f(gl.getUniformLocation(avg, 'uN'), passes); gl.uniform1i(gl.getUniformLocation(avg, 'uKeepA'), 1);
-  draw(avg); gl.finish();
-  baseKey = key;
-}
-function accumulate(t, layout, passes, mode, w, h) {
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); gl.viewport(0, 0, w, h);
-  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+let baseKey = '';
+function accumulate(into, t, layout, passes, mode) {
+  target(into);
+  // colour adds up over the passes; depth keeps the nearest (an average at an edge would be neither surface)
+  gl.clearBufferfv(gl.COLOR, 0, [0, 0, 0, 1e9]);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.FUNC_ADD, gl.MIN);
   gl.useProgram(prog);
-  gl.uniform2f(gl.getUniformLocation(prog, 'uRes'), w, h);
+  gl.uniform2f(gl.getUniformLocation(prog, 'uRes'), W, Hh);
   gl.uniform1f(gl.getUniformLocation(prog, 'uT'), t);
   gl.uniform1i(gl.getUniformLocation(prog, 'uMode'), mode);
   gl.uniform1i(gl.getUniformLocation(prog, 'uLayout'), layout);
-  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, baseTex); gl.uniform1i(gl.getUniformLocation(prog, 'uBase'), 1);
-  for (let i = 0; i < passes; i++) { gl.uniform2f(gl.getUniformLocation(prog, 'uJit'), JIT[i][0], JIT[i][1]); draw(prog); }
+  if (mode === 1) { bindTex(prog, 'uBase', 1, T.base); gl.uniform1f(gl.getUniformLocation(prog, 'uBaseN'), baseN); }
+  for (let i = 0; i < passes; i++) {
+    gl.uniform2f(gl.getUniformLocation(prog, 'uJit'), JIT[i % 9][0], JIT[i % 9][1]);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uSeed'), (i * 0.618034) % 1);
+    draw(prog);
+  }
   gl.disable(gl.BLEND);
 }
+// the loop's still scene: averaged once, kept in its own texture (linear rgb + depth)
+function buildBase(layout, passes) {
+  const key = [layout, passes, W, Hh].join();
+  if (key === baseKey) return;
+  accumulate(T.acc, 0, layout, passes, 2);
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, T.acc.f); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, T.base.f);
+  // copy with the average applied: draw through a scale in the steam pass instead (uBase is divided there)
+  gl.blitFramebuffer(0, 0, W, Hh, 0, 0, W, Hh, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+  baseKey = key; baseN = passes;
+}
+let baseN = 1;
 window.renderFrame = (t, layout, passes, mode, w, h, basePasses) => {
   setup(w, h);
-  if (mode === 1) { buildBase(layout, basePasses || passes, w, h); passes = 1; }
-  accumulate(t, layout, passes, mode, w, h);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, w, h);
-  gl.useProgram(avg);
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.uniform1i(gl.getUniformLocation(avg, 'uTex'), 0); gl.uniform1f(gl.getUniformLocation(avg, 'uN'), passes); gl.uniform1i(gl.getUniformLocation(avg, 'uKeepA'), 0);
-  draw(avg);
-  gl.finish();
-  return cv.toDataURL('image/png');
-};
-window.renderFrameOld = (t, layout, passes, mode, w, h) => {
-  setup(w, h);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); gl.viewport(0, 0, w, h);
-  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
-  gl.useProgram(prog);
-  gl.uniform2f(gl.getUniformLocation(prog, 'uRes'), w, h);
-  gl.uniform1f(gl.getUniformLocation(prog, 'uT'), t);
-  gl.uniform1i(gl.getUniformLocation(prog, 'uMode'), mode);
-  gl.uniform1i(gl.getUniformLocation(prog, 'uLayout'), layout);
-  for (let i = 0; i < passes; i++) { gl.uniform2f(gl.getUniformLocation(prog, 'uJit'), JIT[i][0], JIT[i][1]); draw(prog); }
-  gl.disable(gl.BLEND);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, w, h);
-  gl.useProgram(avg);
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.uniform1i(gl.getUniformLocation(avg, 'uTex'), 0); gl.uniform1f(gl.getUniformLocation(avg, 'uN'), passes);
-  draw(avg);
+  let n = passes;
+  if (mode === 1) buildBase(layout, basePasses || 4);   // the still scene once; the steam over it, `passes` times
+  accumulate(T.acc, t, layout, n, mode);
+  // depth of field
+  const focus = layout === 0 ? Math.hypot(16, 5.8, 44) : Math.hypot(10, 7, 54);
+  target(T.dof); gl.useProgram(dofP); bindTex(dofP, 'uTex', 0, T.acc);
+  gl.uniform1f(gl.getUniformLocation(dofP, 'uN'), n);
+  gl.uniform1f(gl.getUniformLocation(dofP, 'uFocus'), focus);
+  gl.uniform1f(gl.getUniformLocation(dofP, 'uAper'), 0.02 * W);
+  gl.uniform1f(gl.getUniformLocation(dofP, 'uMaxC'), 0.02 * W);
+  if (window.noDof) gl.uniform1f(gl.getUniformLocation(dofP, 'uMaxC'), 0.0);
+  gl.uniform1i(gl.getUniformLocation(dofP, 'uDebug'), window.dbg || 0);
+  draw(dofP);
+  // bloom: bright parts at a quarter size, blurred twice
+  target(T.b1); gl.useProgram(brightP); bindTex(brightP, 'uTex', 0, T.dof); gl.uniform2f(gl.getUniformLocation(brightP, 'uTexel'), 1 / W, 1 / Hh); draw(brightP);
+  for (let k = 0; k < 2; k++) {
+    target(T.b2); gl.useProgram(blurP); bindTex(blurP, 'uTex', 0, T.b1); gl.uniform2f(gl.getUniformLocation(blurP, 'uDir'), 1 / T.b1.w, 0); draw(blurP);
+    target(T.b1); gl.useProgram(blurP); bindTex(blurP, 'uTex', 0, T.b2); gl.uniform2f(gl.getUniformLocation(blurP, 'uDir'), 0, 1 / T.b1.h); draw(blurP);
+  }
+  // tone, grade, vignette
+  target(null); gl.useProgram(finalP); bindTex(finalP, 'uImg', 0, T.dof); bindTex(finalP, 'uBloom', 1, T.b1);
+  const k = Math.min(1, Math.max(0, t / 0.75));   // the light comes up
+  gl.uniform1f(gl.getUniformLocation(finalP, 'uExpo'), mode === 0 ? k * k * (3 - 2 * k) : 1);
+  gl.uniform1f(gl.getUniformLocation(finalP, 'uSeed'), (t * 24) % 97);
+  gl.uniform1f(gl.getUniformLocation(finalP, 'uBloomK'), window.noBloom ? 0 : 1);
+  draw(finalP);
   gl.finish();
   return cv.toDataURL('image/png');
 };

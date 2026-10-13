@@ -6,6 +6,8 @@ const { chromium } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:8790/';
 const PAGES = ['index.html', 'menu.html', 'story.html', 'visit.html'];
 const PAGES_ONLY = !!process.env.PAGES_ONLY;
+// the cup in each render (handle to far rim, rim to foot), as fractions of the frame, measured on the final frames
+const CUP_L = [0.61, 0.43, 0.78, 0.70], CUP_P = [0.30, 0.19, 0.66, 0.40];
 const results = [];
 const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass ? 'ok  ' : 'FAIL'} ${name}${info ? '  ' + info : ''}`); };
 
@@ -22,12 +24,13 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
   const trackIntro = (p) => p.addInitScript(() => {
     // intro: whether html.intro was ever set; done: when it was removed again (never, if it was never set)
     // loopFrame: the loop's first frame on screen once playing; pourOff: when the pour was hidden
-    window.__t = { intro: false, playing: null, opening: null, done: null, loop: null, loopFrame: null, pourOff: null };
+    // lit: when the words and the nav came in (html.is-lit); atPlay: what was showing when the pour started
+    window.__t = { intro: false, playing: null, lit: null, done: null, loop: null, loopFrame: null, pourOff: null, atPlay: null };
     const watchRoot = (root) => {
       const see = () => {
         const t = performance.now();
         if (root.classList.contains('intro')) window.__t.intro = true;
-        if (root.classList.contains('is-opening') && window.__t.opening === null) window.__t.opening = t;
+        if (root.classList.contains('is-lit') && window.__t.lit === null) window.__t.lit = t;
         if (window.__t.intro && !root.classList.contains('intro') && window.__t.done === null) window.__t.done = t;
       };
       see();
@@ -38,7 +41,12 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     else new MutationObserver((_, o) => { if (document.documentElement) { o.disconnect(); watchRoot(document.documentElement); } }).observe(document, { childList: true });
     document.addEventListener('DOMContentLoaded', () => {
       const intro = document.querySelector('.hero__intro');
-      if (intro) intro.addEventListener('playing', () => { if (window.__t.playing === null) window.__t.playing = performance.now(); });
+      if (intro) intro.addEventListener('playing', () => {
+        if (window.__t.playing !== null) return;
+        window.__t.playing = performance.now();
+        const op = (sel) => parseFloat(getComputedStyle(document.querySelector(sel)).opacity);
+        window.__t.atPlay = { nav: op('#nav'), copy: op('.hero__copy') };
+      });
       if (intro) new MutationObserver(() => { if (!intro.classList.contains('is-on') && window.__t.playing !== null && window.__t.pourOff === null) window.__t.pourOff = performance.now(); }).observe(intro, { attributes: true });
       const loop = document.querySelector('.hero__loop');
       if (loop) loop.addEventListener('playing', () => { if (window.__t.loop === null) window.__t.loop = performance.now(); });
@@ -47,78 +55,83 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     });
   });
 
-  /* 1. the opening: the beats, in order, at the right times */
+  /* 1. the opening: the light comes up on the scene, then the words; the steam takes over; three lines with the scroll */
   if (!PAGES_ONLY) for (const [v, vp, mob] of [['desk', { width: 1440, height: 900 }, false], ['mob', { width: 390, height: 844 }, true]].filter(([v]) => !process.env.VIEWS || process.env.VIEWS.split(',').includes(v))) {
     const ctx = await b.newContext({ viewport: vp, isMobile: mob, hasTouch: mob });
     const p = await ctx.newPage(); watch(p, `intro ${v}`);
     await trackIntro(p);
     try {
     await p.goto(BASE);
-    // while the pour plays: the wall, an opening around the cup, nothing else
-    await p.waitForFunction(() => document.querySelector('.hero__intro')?.currentTime > 1.5, null, { timeout: 15000 });
-    const mid = await p.evaluate(() => {
-      const r = document.querySelector('.hero__edge').getBoundingClientRect();
-      const nav = parseFloat(getComputedStyle(document.getElementById('nav')).opacity);
-      const copy = parseFloat(getComputedStyle(document.querySelector('.hero__title')).opacity);
-      const clip = getComputedStyle(document.getElementById('heroMedia')).clipPath;
-      return { hole: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)], vw: innerWidth, vh: innerHeight, nav, copy, clip: clip.slice(0, 60), src: document.querySelector('.hero__intro').currentSrc.split('/').pop() };
-    });
-    const [hx, hy, hw, hh] = mid.hole;
-    const holeOk = hw > 150 && hh > 300 && hw < mid.vw * 0.9 && hh < mid.vh && hx >= 0 && hy >= 0 && hx + hw <= mid.vw;
-    ok(`${v}: the pour plays through an opening in the dark wall, nothing else shows`, holeOk && mid.nav === 0 && mid.copy === 0 && /^inset/.test(mid.clip), JSON.stringify(mid));
-    ok(`${v}: the ${mob ? 'portrait' : 'landscape'} render, WebM in this Chromium`, mid.src === `intro-${mob ? 'p' : 'l'}.webm`, mid.src);
-    // then it opens into the site, and the steam carries on
+    await p.waitForFunction(() => window.__t.lit !== null, null, { timeout: 15000 });
+    const start = await p.evaluate(() => ({ atPlay: window.__t.atPlay, litAfter: Math.round(window.__t.lit - window.__t.playing), src: document.querySelector('.hero__intro').currentSrc.split('/').pop(), still: getComputedStyle(document.querySelector('.hero__media img')).opacity }));
+    ok(`${v}: the pour plays on a dark screen first, nothing else shows`, start.atPlay && start.atPlay.nav === 0 && start.atPlay.copy === 0, JSON.stringify(start.atPlay));
+    ok(`${v}: the ${mob ? 'portrait' : 'landscape'} render, WebM in this Chromium`, start.src === `intro-${mob ? 'p' : 'l'}.webm`, start.src);
+    await p.waitForTimeout(1100);   // the words fade in
+    const words = await p.evaluate(() => ({ nav: getComputedStyle(document.getElementById('nav')).opacity, copy: getComputedStyle(document.querySelector('.hero__copy')).opacity, line: document.querySelector('.beat:first-child .beat__title').textContent, shown: getComputedStyle(document.querySelector('.beat:first-child')).opacity, beat: document.querySelector('.hero').dataset.beat }));
+    ok(`${v}: then the nav and the first line come in, about 0.65 s into the pour`, start.litAfter > 500 && start.litAfter < 1100 && words.nav === '1' && words.copy === '1' && words.shown === '1' && words.beat === '0', JSON.stringify({ litAfter: start.litAfter, ...words }));
+    // the steam takes over from the pour
     await p.waitForFunction(() => window.__t.done !== null && window.__t.loop !== null, null, { timeout: 15000 });
     await p.waitForTimeout(400);
-    const end = await p.evaluate(() => ({ t: window.__t, clip: getComputedStyle(document.getElementById('heroMedia')).clipPath, nav: getComputedStyle(document.getElementById('nav')).opacity, copy: getComputedStyle(document.querySelector('.hero__title')).opacity, loopOn: document.querySelector('.hero__loop').classList.contains('is-on'), loopPlaying: !document.querySelector('.hero__loop').paused, pause: !document.getElementById('steamToggle').hidden }));
-    const opensAt = end.t.opening - end.t.playing;
-    ok(`${v}: it opens up into the site about 3.5 s into the pour`, opensAt > 3000 && opensAt < 4300 && /inset\(0px( 0px)*( round 0px)?\)|none/.test(end.clip) && end.nav === '1' && end.copy === '1', JSON.stringify({ opensAt: Math.round(opensAt), clip: end.clip, nav: end.nav, copy: end.copy }));
-    ok(`${v}: the steam loop takes over, with a pause button`, end.loopOn && end.loopPlaying && end.pause && end.t.loop > end.t.opening, JSON.stringify({ loopAt: Math.round(end.t.loop), opening: Math.round(end.t.opening) }));
+    const end = await p.evaluate(() => ({ t: window.__t, loopOn: document.querySelector('.hero__loop').classList.contains('is-on'), loopPlaying: !document.querySelector('.hero__loop').paused, pause: !document.getElementById('steamToggle').hidden }));
+    ok(`${v}: the steam loop takes over at the end of the pour, with a pause button`, end.loopOn && end.loopPlaying && end.pause && end.t.loop - end.t.playing > 3800, JSON.stringify({ loopAfter: Math.round(end.t.loop - end.t.playing) }));
     ok(`${v}: no black frame at the hand-over: the pour stays up until the loop has a frame on screen`, end.t.loopFrame !== null && (end.t.pourOff === null || end.t.pourOff >= end.t.loopFrame), JSON.stringify({ loopFrame: Math.round(end.t.loopFrame), pourOff: Math.round(end.t.pourOff) }));
-    // pause and play again
-    await p.click('#steamToggle');
-    await p.waitForTimeout(500);
+    await p.click('#steamToggle'); await p.waitForTimeout(500);
     const paused = await p.evaluate(() => ({ paused: document.querySelector('.hero__loop').paused, pressed: document.getElementById('steamToggle').getAttribute('aria-pressed'), label: document.getElementById('steamToggle').getAttribute('aria-label') }));
     await p.click('#steamToggle'); await p.waitForTimeout(500);
     const again = await p.evaluate(() => !document.querySelector('.hero__loop').paused);
     ok(`${v}: the pause button stops the steam and starts it again`, paused.paused && paused.pressed === 'true' && paused.label === 'Play the steam' && again, JSON.stringify({ ...paused, again }));
+    // the scroll: the scene stays, the lines take turns, the last one is the headline with the buttons
+    const at = async (f) => {
+      await p.evaluate((f) => { const h = document.querySelector('.hero'); scrollTo({ top: (h.offsetHeight - innerHeight) * f, behavior: 'instant' }); }, f);
+      await p.waitForTimeout(950);
+      return p.evaluate(() => {
+        const beats = [...document.querySelectorAll('.beat')].map((e) => +getComputedStyle(e).opacity);
+        const stage = document.querySelector('.hero__stage').getBoundingClientRect();
+        const btns = [...document.querySelectorAll('.beat:last-child .btn')].map((el) => { const r = el.getBoundingClientRect(); const h = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return el.contains(h) && r.height >= 44 && r.bottom <= innerHeight; });
+        return { beat: document.querySelector('.hero').dataset.beat, beats, stageTop: Math.round(stage.top), btns };
+      });
+    };
+    const s1 = await at(0.45), s2 = await at(0.85);
+    ok(`${v}: scrolling, the scene stays and the second line takes over`, s1.beat === '1' && s1.stageTop === 0 && s1.beats[1] === 1 && s1.beats[0] === 0 && s1.beats[2] === 0, JSON.stringify(s1));
+    ok(`${v}: then the headline, with both buttons tappable`, s2.beat === '2' && s2.stageTop === 0 && s2.beats[2] === 1 && s2.beats[0] === 0 && s2.btns.length === 2 && s2.btns.every(Boolean), JSON.stringify(s2));
+    await p.evaluate(() => { const h = document.querySelector('.hero'); scrollTo({ top: h.offsetHeight + 40, behavior: 'instant' }); });
+    await p.waitForTimeout(400);
+    const after = await p.evaluate(() => ({ heroBottom: Math.round(document.querySelector('.hero').getBoundingClientRect().bottom), next: Math.round(document.querySelector('.hero + section').getBoundingClientRect().top) }));
+    ok(`${v}: and the page carries on after the scene`, after.heroBottom <= 0 && after.next <= 0, JSON.stringify(after));
     } catch (e) { ok(`${v}: the opening ran to the end`, false, e.message.split('\n')[0]); }   // a stalled wait is a failed check, not a crashed run
     await ctx.close();
   }
 
-  /* 1b. at many screen sizes the cup sits inside the opening, and the two videos slide in step */
+  /* 1b. at many screen sizes the headline and the buttons stay clear of the cup, and fit the screen */
   if (!PAGES_ONLY) {
     // the cup in each render, as fractions of the frame (handle to far rim, rim to foot), measured on the rendered frames
-    const CUP = { l: [0.45, 0.247, 0.781, 0.812], p: [0.222, 0.201, 0.764, 0.49] };
+    const CUP = { l: CUP_L, p: CUP_P };
     const sizes = [[360, 640, 1], [390, 844, 1], [430, 932, 1], [768, 1024, 1], [820, 1180, 1], [1024, 1366, 1], [1024, 768, 0], [1180, 820, 0], [1280, 720, 0], [1366, 768, 0], [1440, 900, 0], [1920, 1080, 0], [2560, 1080, 0]];
     const bad = [];
     for (const [w, h, mob] of sizes) {
       const ctx = await b.newContext({ viewport: { width: w, height: h }, isMobile: !!mob, hasTouch: !!mob });
       const p = await ctx.newPage(); watch(p, `fit ${w}x${h}`);
       try {
-      await p.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
-        const l = document.querySelector('.hero__loop'), i = document.querySelector('.hero__intro');
-        l?.addEventListener('playing', () => { window.__slide = [getComputedStyle(i).objectPosition, getComputedStyle(l).objectPosition]; }, { once: true });
-      }));
-      await p.goto(BASE);
-      await p.waitForFunction(() => document.querySelector('.hero__intro')?.currentTime > 1.6, null, { timeout: 15000 });
-      const m = await p.evaluate((CUP) => {
-        const media = document.getElementById('heroMedia'), v = document.querySelector('.hero__intro');
-        const S = matchMedia('(max-aspect-ratio: 1/1)').matches ? { n: 'p', w: 900, h: 1600 } : { n: 'l', w: 1600, h: 900 };
-        const vw = media.clientWidth, vh = media.clientHeight, k = Math.max(vw / S.w, vh / S.h), dw = S.w * k, dh = S.h * k;
-        const pos = getComputedStyle(v).objectPosition.split(' ').map((x) => parseFloat(x) / 100);
-        const ox = (vw - dw) * pos[0], oy = (vh - dh) * pos[1], c = CUP[S.n];
-        const e = document.querySelector('.hero__edge').getBoundingClientRect();
-        return [ox + c[0] * dw - e.left, oy + c[1] * dh - e.top, e.right - (ox + c[2] * dw), e.bottom - (oy + c[3] * dh)].map(Math.round).concat(e.left >= 0 && e.right <= vw ? 1 : 0);
-      }, CUP);
-      await p.waitForFunction(() => window.__slide, null, { timeout: 15000 }).catch(() => {});
-      const slide = await p.evaluate(() => window.__slide || ['?', '!']);
-      if (m.slice(0, 4).some((x) => x < 16) || !m[4]) bad.push(`${w}x${h} margins ${m.slice(0, 4)}`);
-      if (slide[0] !== slide[1]) bad.push(`${w}x${h} videos out of step at the hand-over: ${slide}`);
+        await p.goto(BASE + '?skip'); await p.waitForTimeout(500);
+        await p.evaluate(() => { const hh = document.querySelector('.hero'); scrollTo({ top: (hh.offsetHeight - innerHeight) * 0.75, behavior: 'instant' }); });
+        await p.waitForTimeout(900);
+        const m = await p.evaluate((CUP) => {
+          const v = document.querySelector('.hero__loop'), mr = document.getElementById('heroMedia').getBoundingClientRect();   // includes the lean-in
+          const S = matchMedia('(max-aspect-ratio: 1/1)').matches ? { n: 'p', w: 900, h: 1600 } : { n: 'l', w: 1600, h: 900 };
+          const k = Math.max(mr.width / S.w, mr.height / S.h), dw = S.w * k, dh = S.h * k;
+          const pos = getComputedStyle(v).objectPosition.split(' ').map((x) => parseFloat(x) / 100);
+          const ox = mr.left + (mr.width - dw) * pos[0], oy = mr.top + (mr.height - dh) * pos[1], c = CUP[S.n];
+          const cup = { l: ox + c[0] * dw, t: oy + c[1] * dh, r: ox + c[2] * dw, b: oy + c[3] * dh };
+          const els = [...document.querySelectorAll('.beat:last-child .beat__title, .beat:last-child .beat__lead, .beat:last-child .btn, .hero__kicker')].map((e) => e.getBoundingClientRect());
+          const gap = Math.min(...els.map((r) => Math.max(cup.l - r.right, r.left - cup.r, cup.t - r.bottom, r.top - cup.b)));
+          const inside = els.every((r) => r.left >= 0 && r.right <= innerWidth && r.top >= 60 && r.bottom <= innerHeight);
+          return { gap: Math.round(gap), inside, cup: Object.values(cup).map(Math.round) };
+        }, CUP);
+        if (m.gap < 16 || !m.inside) bad.push(`${w}x${h} gap ${m.gap}px${m.inside ? '' : ', words off screen'} cup ${m.cup}`);
       } catch (e) { bad.push(`${w}x${h} ${e.message.split('\n')[0]}`); }
       await ctx.close();
     }
-    ok(`the cup sits inside the opening (16px+ clear) at ${sizes.length} screen sizes, videos in step at the hand-over`, !bad.length, bad.join('; '));
+    ok(`the headline and buttons stay clear of the cup (16px+) and on screen at ${sizes.length} sizes`, !bad.length, bad.join('; '));
   }
 
   /* 2. when it plays: on opening and refresh, not coming back from inside the site */
@@ -144,7 +157,7 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     await ctx2.close();
   }
 
-  /* 3. no video, or a slow one: the site opens on the still, never stuck on the wall */
+  /* 3. no video, or a slow one: the scene opens on the still, never stuck on black */
   if (!PAGES_ONLY) for (const how of ['fails', 'slow']) {
     const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
     await ctx.route(/\/assets\/pour\/.*\.(webm|mp4)$/, (r) => (how === 'fails' ? r.abort() : setTimeout(() => r.continue().catch(() => {}), 6000)));
@@ -153,8 +166,8 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     await p.goto(BASE);
     await p.waitForFunction(() => window.__t.done !== null, null, { timeout: 12000 }).catch(() => {});
     await p.waitForTimeout(1200);   // the still and the words fade in
-    const r = await p.evaluate(() => ({ done: Math.round(window.__t.done), img: getComputedStyle(document.querySelector('.hero__media img')).opacity, title: getComputedStyle(document.querySelector('.hero__title')).opacity, clip: getComputedStyle(document.getElementById('heroMedia')).clipPath }));
-    ok(`video ${how}: opens on the still within 3 s`, r.done !== null && r.done < 3200 && r.img === '1' && r.title === '1' && /none|inset\(0px\)/.test(r.clip), JSON.stringify(r));
+    const r = await p.evaluate(() => ({ done: Math.round(window.__t.done), img: getComputedStyle(document.querySelector('.hero__media img')).opacity, copy: getComputedStyle(document.querySelector('.hero__copy')).opacity, line: getComputedStyle(document.querySelector('.beat:first-child')).opacity, nav: getComputedStyle(document.getElementById('nav')).opacity }));
+    ok(`video ${how}: opens on the still within 3 s, words and nav showing`, r.done !== null && r.done < 3200 && r.img === '1' && r.copy === '1' && r.line === '1' && r.nav === '1', JSON.stringify(r));
     await ctx.close();
   }
 

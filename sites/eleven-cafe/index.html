@@ -118,35 +118,51 @@
   </div>
 
   <main id="main">
-    <section class="hero" id="top" aria-label="Eleven Cafē">
-      <div class="hero__media" id="heroMedia">
-        <picture>
+    <section class="hero" id="top" aria-label="Eleven Cafē" data-beat="0">
+      <div class="hero__stage">
+        <div class="hero__media" id="heroMedia">
+          <picture>
           <source media="(max-aspect-ratio: 1/1)" type="image/webp" srcset="assets/pour/hero-p.webp">
           <source media="(max-aspect-ratio: 1/1)" srcset="assets/pour/hero-p.jpg">
           <source type="image/webp" srcset="assets/pour/hero-l.webp">
-          <img src="assets/pour/hero-l.jpg" alt="A white ribbed espresso cup with a gold ring handle, full of espresso with crema, steam rising, on a dark counter" width="1600" height="900" fetchpriority="high">
+          <img src="assets/pour/hero-l.jpg" alt="A white ribbed espresso cup with a gold ring handle, full of espresso with crema, steam rising, on a wooden counter by a window in low golden light" width="1600" height="900" fetchpriority="high">
         </picture>
-        <video class="hero__intro" muted playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>
-        <video class="hero__loop" muted playsinline loop preload="none" aria-hidden="true" tabindex="-1"></video>
-      </div>
-      <div class="hero__edge" aria-hidden="true"></div>
-      <button class="hero__pause" id="steamToggle" type="button" aria-pressed="false" aria-label="Pause the steam" hidden><svg class="icon icon--pause" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M200,32H160a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16h40a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm0,176H160V48h40ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Zm0,176H56V48H96Z"/></svg><svg class="icon icon--play" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></button>
-      <div class="container hero__copy">
-        <h1 class="hero__title">The hole in the wall that fills the gaps in your&nbsp;day.</h1>
-        <p class="hero__lead">Coffee, espresso, teas and more, made one cup at a time in downtown Tucson.</p>
-        <div class="hero__ctas">
-          <a class="btn btn--gold" href="menu.html">See the menu</a>
-          <a class="btn btn--line" href="https://www.google.com/maps/dir/?api=1&amp;destination=33+N+Stone+Ave+Suite+150,+Tucson,+AZ+85701" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Get directions</a>
+          <video class="hero__intro" muted playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>
+          <video class="hero__loop" muted playsinline loop preload="none" aria-hidden="true" tabindex="-1"></video>
         </div>
+        <div class="hero__shade" aria-hidden="true"></div>
+        <button class="hero__pause" id="steamToggle" type="button" aria-pressed="false" aria-label="Pause the steam" hidden><svg class="icon icon--pause" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M200,32H160a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16h40a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm0,176H160V48h40ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Zm0,176H56V48H96Z"/></svg><svg class="icon icon--play" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></button>
+        <div class="container hero__copy">
+          <p class="kicker hero__kicker">Espresso bar, downtown Tucson</p>
+          <div class="beats">
+            <div class="beat">
+              <p class="beat__title">Made by hand, <em>one cup</em> at a time.</p>
+              <p class="beat__lead">Every drink is made to order by Q, the owner, in a small espresso bar on Pennington Street.</p>
+            </div>
+            <div class="beat">
+              <p class="beat__title">Every shot, <em>pulled to order.</em></p>
+              <p class="beat__lead">Espresso, Americano, cappuccino and lattes, made the way you like them. And the <span lang="vi">cà phê sữa đá</span> people come for.</p>
+            </div>
+            <div class="beat">
+              <h1 class="beat__title">The hole in the wall that <em>fills the gaps</em> in your&nbsp;day.</h1>
+              <p class="beat__lead">33 N Stone Ave, downtown Tucson. Monday to Friday, 7am to 2pm.</p>
+              <div class="hero__ctas">
+                <a class="btn btn--gold" href="menu.html">See the menu</a>
+                <a class="btn btn--line" href="https://www.google.com/maps/dir/?api=1&amp;destination=33+N+Stone+Ave+Suite+150,+Tucson,+AZ+85701" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Get directions</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="hero__cue" aria-hidden="true">Scroll</p>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="sig-title">
+    <section class="section glow" aria-labelledby="sig-title">
       <div class="container split">
         <div class="photo reveal"><picture><source type="image/webp" srcset="assets/photos/phins.webp"><img src="assets/photos/phins.jpg" alt="Three phin filters dripping coffee into glasses with condensed milk at the bottom, on the wooden counter at Eleven Cafē" width="390" height="390" loading="lazy" decoding="async"></picture></div>
         <div class="split__copy reveal">
           <span class="kicker">Vietnamese iced coffee</span>
-          <h2 class="section__title" id="sig-title" lang="vi">Cà phê sữa đá</h2>
+          <h2 class="section__title" id="sig-title" lang="vi">Cà phê <em>sữa đá</em></h2>
           <p>The drink people come for: coffee dripped slowly through a traditional phin onto condensed milk, then poured over ice.</p>
           <figure class="quote quote--small"><blockquote><p>“Q is great, highly recommend the Vietnamese special!”</p></blockquote><figcaption><strong>Casey Good</strong>, on Facebook, February 2018</figcaption></figure>
           <a class="link" href="menu.html"><span>See the menu</span><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
@@ -156,15 +172,17 @@
 
     <section class="section band statement" aria-label="Why Eleven">
       <div class="container reveal">
+        <p class="kicker">The name</p>
         <p class="statement__text">Q is the eleventh of eleven children. That&rsquo;s the <em>Eleven</em> in Eleven&nbsp;Cafē.</p>
         <p class="statement__sub">He makes every cup by hand and knows his regulars by name, and their order too.</p>
         <a class="link" href="story.html"><span>Our story</span><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="say-title">
+    <section class="section glow--right glow" aria-labelledby="say-title">
       <div class="container">
-        <h2 class="section__title section__title--gap reveal" id="say-title">What people say</h2>
+        <p class="kicker reveal">Reviews</p>
+        <h2 class="section__title section__title--gap reveal" id="say-title">What people <em>say</em></h2>
         <div class="quotes">
           <div class="reveal"><figure class="quote"><blockquote><p>“I love this place. Tucson has a vast amount of coffee shops, this one is on my top 3. Best cappuccino of my life!!”</p></blockquote><figcaption><strong>Sally Marie</strong>, on Facebook, March 2020</figcaption></figure></div>
           <div class="quotes__side reveal">
@@ -179,7 +197,8 @@
     <section class="section band" id="visit" aria-labelledby="visit-title">
       <div class="container visit">
         <div class="reveal">
-          <h2 class="section__title" id="visit-title">Come by.</h2>
+          <p class="kicker">Find us</p>
+          <h2 class="section__title" id="visit-title">Come <em>by</em>.</h2>
           <div class="visit__status"><p class="status"><span class="status__dot" aria-hidden="true"></span><span data-status>Monday to Friday, 7am to 2pm</span></p></div>
           <address>33 N Stone Ave, Suite 150<br>Tucson, AZ 85701</address>
           <p class="visit__find">At the southeast corner of Church and Pennington. The door is on Pennington Street.</p>
