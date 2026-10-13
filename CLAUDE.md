@@ -188,12 +188,25 @@ Eleven Cafē: every page is `noindex` until they agree.
   animation at an espresso being poured then it opens up into the website
   make sure you have a separate tab for the menu and stuff", "great and
   clean", "make no mistakes".
-- The opening: their line "The hole in the wall that fills the gaps in your
-  day!" made literal. A dark wall; through an opening, espresso pours into a
-  white ribbed cup with a gold ring handle (their logo's cup, rendered in
-  3D by `render/pour.html`, offline, frame by frame); at 3.55 s the opening
-  widens into the site; a seamless steam loop carries on, with a pause
-  button. Beats, timing and how to re-render: the site README.
+- The opening and the look since 2026-10-13 (second pass), from two reference
+  videos the owner sent: "make the opening scene and dashboard just like this
+  one" (a coffee site: a sunlit counter by a window, a pour, three lines that
+  change as you scroll) and "I also want the dark tones and themes of this
+  website" (a near-black café site with amber light, serif headlines with a
+  gold italic word, small gold labels, a pill nav). Structure and look were
+  taken; copy, images and logos of those sites were not.
+  - The scene (`render/pour.html`, offline): their logo's cup on a walnut
+    counter by a tall window in low amber light, haze, soft focus; the light
+    comes up, espresso pours, steam rises; a seamless steam loop follows.
+  - Home: the scene is pinned while three lines take turns with the scroll
+    (made by hand; every shot pulled to order; the headline "The hole in the
+    wall that fills the gaps in your day." with the buttons), then it sinks
+    into the page. Reduced motion or no JavaScript: one screen, the headline.
+  - Every page: warm near-black `#0d0b09`, amber glows, Playfair italic in
+    their gold for accent words, gold labels with a rule, pill nav and
+    buttons, tags on the menu. README "Design note" and "The opening".
+  - The first version (the pour seen through "the hole in the wall") is in
+    git history (commit c41cba4 and earlier).
 - Facts and their sources (Facebook first; the 2021 tucson.com article and
   Google's hours via Wanderlog only where they agree), the gaps to ask
   about (still open? hours, menu and prices, photo originals): the site
@@ -202,12 +215,12 @@ Eleven Cafē: every page is `noindex` until they agree.
 - Q asked the tucson.com writer not to photograph his face: never show him.
 - Logo: their "ELEVEN cafē" lettering traced from their 720 px Facebook
   profile logo (`render/trace_logo.py`); icons are its first E.
-- The pour renders offline (`render/render_all.sh`, about 1.5 h on 4
+- The scene renders offline (`render/render_all.sh`, about 1.5 h on 4
   cores, then `encode.sh` and `make_og.cjs`). The intro's last frame is the
   steam loop's first, and the page keeps the pour on screen until the loop
-  has a frame showing (no black flash). If the shot changes, re-measure
-  `OPEN_AT` and `SHOT.hole` in `js/home.js` and the cup fractions in the
-  test (README "Rendering the pour again").
+  has a frame showing (no black flash). If the framing changes, re-measure
+  the cup's fractions (`CUP_L`, `CUP_P` in the test); README "Rendering the
+  pour again" lists every knob.
 - Checked 2026-10-13 in Chromium, desktop and phone:
   `sites/eleven-cafe/tests/behave.cjs`, 65 of 65 (serve the site on port
   8790 first; `PAGES_ONLY=1` and `VIEWS=desk|mob` narrow it). README

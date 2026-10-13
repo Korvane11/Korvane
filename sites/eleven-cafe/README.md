@@ -69,23 +69,42 @@ peeve"). Nothing on this site shows him.
 
 ## The opening, beat by beat
 
-The owner's words: "the opening of the website to kind of be an animation
-at an espresso being poured then it opens up into the website".
+The owner's words, first: "the opening of the website to kind of be an
+animation at an espresso being poured then it opens up into the website".
+Then, on 2026-10-13, two reference videos: "I want you to make the opening
+scene and dashboard just like this one here" (a coffee site by
+@afterframe.design, "Kanto Coffee": a sunlit counter by a window, a pour,
+three lines that change as you scroll, then the page) and "But I also want
+the dark tones and themes of this website" (a café site by
+@sitebuilt.tiktok: near-black, warm amber light, serif headlines with a
+word or two in gold italic, small gold labels, a floating pill nav). The
+structure and the look were taken from them; the cup, colours, facts and
+words are Eleven Cafē's own, and nothing of theirs (copy, images, logo) was
+reused.
 
-1. **"an espresso being poured"**: a rendered pour. A white ribbed cup with a
-   gold ring handle (the cup in their logo, in 3D) on a dark counter;
-   espresso pours in, crema rises, the stream stops, steam rises.
-   `render/pour.html` (a WebGL shader rendered offline frame by frame) gives
-   `assets/pour/intro-l.*` (1600 x 900) and `intro-p.*` (900 x 1600, phones
-   and tall windows).
-2. **"then it opens up into the website"**: the pour is first seen through
-   an opening in a dark wall, their own line made literal ("the hole in the
-   wall that fills the gaps in your day"). At 3.55 s, with the stream
-   stopped, the opening widens to the whole screen and the nav and the
-   words come in around the cup (`js/home.js`). The steam keeps rising: a
-   6 s seamless loop (`assets/pour/loop-*`) whose first frame is the pour's
-   last.
-3. **"a separate tab for the menu and stuff"**: Menu is its own page
+1. **The scene** (`render/pour.html`, a WebGL raymarcher rendered offline
+   frame by frame): their logo's cup, white and ribbed with a gold ring
+   handle, on a walnut counter by a tall window, late in the day. Low amber
+   sun comes through the panes in stripes, the air is hazy with it, and
+   everything but the cup is in soft focus. The light comes up from black
+   (0.75 s), espresso pours in from above, crema rises, the stream stops
+   (3.05 s), steam rises into the light. `assets/pour/intro-l.*`
+   (1600 x 900) and `intro-p.*` (900 x 1600, phones and tall windows), then
+   a 6 s seamless steam loop (`loop-*`) whose first frame is the pour's last.
+2. **The words come in** 0.65 s after the pour starts, with the nav: a gold
+   label ("Espresso bar, downtown Tucson") and the first of three lines.
+3. **Scrolling** (`js/home.js`): the scene stays put while the lines take
+   turns over it, as in the reference:
+   - "Made by hand, *one cup* at a time." (every drink made to order by Q,
+     the owner, on Pennington Street);
+   - "Every shot, *pulled to order.*" (espresso, Americano, cappuccino and
+     lattes, made the way you like them, and the cà phê sữa đá);
+   - the headline, their own line: "The hole in the wall that *fills the
+     gaps* in your day.", with the address, the hours, "See the menu" and
+     "Get directions".
+   The camera leans in a little (6%) and, at the end, the scene sinks into
+   the page.
+4. **"a separate tab for the menu and stuff"**: Menu is its own page
    (`menu.html`), with Our story and Visit beside it in the nav.
 
 It plays whenever the site is opened (link, new tab, refresh) and not when
@@ -93,37 +112,40 @@ coming back to the home page from another page of the site after seeing it.
 `?skip` skips it, `?intro` plays it even after it has played this visit.
 No loader, label or skip button. It starts on the first frame the browser
 can play; if none comes within 2.5 s (or the video fails) the still comes up
-out of the dark. The pour stays on screen under the steam loop until the
-loop has a frame showing, so the hand-over has no black frame. Reduced
-motion: the still, no video. No JavaScript: the still and every word.
+out of the dark with the words. The pour stays on screen under the steam
+loop until the loop has a frame showing, so the hand-over has no black
+frame. Reduced motion, or no JavaScript: one screen, the still and the
+headline with its buttons (the first two lines are left out).
 
 ## Design note
 
-1. **The moment:** the pour through the hole in the wall, then the wall
-   opening into the site. It is their tagline and their logo's cup, shown.
-2. **What stays quiet:** everything after it. One dark room, one accent (their
-   gold), hairlines rather than boxes, and nothing else that moves except
-   things fading in as they scroll into view.
-3. **Colour:** from their logo. The room is a neutral near-black `#121212`
-   (their grey family, not espresso brown); warm white `#f1f0ed` for text
-   (the cup); `#aaa9a4` for secondary text; their gold `#e2992a` for buttons,
-   links and today's hours, and the ring on the cup; their grey `#7e7e7e`
-   for the icon.
+1. **The moment:** the light coming up on the cup by the window, the pour,
+   and the three lines over it. It is their logo's cup, in their gold light,
+   and their own line as the headline.
+2. **What stays quiet:** everything after it. A dark room with warm light
+   pooling in it, one accent (their gold), hairlines rather than boxes, and
+   nothing else that moves except things fading in as they scroll into view.
+3. **Colour:** a warm near-black `#0d0b09` (the café after dark), `#120f0c`
+   for quieter bands, `#18140f` for cards; cream `#f4ece0` for text (the
+   cup), `#b2a896` for secondary text (8:1); their gold `#e2992a` for
+   buttons, links, labels, the accent words and today's hours, and soft
+   amber glows (`rgba(226, 153, 42, 0.13)`) behind sections.
 4. **Type:** Playfair at its narrowest (opsz 144, width 87.5) for headlines,
-   a high-contrast Didone like the "ELEVEN" in their logo; Be Vietnam Pro for
-   everything else (a Vietnamese typeface, for a café known for cà phê sữa
-   đá). Both cover Vietnamese and the macron in Cafē.
-5. **Motion:** the opening, once; fades of 0.9 s, ease-out; never decoration.
-6. **Photos:** their two best Facebook photos (the phins dripping, the cup with
-   a gift card), shown small and square with the same 10 px corners. The
-   rendered cup is the only big image.
-7. **Phones:** the render is reframed (a portrait version with the cup in
-   the top third), so the words sit on the dark counter under it; the nav
-   folds into a full-screen menu with Call and Directions.
-8. **Narrower landscape screens** (a tablet on its side, up to 1280 px
-   wide): the frame sits further right (`object-position: 18%`) so the
-   words clear the cup. During the pour the cup is centred in its opening;
-   as the opening widens, both videos slide right together.
+   a high-contrast Didone like the "ELEVEN" in their logo, with a word or two
+   in its italic, in gold; Be Vietnam Pro 300 for text and 600 for labels (a
+   Vietnamese typeface, for a café known for cà phê sữa đá). Both cover
+   Vietnamese and the macron in Cafē.
+5. **Shapes:** buttons and the nav are pills; photos 14 px; cards 18 px;
+   menu tags 4 px.
+6. **Motion:** the opening and the three lines; fades of 0.7-0.9 s,
+   ease-out; never decoration.
+7. **Photos:** their two best Facebook photos (the phins dripping, the cup
+   with a gift card), with a soft amber glow under them. The rendered cup
+   is the only big image.
+8. **Phones:** the render is reframed (a portrait version with the cup high
+   in the frame), so the words sit on the dark counter under it; the nav
+   folds into a full-screen menu with Call and Directions. On short phones
+   the headline and spacing tighten so everything fits under the cup.
 
 ## Pages
 
@@ -191,15 +213,40 @@ blocked).
 ## Rendering the pour again
 
 `bash render/render_all.sh <frames dir>` renders every frame in headless
-Chromium (SwiftShader, about 19 s a pour frame at 1600 x 900 with 4
-samples on 4 cores, 4 s a steam frame; about 1.5 hours for everything),
-then `bash render/encode.sh <frames dir>` writes `assets/pour/` (add `l` or
-`p` to encode one layout), and `node render/make_og.cjs` the link-preview
-image from the new still. The shot's timing is at the top of the
-shader (`T_START`, `T_STOP`, `T_END` = 103/24 s, `LOOP` = 6 s); the steam's
-noise wraps every loop, so loop frame 0 is the intro's last frame. If the
-timing changes, update `OPEN_AT` in `js/home.js`; if the framing changes,
-update `SHOT.hole` there (the opening's corners as fractions of the frame).
+Chromium (SwiftShader on 4 cores: about 11 s a pour frame at 1600 x 900
+with 4 samples, about 8 s a steam frame with 2; about 1.5 hours for
+everything), then `bash render/encode.sh <frames dir>` writes
+`assets/pour/` (add `l` or `p` to encode one layout), and
+`node render/make_og.cjs` the link-preview image from the new still.
+
+What sets the shot, all at the top of the shader's sections:
+
+- Timing: `T_START`, `T_STOP`, `T_END` = 103/24 s, `LOOP` = 6 s. The steam's
+  noise wraps every loop, so loop frame 0 is the intro's last frame (and
+  `encode.sh` copies it over the intro's last).
+- The room: the window wall `XW`, its posts (`SP` apart, `PW` wide, `PD`
+  deep, phase `Z0`), the sun `SUN` and its colour `SUNC`, the sky through
+  the glass `GLASS`, the room's bounce `AMB`, the haze `SIG`. The posts are
+  spaced so the cup sits in a band of sun with a dark post behind it; if
+  `SUN`, `SP` or the camera moves, check both in a preview.
+- The camera (`main()`), the lens shift that places the cup (`shift`), and
+  the soft focus (`uAper`, `uMaxC` in `renderFrame`, the focus distance is
+  the camera's distance to the cup).
+- Post: the glow threshold (`bright`), the exposure (`uExpo * 0.62`) and the
+  vignette (`final`).
+
+Preview a frame without the whole run: load `render/pour.html` in the same
+headless Chromium and call `window.renderFrame(t, layout, passes, mode, w,
+h)` (mode 0 the pour, 1 the steam loop). Setting `window.noDof` or
+`window.noBloom` first turns those effects off, for comparing.
+
+Depth is kept as the nearest value over the passes (an average at the
+cup's edge would belong to neither the cup nor the background, and the soft
+focus would spray the edge into the background).
+
+If the framing changes, re-measure the cup's fractions of the frame
+(`CUP_L`, `CUP_P` at the top of `tests/behave.cjs`): the test checks that
+the headline and buttons stay clear of the cup at 13 screen sizes.
 
 ## Photos and credits
 
@@ -216,6 +263,6 @@ update `SHOT.hole` there (the opening's corners as fractions of the frame).
 
 ## Licences
 
-- Fonts: Playfair and Be Vietnam Pro, SIL Open Font License 1.1
-  (`assets/fonts/OFL-*.txt`).
+- Fonts: Playfair (roman and italic) and Be Vietnam Pro, SIL Open Font
+  License 1.1 (`assets/fonts/OFL-*.txt`).
 - Icons: Phosphor, MIT (`assets/icons/LICENSE-phosphor.txt`).
