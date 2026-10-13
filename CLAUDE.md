@@ -159,11 +159,13 @@ approved by RC Cleaning: every page is `noindex` until they agree.
   never worked, so neither was carried over: public-domain Library of
   Congress photos (Carol M. Highsmith) and a mailto request form instead.
 - Facts, gaps and questions for them: the site README.
-- Status at the last commit: built and checked in a browser; the
-  behaviour test passed 41 of 52. Still to do: the wordmark link is 39 px
-  tall (needs 44), the hero eyebrow uses opacity (use a colour), and the
-  test itself must wait for the wipe to end and ignore mailto requests.
-  Then rerun, push, and confirm it live.
+- Checked 2026-10-13 in Chromium, desktop and phone: the wipe (frames
+  seeked through), every page's screens, taps (44 px+), the menu, the
+  phone call bar, forms (mailto URLs read from Playwright's `request`
+  event), reduced motion, no JavaScript, share tags, structured data and
+  every internal link: 52 of 52.
+- Live at https://korvane11.github.io/Korvane/sites/rc-cleaning/ (the root
+  address still goes to SimNow).
 
 ## Skills
 
