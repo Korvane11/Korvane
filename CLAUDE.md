@@ -209,6 +209,16 @@ proxies).
 corrections during work and proposes skill improvements for review. The
 instructions below are what switches it on each session.
 
+Reviews: the first ran 2026-10-13 (record in
+`skill-observations/reviews/2026-10-13/REVIEW.md`). A weekly review runs
+on its own: the Routine `weekly-skill-review` (trig_01Nrqdrz79K6pVGtYYZgdtFD,
+Mondays 7:57 AM Arizona time) wakes the session "Weekly skill review
+(routine)" (session_016ffmjZpF4rUjxsqpdBpY7b, which has this repo
+attached), and that session pulls main, reviews in autonomous mode and
+pushes. A Routine that starts fresh sessions does not get the repo, which
+is why it targets a fixed session. Staged updates wait in `skill-updates/`
+until the owner says to install them.
+
 This container is ephemeral, so the workspace is the repository itself:
 `skill-observations/` and `skill-updates/` must be committed and pushed to
 `main` with the session's other work, or they are lost.

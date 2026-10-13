@@ -69,8 +69,12 @@ headers; 15 files, 15 parsed. `skill:` names all bare. Inbox not read: no
 user-scoped memory store exists in this environment.
 
 ### Skipped (needs manual review)
-- Weekly scheduled review: approved, not yet registered; it needs the
-  owner's time zone for the schedule.
+None. Installed the same day at the owner's word ("yes install"): all
+three staged items, each checked identical to its staged copy. The weekly
+review is registered: Routine weekly-skill-review, Mondays 7:57 AM Arizona
+time, firing into a dedicated session that has the repository attached
+(a Routine that starts fresh sessions would get no repository); reach
+verified from inside that session.
 
 1 bundles staged, 1 bundles presented
 

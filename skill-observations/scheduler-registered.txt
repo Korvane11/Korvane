@@ -1,0 +1,5 @@
+2026-10-13
+workspace: /home/user/Korvane (the Korvane11/Korvane repository, cloned in the review session)
+routine: weekly-skill-review, trig_01Nrqdrz79K6pVGtYYZgdtFD, CRON_TZ=America/Phoenix 57 7 * * 1 (Mondays 7:57 AM Arizona time)
+fires into: session_016ffmjZpF4rUjxsqpdBpY7b ("Weekly skill review (routine)"), which has the repository attached
+verified: 2026-10-13, that session listed /home/user/Korvane/skill-observations and saw main at ca79309 from inside its own container

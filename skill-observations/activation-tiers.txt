@@ -1,4 +1,4 @@
 # Activation tiers found by the 2026-10-13 review
 instruction-file: present (CLAUDE.md, "## Task observer" block: invoke the skill and run the Session Start Protocol before the first tool call)
 session-start-hook: present with the task-observer reminder (.claude/settings.json, second SessionStart group, installed 2026-10-13); the first group installs playwright-cli
-scheduled-task: none registered
+scheduled-task: weekly-skill-review (trig_01Nrqdrz79K6pVGtYYZgdtFD), Mondays 7:57 AM Arizona time, fires into session_016ffmjZpF4rUjxsqpdBpY7b; workspace reach verified 2026-10-13. Prompt names the skill, autonomous mode, the workspace, the offline policy, probe first and the started marker; it restates no review step (read: 9 lines)
