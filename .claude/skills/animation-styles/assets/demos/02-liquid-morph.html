@@ -3,7 +3,7 @@
 STYLE: Liquid morph
 LOOK: Mercury-like drops that drift, stretch into each other and pinch apart behind a headline, with a soft specular sheen so they read as heavy liquid metal rather than flat shapes.
 TECHNIQUE: Plain SVG circles on slow Lissajous paths, run through one "gooey" filter: blur them together (feGaussianBlur), then crush the blurred alpha back to a hard edge (feColorMatrix alpha row "0 0 0 A B"), so overlapping halos fuse into one surface. A wider blur of that shape is used as a height map for feSpecularLighting, clipped back inside the shape and added on top: the highlight slides over the bulges as they merge. Each circle has its own off-centre radial gradient so the body has volume and a dark rim.
-KNOBS: BLOBS (radius as a share of the short side, orbit size, speed, phase); BLUR (merge distance, share of the short side); the alpha row values "28 -11" in #goo (higher = crisper edge, the offset sets how fat the bridges are); feSpecularLighting surfaceScale / specularExponent and feDistantLight azimuth / elevation (sheen size and direction); #metal stops (the metal colour); SPEED.
+KNOBS: BLOBS (radius as a share of the short side, orbit size, speed, phase); BLUR (merge distance, share of the short side); the alpha row values "20 -8" in #goo (higher = crisper edge, the offset sets how fat the bridges are); feSpecularLighting surfaceScale / specularExponent and feDistantLight azimuth / elevation (sheen size and direction); #metal stops (the metal colour); SPEED.
 COST: The SVG filter re-runs on every frame over the whole stage, and cost scales with screen pixels and blur radius. Fine on laptops; on phones it holds 60 fps at this size but drop BLOBS or SPEED before adding more. For many blobs or full-bleed 4K, move to a WebGL metaball shader.
 REDUCED MOTION: The blobs are drawn once in a pose where two pairs are mid-merge, so the liquid character still shows.
 PITFALLS: A threshold without the sheen looks like flat clip art: the specular pass is what makes it liquid. Blur larger than the smallest drop erases it: BLUR stays under the smallest radius. A filter region left at the default clips the goo into straight edges near the frame: the filter uses userSpaceOnUse over the whole viewBox. Busy, fast motion looks like a lava-lamp screensaver: orbits are slow and the palette is a single cool metal.
@@ -41,18 +41,18 @@ PITFALLS: A threshold without the sheen looks like flat clip art: the specular p
     <radialGradient id="metal" cx="36%" cy="30%" r="78%">
       <stop offset="0" stop-color="#ffffff"/>
       <stop offset=".1" stop-color="#d9dee6"/>
-      <stop offset=".3" stop-color="#7e8797"/>
-      <stop offset=".58" stop-color="#2f3540"/>
-      <stop offset=".86" stop-color="#11141a"/>
-      <stop offset="1" stop-color="#2b313c"/>
+      <stop offset=".32" stop-color="#7e8797"/>
+      <stop offset=".64" stop-color="#2e343f"/>
+      <stop offset=".9" stop-color="#191d25"/>
+      <stop offset="1" stop-color="#232832"/>
     </radialGradient>
     <filter id="goo" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="24" result="blur"/>
-      <!-- the decisive line: alpha * 28 - 11 turns soft overlapping halos into one hard-edged surface -->
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 28 -11" result="goo"/>
-      <feGaussianBlur in="goo" stdDeviation="3.5" result="height"/>
-      <feSpecularLighting in="height" surfaceScale="7" specularConstant="1.4" specularExponent="40" lighting-color="#ffffff" result="spec">
-        <feDistantLight azimuth="225" elevation="52"/>
+      <!-- the decisive line: alpha * 20 - 8 turns soft overlapping halos into one hard-edged surface -->
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="goo"/>
+      <feGaussianBlur in="goo" stdDeviation="4.5" result="height"/>
+      <feSpecularLighting in="height" surfaceScale="8" specularConstant="1.4" specularExponent="40" lighting-color="#ffffff" result="spec">
+        <feDistantLight azimuth="225" elevation="30"/>
       </feSpecularLighting>
       <feComposite in="spec" in2="goo" operator="in" result="shine"/>
       <feComposite in="goo" in2="shine" operator="arithmetic" k1="0" k2="1" k3=".9" k4="0"/>
@@ -80,6 +80,7 @@ const NS = 'http://www.w3.org/2000/svg';
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const svg = document.getElementById('stage'), g = document.getElementById('blobs');
 const goo = document.getElementById('goo'), blurs = goo.querySelectorAll('feGaussianBlur');
+BLOBS.sort((a, b) => a.r - b.r);   // smallest painted first: a drop inside a bigger one is hidden, no dimples
 const els = BLOBS.map(() => { const c = document.createElementNS(NS, 'circle'); c.setAttribute('fill', 'url(#metal)'); g.appendChild(c); return c; });
 let W, H, S, t0 = performance.now();
 

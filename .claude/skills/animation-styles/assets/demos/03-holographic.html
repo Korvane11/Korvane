@@ -25,7 +25,7 @@ PITFALLS: Fully saturated rainbow gradients look like a toy: hues are pastel, de
   main { display: grid; justify-items: center; gap: clamp(20px, 4vh, 40px); text-align: center; }
   .eyebrow { font: 500 11px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); }
   h1 { font-size: clamp(30px, 4.6vw, 58px); font-weight: 600; letter-spacing: -.03em; line-height: 1.02; margin-top: 12px; }
-  .support { font-size: clamp(14px, 1.2vw, 16px); color: var(--muted); max-width: 34ch; line-height: 1.5; }
+  .support { font-size: clamp(14px, 1.2vw, 16px); color: var(--muted); max-width: 34ch; line-height: 1.5; text-wrap: balance; }
 
   .scene { perspective: 1100px; }
   .card {
@@ -105,7 +105,7 @@ PITFALLS: Fully saturated rainbow gradients look like a toy: hues are pastel, de
       </div>
     </div>
   </div>
-  <p class="support"><span class="fine">Move your cursor across the card, or just watch it catch the light.</span><span class="touch">Hold still and watch it catch the light.</span></p>
+  <p class="support"><span class="fine">Move your cursor across the card, or just watch it catch the light.</span><span class="touch">Watch it catch the light as it turns.</span></p>
 </main>
 <script>
 const SWAY_X = .75, SWAY_Y = .55, SWAY_SPEED = 1, EASE = 5, IDLE_MS = 2500;

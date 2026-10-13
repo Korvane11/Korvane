@@ -1,0 +1,215 @@
+<!doctype html>
+<!--
+STYLE: Blueprint
+LOOK: White technical linework on blue drafting paper with a fine and a coarse grid: a flanged hub in plan and in
+  section draws itself line by line, dimensions and leaders follow, the hatching fades in and the title block types
+  itself out. Calm, exact, engineering-grade.
+TECHNIQUE: An inline SVG built from a few helpers (line, circle, path, dimension, leader). Every stroke draws on with
+  stroke-dasharray = stroke-dashoffset = its getTotalLength(), eased to 0 on a declarative timeline (data-t start,
+  data-d duration). Dash-dot centre lines cannot use their own dash for this, so each gets a solid twin inside a
+  <mask> and the twin is what draws. Text types in by slicing its string; arrowheads and hatching fade.
+KNOBS: CSS --paper / --paper-edge (sheet colour), --ink (line colour), --grid-fine / --grid-coarse (cell sizes),
+  --grid-a (grid strength); JS SPEED (multiplies every start time and duration), ease() (pen acceleration), POS
+  (where each view sits, per orientation), the t values passed to each helper (the drawing order).
+COST: Low. A few dozen SVG strokes animate for about 7 s, then the loop stops completely (click or tap replays).
+  The grid is CSS gradients, painted once.
+REDUCED MOTION: The finished sheet: every line, dimension, hatch and title-block field in place.
+PITFALLS: Glows or thick strokes make it look like neon, not drafting: hairlines and two line weights only. Markers
+  (marker-end) appear before their line is drawn: arrowheads here are separate paths that fade in when the line
+  arrives. Dashed lines ignore a dashoffset draw-on: they reveal through a masked solid twin. Text that scales with
+  the drawing gets unreadable on phones: the SVG swaps to a stacked portrait layout instead of shrinking.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blueprint</title>
+<style>
+  :root {
+    --paper: #1c5396; --paper-edge: #0e2f63; --ink: #eef5ff;
+    --grid-fine: 12px; --grid-coarse: 60px; --grid-a: .07;
+    --cond: "Arial Narrow", "Roboto Condensed", sans-serif-condensed, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    min-height: 100svh; overflow: hidden; display: flex; flex-direction: column; color: var(--ink);
+    font-family: var(--cond);
+    background:
+      linear-gradient(rgb(255 255 255 / calc(var(--grid-a) * 2)) 1px, transparent 1px) -1px -1px / var(--grid-coarse) var(--grid-coarse),
+      linear-gradient(90deg, rgb(255 255 255 / calc(var(--grid-a) * 2)) 1px, transparent 1px) -1px -1px / var(--grid-coarse) var(--grid-coarse),
+      linear-gradient(rgb(255 255 255 / var(--grid-a)) 1px, transparent 1px) -1px -1px / var(--grid-fine) var(--grid-fine),
+      linear-gradient(90deg, rgb(255 255 255 / var(--grid-a)) 1px, transparent 1px) -1px -1px / var(--grid-fine) var(--grid-fine),
+      radial-gradient(120% 90% at 50% 40%, var(--paper), var(--paper-edge));
+  }
+  header { padding: clamp(18px, 4.5vmin, 52px) clamp(18px, 4.5vw, 64px) 0; }
+  .kicker { margin: 0 0 .7em; font: 500 clamp(10px, 1.4vmin, 13px)/1 var(--mono); letter-spacing: .22em; opacity: .7; }
+  h1 { margin: 0; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; line-height: .95; font-size: clamp(28px, 5.2vw, 64px); }
+  .sub { margin: .6em 0 0; max-width: 34em; font-size: clamp(14px, 1.8vmin, 18px); line-height: 1.4; opacity: .82; letter-spacing: .02em; }
+  svg { flex: 1; min-height: 0; width: 100%; padding: clamp(8px, 2vmin, 24px); cursor: pointer; }
+  @media (orientation: landscape) and (max-height: 520px) {   /* phone on its side: title left, sheet right */
+    body { flex-direction: row; }
+    header { flex: 0 0 30%; padding-bottom: 18px; align-self: center; }
+    h1 { font-size: clamp(22px, 3.6vw, 34px); }
+    svg { width: auto; min-width: 0; }
+  }
+  .ob { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }   /* object lines: the heavy weight */
+  .th { fill: none; stroke: var(--ink); stroke-width: 1; opacity: .8; }               /* dimension + extension lines */
+  .cl { fill: none; stroke: var(--ink); stroke-width: 1; opacity: .7; stroke-dasharray: 18 4 3 4; }   /* centre lines */
+  .mk { fill: none; stroke: #fff; stroke-width: 12; }                                  /* solid twin inside a mask */
+  .ar { fill: var(--ink); }
+  .ht { fill: url(#hatch); stroke: none; }
+  text { fill: var(--ink); font-family: var(--cond); letter-spacing: .06em; }
+  .dm { font-size: 14px; }
+  .lb { font-size: 15px; font-weight: 700; letter-spacing: .2em; }
+  .k { font-size: 10px; opacity: .65; letter-spacing: .16em; }
+  .v { font-size: 15px; }
+  .tt { font-size: 23px; font-weight: 700; letter-spacing: .12em; }
+</style>
+</head>
+<body>
+  <header>
+    <p class="kicker">DWG 18-0412 · REV A · SCALE 1:2</p>
+    <h1>Drawn to tolerance</h1>
+    <p class="sub">Every part starts as a line on blue paper. Tap the sheet to redraw.</p>
+  </header>
+  <svg id="dwg" role="img" aria-label="Technical drawing of a flanged hub, plan and section A-A, with a title block"></svg>
+<script>
+(() => {
+  const SPEED = 1, NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('dwg');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ease = (u) => (u < .5 ? 4 * u ** 3 : 1 - (-2 * u + 2) ** 3 / 2);   // cubic in-out: a pen that accelerates and settles
+  let defs, maskN = 0, land = null, items = [], t0 = null, running = false;
+
+  function el(parent, tag, attrs, t, d) {
+    const e = parent.appendChild(document.createElementNS(NS, tag));
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (t == null) return e;
+    let target = e;
+    if (attrs.class === 'cl') {   // dashed: reveal through a solid twin drawn inside a mask
+      const m = el(defs, 'mask', { id: 'm' + ++maskN, maskUnits: 'userSpaceOnUse', x: -3000, y: -3000, width: 6000, height: 6000 });
+      target = m.appendChild(e.cloneNode()); target.setAttribute('class', 'mk');
+      e.setAttribute('mask', `url(#m${maskN})`);
+    }
+    target.dataset.t = t * SPEED; target.dataset.d = (d ?? .5) * SPEED;
+    return e;
+  }
+  const line = (g, x1, y1, x2, y2, c, t, d) => el(g, 'line', { x1, y1, x2, y2, class: c }, t, d);
+  const circ = (g, cx, cy, r, c, t, d) => el(g, 'circle', { cx, cy, r, class: c }, t, d);
+  const path = (g, d, c, t, dur) => el(g, 'path', { d, class: c }, t, dur);
+  const text = (g, x, y, s, c, t, anchor = 'middle', rot = 0) => {
+    const e = el(g, 'text', { x, y, class: c, 'text-anchor': anchor, transform: `rotate(${rot} ${x} ${y})` }, t, s.length * .045);
+    e.textContent = s; return e;
+  };
+  const arrow = (g, x, y, ang, t) => el(g, 'path', { d: 'M0 0L11 -3.2L11 3.2Z', class: 'ar', transform: `translate(${x} ${y}) rotate(${ang})` }, t, .25);
+  function hdim(g, x1, x2, y, from, label, t) {   // horizontal dimension with extension lines from y = from
+    const s = Math.sign(y - from);
+    line(g, x1, from + 4 * s, x1, y + 8 * s, 'th', t, .35); line(g, x2, from + 4 * s, x2, y + 8 * s, 'th', t, .35);
+    line(g, x1, y, x2, y, 'th', t + .3, .5); arrow(g, x1, y, 0, t + .75); arrow(g, x2, y, 180, t + .75);
+    text(g, (x1 + x2) / 2, y - 6, label, 'dm', t + .8);
+  }
+  function vdim(g, y1, y2, x, f1, f2, label, t) {   // vertical dimension, extension lines from x = f1 / f2
+    const s = Math.sign(x - f1);
+    line(g, f1 + 4 * s, y1, x + 8 * s, y1, 'th', t, .35); line(g, f2 + 4 * s, y2, x + 8 * s, y2, 'th', t, .35);
+    line(g, x, y1, x, y2, 'th', t + .3, .5); arrow(g, x, y1, 90, t + .75); arrow(g, x, y2, -90, t + .75);
+    text(g, x - 6, (y1 + y2) / 2, label, 'dm', t + .8, 'middle', -90);   // rotated: glyphs sit left of x
+  }
+  function leader(g, px, py, ex, ey, dir, lines, t) {   // arrow on the feature, elbow, shoulder, then the note
+    const sx = ex + 18 * dir;
+    path(g, `M${px} ${py}L${ex} ${ey}H${sx}`, 'th', t, .5);
+    arrow(g, px, py, Math.atan2(py - ey, px - ex) * 180 / Math.PI - 180, t + .45);
+    lines.forEach((s, i) => text(g, sx + 4 * dir, ey + 4 + i * 16, s, 'dm', t + .5 + i * .3, dir > 0 ? 'start' : 'end'));
+  }
+
+  function build() {
+    const W = land ? 1000 : 440, H = land ? 560 : 900;
+    const POS = land ? { plan: [235, 268], elev: [705, 200], tb: [580, 404] } : { plan: [220, 228], elev: [220, 572], tb: [20, 742] };
+    svg.innerHTML = '<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
+      + '<line x1="0" y1="0" x2="0" y2="7" stroke="#eef5ff" stroke-width="1" stroke-opacity=".55"/></pattern></defs>';
+    defs = svg.firstChild; maskN = 0;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const group = ([x, y]) => el(svg, 'g', { transform: `translate(${x} ${y})` });
+    el(svg, 'rect', { x: 4, y: 4, width: W - 8, height: H - 8, class: 'th' }, 0, 1.4);   // sheet border
+
+    const p = group(POS.plan);   // PLAN VIEW
+    line(p, -168, 0, 168, 0, 'cl', .3, .8); line(p, 0, -168, 0, 168, 'cl', .4, .8);
+    circ(p, 0, 0, 140, 'ob', .7, 1.1);
+    circ(p, 0, 0, 70, 'ob', 1.3, .8);
+    path(p, 'M-10 -30.4V-39H10V-30.4A32 32 0 1 1 -10 -30.4Z', 'ob', 1.7, .8);   // bore with keyway
+    circ(p, 0, 0, 108, 'cl', 2, 1);
+    for (let i = 0; i < 6; i++) circ(p, 108 * Math.cos(i * Math.PI / 3), 108 * Math.sin(i * Math.PI / 3), 12, 'ob', 2.3 + i * .12, .45);
+    for (const s of [-1, 1]) {   // cutting plane A-A
+      line(p, 172 * s, 0, 194 * s, 0, 'ob', 2.9, .3); line(p, 186 * s, 0, 186 * s, -16, 'th', 3.1, .2);
+      arrow(p, 186 * s, -27, 90, 3.3); text(p, 186 * s - 13 * s, -30, 'A', 'lb', 3.4);
+    }
+    hdim(p, -140, 140, 178, 2, 'Ø140', 3.6);
+    leader(p, 60, -103.9, 92, -150, 1, ['6× Ø12', 'PCD Ø108'], 4.1);
+    leader(p, -10, -39, -64, -150, -1, ['KEYWAY 10 × 3.3'], 4.4);
+    text(p, 0, 214, 'PLAN', 'lb', 5);
+
+    const e = group(POS.elev);   // SECTION A-A
+    line(e, 0, -80, 0, 76, 'cl', 2.6, .6);
+    const parts = ['M-140 22H-120V50H-140Z', 'M-96 22H-70V-46L-66 -50H-32V50H-96Z', 'M140 22H120V50H140Z', 'M96 22H70V-46L66 -50H32V50H96Z'];
+    parts.forEach((d) => el(e, 'path', { d, class: 'ht' }, 3.7, .7));
+    parts.forEach((d, i) => path(e, d, 'ob', 2.8 + i * .18, .9));
+    for (const s of [-1, 1]) {   // edges seen beyond the cut: back of the bore, keyway groove, bolt holes
+      line(e, 32 * s, -50, 0, -50, 'ob', 3.4, .3); line(e, 32 * s, 50, 0, 50, 'ob', 3.4, .3);
+      line(e, 10 * s, -50, 10 * s, 50, 'th', 3.5, .5);
+      line(e, 96 * s, 22, 120 * s, 22, 'ob', 3.6, .2); line(e, 96 * s, 50, 120 * s, 50, 'ob', 3.6, .2);
+    }
+    hdim(e, -70, 70, -84, -54, 'Ø70', 3.9);
+    hdim(e, -32, 32, 86, 54, 'Ø32 H7', 4.3);
+    vdim(e, -50, 50, 172, 74, 144, '50', 4.5);
+    vdim(e, 22, 50, -172, -144, -144, '14', 4.8);
+    text(e, 0, 136, 'SECTION A–A', 'lb', 5.1);
+
+    const b = group(POS.tb);   // TITLE BLOCK
+    el(b, 'rect', { x: 0, y: 0, width: 400, height: 136, class: 'ob' }, 5.2, .9);
+    line(b, 0, 52, 400, 52, 'th', 5.6, .4); line(b, 0, 95, 400, 95, 'th', 5.7, .4);
+    line(b, 150, 52, 150, 95, 'th', 5.8, .2); line(b, 280, 52, 280, 136, 'th', 5.8, .3);
+    path(b, 'M318 19L340 24V40L318 45Z', 'th', 5.9, .4); circ(b, 368, 32, 13, 'th', 6, .4); circ(b, 368, 32, 6, 'th', 6.1, .3);   // projection symbol
+    [[10, 15, 'TITLE', 'k'], [10, 42, 'FLANGED HUB', 'tt'], [10, 67, 'DWG NO.', 'k'], [10, 87, '18-0412', 'v'],
+      [160, 67, 'SCALE', 'k'], [160, 87, '1 : 2', 'v'], [290, 67, 'SHEET', 'k'], [290, 87, '1 OF 1', 'v'],
+      [10, 110, 'MATERIAL', 'k'], [10, 129, '6061-T6 ALUMINIUM', 'v'], [290, 110, 'UNITS', 'k'], [290, 129, 'MM', 'v'],
+    ].forEach(([x, y, s, c], i) => text(b, x, y, s, c, 6 + i * .12, 'start'));
+
+    items = [...svg.querySelectorAll('[data-t]')].map((n) => {
+      const it = { n, t: +n.dataset.t, d: +n.dataset.d, kind: n.tagName === 'text' ? 'type' : /ar|ht/.test(n.getAttribute('class')) ? 'fade' : 'draw' };
+      if (it.kind === 'draw') { it.L = n.getTotalLength(); n.style.strokeDasharray = it.L + ' ' + it.L; }
+      if (it.kind === 'type') it.full = n.textContent;
+      return it;
+    });
+  }
+
+  function apply(t) {   // pose every element at time t; returns true while anything is still moving
+    let busy = false;
+    for (const it of items) {
+      const u = Math.min(1, Math.max(0, (t - it.t) / it.d));
+      if (u < 1) busy = true;
+      if (it.kind === 'draw') it.n.style.strokeDashoffset = it.L * (1 - ease(u));
+      else if (it.kind === 'type') it.n.textContent = it.full.slice(0, Math.ceil(it.full.length * u));
+      else it.n.style.opacity = ease(u);
+    }
+    return busy;
+  }
+  function loop(now) {
+    if (t0 === null) t0 = now;
+    running = apply((now - t0) / 1000);
+    if (running) requestAnimationFrame(loop);
+  }
+  function play() { t0 = null; if (!running) { running = true; requestAnimationFrame(loop); } }
+  function layout(first) {
+    const l = innerWidth >= innerHeight * .9;
+    if (l === land) return;
+    land = l; build();
+    if (reduce || !first) apply(1e9); else play();
+  }
+  layout(true);
+  addEventListener('resize', () => layout(false));
+  svg.addEventListener('click', () => { if (!reduce) play(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!doctype html>
+<!--
+STYLE: Split-flap
+LOOK: A station departure board: rows of dark character tiles split by a hinge, each flapping through the drum of characters until the next message settles, with a mechanical clatter of staggered starts. A small flap clock keeps real time.
+TECHNIQUE: Each tile is four half-height layers: a static top (next character) and static bottom (current), plus two flaps. The top flap folds down (rotateX 0 to -90deg, hinge at its bottom edge, accelerating), then the bottom flap lands (rotateX 90deg to 0, hinge at its top edge) with a small bounce. Each half shows its slice of the character by clipping a full-height line box. A tile steps one drum character per flip until it reaches its target; start delays per column and row give the cascade.
+KNOBS: --tile-top / --tile-bot / --ink (tile colours); --amber (accent); COLS (tiles per row); MESSAGES (each row COLS characters or fewer); DRUM (character order the tiles turn through); FLIP (seconds per flap); CYCLE (seconds per message); the 6deg landing bounce in step().
+COST: Low: only tiles that are flipping are touched, two transforms and an opacity per frame each. 36 + 4 tiles here; hundreds are fine.
+REDUCED MOTION: The first message and the current time, set directly with no flipping, and nothing cycles.
+PITFALLS: Flipping straight to the target (no intermediate characters) loses the mechanism: step through the drum. Every tile starting together looks digital: stagger by column with jitter. Flat halves with no hinge line or shading read as a font, not hardware. A clock that flips through letters is wrong: give digit tiles their own drum.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Split-flap</title>
+<style>
+  :root { --bg: #0c0d0f; --tile-top: #26272a; --tile-bot: #1c1d20; --ink: #efe9d9; --amber: #f2b03d; --tw: 60px; --th: 85px; --gap: 5px; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; background: radial-gradient(120% 80% at 50% 40%, #1a1c20 0%, var(--bg) 70%); color: var(--ink); }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .stage { height: 100%; height: 100svh; display: grid; place-items: center; padding: 16px; }
+  .wrap { display: flex; flex-direction: column; gap: calc(var(--gap) * 4); }
+  .bar { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  .label { font: 600 clamp(11px, 1.1vw, 14px)/1.2 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .28em; text-transform: uppercase; color: var(--amber); }
+  .label small { display: block; color: #8d8a82; letter-spacing: .2em; font-size: .85em; margin-top: .5em; }
+  .board { display: grid; gap: calc(var(--gap) * 1.6) var(--gap); padding: calc(var(--gap) * 2.4); border-radius: calc(var(--gap) * 2.2);
+           background: linear-gradient(#0a0a0b, #070708); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 0 0 1px rgba(255,255,255,.03), 0 30px 60px -20px rgba(0,0,0,.8); }
+  .row, .clock { display: flex; gap: var(--gap); }
+  .clock { --tw: calc(var(--ctw) * 1px); --th: calc(var(--ctw) * 1.42px); }
+  .tile { position: relative; width: var(--tw); height: var(--th); perspective: calc(var(--th) * 3.5); border-radius: calc(var(--tw) * .08);
+          box-shadow: 0 2px 3px rgba(0,0,0,.7); font: 700 calc(var(--tw) * .92)/var(--th) "Helvetica Neue", "Arial Narrow", "Roboto Condensed", sans-serif-condensed, ui-sans-serif, sans-serif;
+          font-stretch: condensed; text-align: center; color: var(--ink); }
+  .half { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; }   /* each half clips its slice of one full-height line box */
+  .half span { position: absolute; left: 0; right: 0; height: 200%; }
+  .top { top: 0; border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; background: linear-gradient(var(--tile-top), #212225); }
+  .bot { bottom: 0; border-radius: inherit; border-top-left-radius: 0; border-top-right-radius: 0; background: linear-gradient(#1f2023, var(--tile-bot)); }
+  .top span { top: 0; } .bot span { top: -100%; }
+  .flap { z-index: 2; backface-visibility: hidden; }
+  .flap.top { transform-origin: 50% 100%; } .flap.bot { transform-origin: 50% 0; transform: rotateX(90deg); }
+  .flap::after { content: ""; position: absolute; inset: 0; background: #000; opacity: var(--sh, 0); }   /* shading as a flap turns away from the light */
+  .tile::after { content: ""; position: absolute; z-index: 3; left: 0; right: 0; top: 50%; height: max(1px, calc(var(--tw) * .03)); transform: translateY(-50%); background: #050506; }
+  .tile::before { content: ""; position: absolute; z-index: 4; left: 0; right: 0; top: 50%; height: calc(var(--tw) * .14); transform: translateY(-50%);
+                  background: linear-gradient(90deg, #45464b 2px, transparent 2px calc(100% - 2px), #45464b 0); }   /* axle pins at the hinge */
+  .tile.colon::before { display: none; }
+  .tile.colon { width: calc(var(--tw) * .45); box-shadow: none; } .tile.colon::after { display: none; }
+  .tile.colon .half { background: none; }
+  .sub { width: 0; min-width: min(100%, 44ch);   /* follows the board's width instead of setting it */
+          font-size: clamp(13px, 1.2vw, 16px); line-height: 1.55; color: #9a968d; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+</style>
+</head>
+<body>
+<main class="stage">
+  <div class="wrap" id="wrap">
+    <h1 class="sr" id="msg">Departures</h1>
+    <div class="bar"><p class="label">Departures<small>Platform board</small></p><div class="clock" id="clock" aria-hidden="true"></div></div>
+    <div class="board" id="board" aria-hidden="true"></div>
+    <p class="sub">Every tile turns through the drum, one character at a time, until the message settles.</p>
+  </div>
+</main>
+<script>
+const COLS = 10;
+const MESSAGES = [
+  ['DEPARTURES', 'ON TIME', 'EVERY TIME'],
+  ['BOARDING', 'BIG IDEAS', 'GATE 07'],
+  ['NEXT STOP', 'SOMEWHERE', 'NEW'],
+];
+const DRUM = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:.-/';   // the order a real drum turns through
+const DIGITS = '0123456789';
+const FLIP = 0.085;   // seconds per flap (real boards: 0.06-0.12)
+const CYCLE = 7.5;    // seconds per message, including the flipping
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const board = document.getElementById('board'), clock = document.getElementById('clock'), wrap = document.getElementById('wrap');
+const pad = s => { const l = Math.floor((COLS - s.length) / 2); return (' '.repeat(l) + s).padEnd(COLS); };
+const rows = MESSAGES[0].length;
+
+function makeTile(parent, drum, ch, cls = '') {
+  const el = document.createElement('div');
+  el.className = 'tile ' + cls;
+  el.innerHTML = '<div class="half top"><span></span></div><div class="half bot"><span></span></div>' +
+                 '<div class="half top flap"><span></span></div><div class="half bot flap"><span></span></div>';
+  parent.appendChild(el);
+  const h = el.children, t = { el, drum, cur: ch, to: ch, target: ch, start: -1, dur: FLIP * (0.9 + Math.random() * 0.2),
+    s: [...h].map(x => x.firstChild), ft: h[2], fb: h[3] };
+  t.s.forEach(x => x.textContent = ch);
+  return t;
+}
+const tiles = [];
+for (let r = 0; r < rows; r++) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  board.appendChild(row);
+  for (let c = 0; c < COLS; c++) tiles.push(Object.assign(makeTile(row, DRUM, ' '), { r, c }));
+}
+const clockTiles = [0, 1, 2, 3, 4].map(i => makeTile(clock, i === 2 ? ':' : DIGITS, i === 2 ? ':' : '0', i === 2 ? 'colon' : ''));
+
+// One flip: static top = next char, static bottom = current, top flap = current, bottom flap = next.
+function startFlip(t, at) {
+  const n = t.drum[(t.drum.indexOf(t.cur) + 1) % t.drum.length];
+  t.to = n; t.start = at;
+  t.s[0].textContent = n; t.s[1].textContent = t.cur; t.s[2].textContent = t.cur; t.s[3].textContent = n;
+}
+function setTarget(t, ch, at) {
+  t.target = ch;
+  if (t.start < 0 && ch !== t.cur) startFlip(t, at);
+}
+function step(t, now) {
+  if (t.start < 0 || now < t.start) return;
+  let p = (now - t.start) / t.dur;
+  while (p >= 1) {                        // finished: settle, then chain the next flap if not there yet
+    t.cur = t.to;
+    if (t.cur === t.target) {
+      t.start = -1; t.s.forEach(x => x.textContent = t.cur);
+      t.ft.style.transform = ''; t.fb.style.transform = 'rotateX(90deg)'; t.ft.style.setProperty('--sh', 0); t.fb.style.setProperty('--sh', 0);
+      return;
+    }
+    startFlip(t, t.start + t.dur);
+    p = (now - t.start) / t.dur;
+  }
+  if (p < 0.5) {                          // top flap falls, accelerating like gravity
+    const q = p / 0.5, a = 90 * q * q;
+    t.ft.style.transform = `rotateX(${-a}deg)`; t.ft.style.setProperty('--sh', (a / 90 * 0.55).toFixed(3));
+    t.fb.style.transform = 'rotateX(90deg)';
+  } else {                                // bottom flap lands, then a small bounce off the stop
+    const q = (p - 0.5) / 0.5;
+    const a = q < 0.7 ? 90 * (1 - Math.pow(q / 0.7, 2)) : 6 * Math.sin(Math.PI * (q - 0.7) / 0.3);
+    t.ft.style.transform = 'rotateX(-90deg)';
+    t.fb.style.transform = `rotateX(${a.toFixed(2)}deg)`; t.fb.style.setProperty('--sh', (a / 90 * 0.4).toFixed(3));
+  }
+}
+
+function showMessage(k, now) {
+  const m = MESSAGES[k % MESSAGES.length].map(pad);
+  document.getElementById('msg').textContent = MESSAGES[k % MESSAGES.length].join(' ');
+  tiles.forEach(t => {
+    const ch = m[t.r][t.c];
+    if (reduce) { t.cur = t.to = t.target = ch; t.s.forEach(x => x.textContent = ch); return; }
+    setTarget(t, ch, now + t.c * 0.035 + t.r * 0.08 + Math.random() * 0.12);   // cascade: column, row, jitter
+  });
+}
+function setClock(now) {
+  const d = new Date(), s = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  clockTiles.forEach((t, i) => {
+    if (i === 2) return;
+    if (reduce || now < 0) { t.cur = t.to = t.target = s[i]; t.s.forEach(x => x.textContent = s[i]); }
+    else if (t.target !== s[i]) setTarget(t, s[i], now + i * 0.05);
+  });
+}
+
+function fit() {
+  const w = Math.min(innerWidth - 32, 1180);
+  let gap = Math.max(3, Math.round(w / (COLS * 1.1) * 0.08));         // gaps ~8% of a tile, never under 3px
+  let tw = (w - gap * (COLS - 1 + 4.8)) / COLS;                        // board = tiles + gaps + 2.4-gap padding each side
+  tw = Math.floor(Math.min(tw, (innerHeight - 210) / (rows * 1.42 * 1.12), 96));   // height limit for landscape phones
+  gap = Math.max(3, Math.round(tw * 0.08));
+  const s = wrap.style;
+  s.setProperty('--tw', tw + 'px'); s.setProperty('--th', Math.round(tw * 1.42) + 'px');
+  s.setProperty('--gap', gap + 'px'); s.setProperty('--ctw', Math.max(18, Math.round(tw * 0.48)));
+}
+fit();
+addEventListener('resize', fit);
+
+if (reduce) { showMessage(0, 0); setClock(-1); }
+else {
+  setClock(-1);
+  let t0 = null, shown = -1, ticked = 0;
+  requestAnimationFrame(function frame(ms) {
+    if (t0 === null) t0 = ms;
+    const now = (ms - t0) / 1000, k = Math.floor((now - 0.25) / CYCLE);   // first message starts at 0.25 s
+    if (k > shown) { shown = k; showMessage(k, now); }
+    if (now - ticked > 0.5) { ticked = now; setClock(now); }
+    tiles.forEach(t => step(t, now)); clockTiles.forEach(t => step(t, now));
+    requestAnimationFrame(frame);
+  });
+}
+</script>
+</body>
+</html>

@@ -28,18 +28,18 @@ PITFALLS: Comic Sans and rainbow palettes read as parody: use heavy uppercase it
            font-weight: 900; font-style: italic; text-transform: uppercase; }
   .caption { position: absolute; left: 12px; top: 12px; max-width: 78%; padding: .45em .7em; background: var(--yellow); border: 3px solid var(--ink);
              font-size: clamp(13px, 1.35vw, 19px); letter-spacing: .02em; line-height: 1.15; will-change: transform; }
+  .caption.end { left: auto; top: auto; right: 10px; bottom: 10px; font-size: clamp(11px, 1vw, 14px); }
   .moon { position: absolute; right: 9%; top: 14%; width: 22%; aspect-ratio: 1; border-radius: 50%; background: #fff1bf; border: 3px solid var(--ink); }
   .city { position: absolute; left: 0; bottom: 0; width: 100%; height: 52%; }
-  h1 { position: absolute; left: 5%; top: 6%; font-size: clamp(34px, 5.6vw, 96px); line-height: .92; letter-spacing: .01em; color: #fff;
+  h1 { position: absolute; left: 5%; top: 6%; font-size: clamp(40px, 5.6vw, 96px); line-height: .92; letter-spacing: .035em; color: #fff;
        -webkit-text-stroke: .075em var(--ink); paint-order: stroke fill;   /* outer ink line: stroke drawn under the fill */
        text-shadow: .06em .06em 0 var(--ink); }
   h1 span { display: block; will-change: transform; }
   .burst { position: absolute; left: 0; top: 0; overflow: visible; will-change: transform; }
-  .balloon { position: absolute; left: 50%; top: 50%; width: min(84%, 340px); padding: 1.2em 1.5em; background: #fff; border: 3px solid var(--ink);
-             border-radius: 50%; text-align: center; font: 800 clamp(13px, 1.3vw, 17px)/1.25 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  .balloon { position: absolute; left: 50%; top: 50%; width: min(90%, 360px); padding: 1.4em 1.3em 1.6em; text-align: center; font: 800 clamp(13px, 1.3vw, 17px)/1.25 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
              text-transform: uppercase; letter-spacing: .03em; will-change: transform; }
-  .balloon::after { content: ""; position: absolute; left: 22%; bottom: -21px; width: 26px; height: 24px; background: #fff;
-                    border: solid var(--ink); border-width: 0 0 3px 3px; transform: skewX(38deg) rotate(-8deg); }
+  .balloon svg { position: absolute; left: 0; top: 0; width: 100%; height: 116%; overflow: visible; }   /* one path = ellipse + tail, one clean outline */
+  .balloon p { position: relative; }
 </style>
 </head>
 <body>
@@ -56,13 +56,15 @@ PITFALLS: Comic Sans and rainbow palettes read as parody: use heavy uppercase it
          stroke-linejoin="round" paint-order="stroke" transform="rotate(-8) skewX(-6)">POW!</text></g>
     </svg></section>
   <section class="panel c"><canvas class="dots"></canvas>
-    <div class="balloon" id="balloon"><p>Every panel lands in order. Then the punch.</p></div></section>
+    <div class="balloon" id="balloon"><svg viewBox="0 0 200 128" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M83.2 106.2 A97 52 0 1 0 51.5 100 L30 127 Z" fill="#fff" stroke="#171411" stroke-width="3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg><p>Every panel lands in order.<br>Then the punch.</p></div>
+    <p class="caption end comic" id="end">To be continued…</p></section>
 </div>
 <script>
 const INK = '#171411';
 const CELL = 9;               // halftone pitch in CSS px: 7-12 reads as print at arm's length
 const SCREEN = 22;            // dot screen angle (deg)
-const LINES = 84;             // speed-line wedges
+const LINES = 120;            // speed-line wedges
 const PUNCH_EVERY = 3.8;      // seconds between punches after the reveal
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DPR = Math.min(devicePixelRatio || 1, 2);
@@ -97,13 +99,13 @@ for (let x = -4; x < 404;) {
 document.getElementById('city').innerHTML = city;
 
 const lines = Array.from({ length: LINES }, (_, i) => ({
-  a: (i / LINES) * Math.PI * 2 + rnd() * 0.05, r: rnd(), w: 1.5 + rnd() * 5.5, ph: rnd() * 6.28,
+  a: (i / LINES) * Math.PI * 2 + rnd() * 0.04, r: rnd(), w: 2 + Math.pow(rnd(), 2) * 16, ph: rnd() * 6.28,   // mostly thin, a few heavy
 }));
 
 const panels = [...document.querySelectorAll('.panel')];
 const pb = panels[1], speed = document.getElementById('speed'), sctx = speed.getContext('2d');
 const burst = document.getElementById('burst'), word = document.getElementById('word');
-const cap = document.getElementById('cap'), balloon = document.getElementById('balloon');
+const cap = document.getElementById('cap'), end = document.getElementById('end'), balloon = document.getElementById('balloon');
 const titleLines = [...document.querySelectorAll('h1 span')];
 const B = { w: 1, h: 1, cx: 0, cy: 0, size: 1 };
 
@@ -127,7 +129,7 @@ function halftone(canvas, color, cov) {
 function layout() {
   const tall = innerWidth <= innerHeight;
   B.w = pb.clientWidth; B.h = pb.clientHeight;
-  B.size = Math.min(B.w * (tall ? 0.72 : 0.5), B.h * 0.6);
+  B.size = Math.min(B.w * (tall ? 0.74 : 0.54), B.h * 0.62);
   B.cx = B.w * (tall ? 0.5 : 0.62); B.cy = B.h * (tall ? 0.66 : 0.6);
   burst.style.width = burst.style.height = B.size + 'px';
   speed.width = Math.round(B.w * DPR); speed.height = Math.round(B.h * DPR);
@@ -151,8 +153,9 @@ function render(t) {
     l.style.transform = `translateX(${(1 - backOut(e, 1.5)) * -60}%) skewX(${(1 - expoOut(e)) * -14}deg)`;
     l.style.opacity = e > 0 ? 1 : 0;
   });
+  end.style.transform = `translateX(${(1 - backOut(T(t, 1.7, 0.5), 1.6)) * 130}%)`;
   const bl = backOut(T(t, 0.95, 0.45), 2);
-  balloon.style.transform = `translate(-50%, -54%) scale(${Math.max(0, bl).toFixed(4)})`;
+  balloon.style.transform = `translate(-50%, -62%) scale(${Math.max(0, bl).toFixed(4)})`;
 
   // 2. The burst slams in with a hard overshoot; the word lands a beat later.
   let pop = backOut(T(t, 1.15, 0.5), 2.8), wpop = backOut(T(t, 1.25, 0.45), 3.2), shake = [0, 0], punch = 0;
@@ -176,7 +179,7 @@ function render(t) {
   sctx.fillStyle = INK; sctx.beginPath();
   for (const L of lines) {
     const a = L.a + t * 0.025;
-    const target = B.size * (0.62 + L.r * 0.55 + 0.03 * Math.sin(t * 4 + L.ph) - 0.1 * punch);
+    const target = B.size * (0.56 + L.r * 0.42 + 0.03 * Math.sin(t * 4 + L.ph) - 0.1 * punch);
     const r0 = R + (target - R) * intro, hw = L.w / R;
     sctx.moveTo(B.cx + Math.cos(a) * r0, B.cy + Math.sin(a) * r0);
     sctx.lineTo(B.cx + Math.cos(a - hw) * R, B.cy + Math.sin(a - hw) * R);

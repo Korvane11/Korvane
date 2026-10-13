@@ -43,7 +43,7 @@ PITFALLS: Blurry or uneven pixels from fractional scaling: the scale is a whole 
     far: '#28265a', farWin: '#4a4a86', mid: '#0d0e24', rim: '#25285a', winOff: '#191b3c',
     win: ['#ffd27a', '#ffd27a', '#ffd27a', '#f2a65e', '#9cc7e6'],
     post: '#07081a', lamp: '#fff0b8', glow: ['#4b3f5c', '#e9c27e'], pool: ['#34304e', '#5d5068'],
-    walk: '#24264a', walkTop: '#363a63', curb: '#0a0b1b', road: '#13142a', dash: '#6f6b84', beam: ['#4f4a63', '#f3e2ab'],
+    walk: '#24264a', walkTop: '#363a63', curb: '#0a0b1b', road: '#13142a', dash: '#6f6b84', beam: ['#6a5f6e', '#f3e2ab'],
     moon: '#f3ead0', crater: '#d2c7a8', halo: '#2b2a5e', star: ['#34366c', '#8d90c4', '#ece8ff'],
     title: ['#fff3d2', '#fff3d2', '#ffe09c', '#ffd27a', '#ffbd73', '#ffa766', '#ff9160'], shade: '#05051a', sub: '#a4a7d8',
   };
@@ -185,7 +185,7 @@ PITFALLS: Blurry or uneven pixels from fractional scaling: the scale is a whole 
     const bob = (tick % 9 === 0) ? 1 : 0, cy = y0 + 4 + bob, fx = carX + 28;
     for (let x = 0; x < 34; x++) for (let y = -Math.floor(x * .12); y <= Math.floor(x * .34); y++) {   // headlight beam
       const edge = Math.abs(y - x * .11) / (x * .23 + 1);   // 0 on the beam's axis, 1 at its edge
-      if (cy + 5 + y < H) glow(fx + x, cy + 5 + y, 1.5 * (1 - x / 34) ** .8 * (1 - edge * .75), P.beam);
+      if (cy + 5 + y < H) glow(fx + x, cy + 5 + y, 1.7 * (1 - x / 34) ** .8 * (1 - edge * .75), P.beam);
     }
     px(ctx, CAR.t, carX - 1, cy + 5); px(ctx, CAR.t, carX - 3, cy + 5);   // tail-light spill, dithered
     CAR_ROWS.forEach((row, r) => [...row].forEach((ch, c) => { if (ch !== '.') px(ctx, CAR[ch], carX + c, cy + r); }));

@@ -1,0 +1,181 @@
+<!doctype html>
+<!--
+STYLE: Clay 3D
+LOOK: Soft, matte, pastel clay shapes (a breathing blob, a squishy torus, a lying pill, a bouncing ball) on a seamless warm-cream table, with soft contact shadows and gentle squash-and-stretch.
+TECHNIQUE: One full-screen WebGL fragment shader raymarches signed-distance shapes; matte look = wrapped diffuse + sky fill + warm floor bounce + 5-tap ambient occlusion + a 24-step soft shadow, no specular. The floor is shaded as background colour x (shadow, AO), so it melts into the backdrop with no horizon. Motion lives in JS: positions and a volume-preserving squash factor per shape are passed as uniforms (y scaled by s, x/z by 1/sqrt(s)). The ball's squash is its "penetration" of the floor in a parabolic bounce, so it squashes only on contact.
+KNOBS: --bg (must match BG in the shader), --ink. JS: QUALITY (render scale per device pixel; 0.5-0.8), MIN_SCALE (floor for 1x screens), MAX_PIXELS (hard cap on rendered pixels), BOUNCE (period s), HOP (bounce height), SQUISH (torus wobble), COLORS (sRGB albedos per shape). Shader: STEPS (raymarch), the light vector L, and the AO / shadow loop counts.
+COST: Per-pixel raymarch, so cost = rendered pixels x steps. Rendered at 0.75 x device pixels (min 0.9 x CSS px) (soft matte surfaces hide upscaling), capped at 1.1 MP, and stepped down (x0.85, to half) while frames take over 40 ms. Phones are fine at this scale; raise QUALITY only on desktop.
+REDUCED MOTION: One rendered still (ball mid-hop), no further frames. Without WebGL (or with ?nogl): CSS claymorphism shapes (inset light + shade shadows, soft contact shadows), also still under reduced motion.
+PITFALLS: Specular highlights or hard shadows turn clay into plastic: keep it matte and every shadow soft. A visible floor horizon breaks the studio look: shade the floor from the background colour and fade it. Non-uniform scaling breaks the distance field unless you multiply the distance by the smallest scale (done in sqz()). Full-resolution raymarching on a 3x phone melts the GPU: render small and let CSS upscale.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clay 3D</title>
+<style>
+  :root { --bg: #f3e9de; --ink: #3b2b24; --muted: #7a6559; --round: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--round); overflow: hidden; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .copy { position: fixed; left: clamp(20px, 6vw, 96px); right: 20px; top: clamp(28px, 13vh, 150px); max-width: 36rem; }
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #c26a58; }
+  h1 { margin-top: 12px; font-size: clamp(2.5rem, min(9vw, 9vh), 5rem); line-height: .98; letter-spacing: -.035em; font-weight: 800; }
+  .copy p:not(.eyebrow) { margin-top: 16px; max-width: 27ch; font-size: clamp(1rem, 1.3vw, 1.15rem); line-height: 1.5; color: var(--muted); }
+  .btn { display: inline-block; margin-top: 24px; padding: 14px 26px; border-radius: 999px; font-weight: 700; color: #4a2a22; text-decoration: none;
+    background: #f6b6a8; box-shadow: inset -4px -6px 10px rgba(150, 60, 40, .22), inset 5px 6px 10px rgba(255, 255, 255, .6), 0 14px 22px -10px rgba(150, 70, 50, .45); }
+  /* CSS claymorphism fallback (no WebGL) */
+  .fallback { display: none; position: fixed; right: 3vw; bottom: 6vh; width: min(56vw, 720px); height: 62vh; }
+  .nogl .fallback { display: block; } .nogl canvas { display: none; }
+  .clay, .shadow { position: absolute; will-change: transform; }
+  .clay { box-shadow: inset -12px -16px 28px rgba(80, 40, 30, .18), inset 14px 14px 26px rgba(255, 255, 255, .55), 0 26px 40px -22px rgba(110, 70, 50, .45); }
+  .shadow { height: 7%; border-radius: 50%; background: radial-gradient(closest-side, rgba(110, 70, 50, .32), transparent); }
+  .c1 { left: 6%; bottom: 8%; width: 40%; aspect-ratio: 1; background: #f4a29c; border-radius: 47% 53% 50% 50% / 54% 50% 50% 46%; }
+  .c2 { right: 2%; bottom: 8%; width: 30%; aspect-ratio: 2.3; background: #9fb3f1; border-radius: 999px; }
+  .c3 { left: 50%; bottom: 8%; width: 14%; aspect-ratio: 1; background: #a8dcc4; border-radius: 50%; }
+  .c4 { right: 14%; top: 6%; width: 22%; aspect-ratio: 1; background: #f6cf7c; border-radius: 34%; }
+  @media (max-aspect-ratio: 1/1) { .fallback { left: 4vw; right: 4vw; width: auto; height: 44vh; bottom: 6vh; } .c4 { top: 14%; } .copy { top: max(28px, 7vh); } }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="fallback" aria-hidden="true">
+  <i class="shadow" style="left:8%;bottom:5%;width:36%"></i><i class="shadow" style="right:3%;bottom:5%;width:28%"></i><i class="shadow s3" style="left:50%;bottom:5%;width:15%"></i>
+  <i class="clay c1"></i><i class="clay c2"></i><i class="clay c3"></i><i class="clay c4"></i>
+</div>
+<main class="copy">
+  <p class="eyebrow">Small teams, big ideas</p>
+  <h1>Serious tools,<br>soft edges.</h1>
+  <p>A friendly workspace shaped by hand and built to be played with.</p>
+  <a class="btn" href="#">Start playing</a>
+</main>
+<script>
+(() => {
+  const QUALITY = 0.75, MIN_SCALE = 0.9, MAX_PIXELS = 1.1e6, BOUNCE = 1.45, HOP = 1.35, SQUISH = 0.06;
+  const COLORS = [[0.96, 0.63, 0.61], [0.98, 0.81, 0.47], [0.62, 0.70, 0.95], [0.62, 0.86, 0.76]];  // blob, torus, pill, ball
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cv = document.getElementById('gl');
+  const gl = /[?&]nogl/.test(location.search) ? null : cv.getContext('webgl', { antialias: false, alpha: false });
+
+  const FS = `precision highp float;
+  uniform vec2 uRes; uniform float uT; uniform vec3 uRo, uTa; uniform vec4 uO[4], uR; uniform vec3 uC[4];
+  const vec3 BG = vec3(.953, .914, .871);
+  mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+  float sqz(inout vec3 q, float s) { q = vec3(q.x * sqrt(s), q.y / s, q.z * sqrt(s)); return min(s, inversesqrt(s)); }  // volume-preserving squash
+  vec2 map(vec3 p) {
+    vec2 r = vec2(p.y, 0.);
+    vec3 q = p - uO[0].xyz; float k = sqz(q, uO[0].w); q.xz = rot(uR.w) * q.xz;
+    float d = (length(q) - 1. + .05 * sin(3. * q.x + uT * .9) * sin(3. * q.y + uT * 1.2) * sin(3. * q.z + uT * .7)) * k * .85;
+    if (d < r.x) r = vec2(d, 1.);
+    q = p - uO[1].xyz; k = sqz(q, uO[1].w); q.xz = rot(uR.x) * q.xz; q.yz = rot(uR.y) * q.yz;
+    d = (length(vec2(length(q.xz) - .78, q.y)) - .32) * k; if (d < r.x) r = vec2(d, 2.);
+    q = p - uO[2].xyz; k = sqz(q, uO[2].w); q.xz = rot(uR.z) * q.xz; q.x -= clamp(q.x, -.62, .62);
+    d = (length(q) - .42) * k; if (d < r.x) r = vec2(d, 3.);
+    q = p - uO[3].xyz; k = sqz(q, uO[3].w); d = (length(q) - .5) * k; if (d < r.x) r = vec2(d, 4.);
+    return r;
+  }
+  vec3 nrm(vec3 p) { const vec2 e = vec2(.0015, -.0015);
+    return normalize(e.xyy * map(p + e.xyy).x + e.yyx * map(p + e.yyx).x + e.yxy * map(p + e.yxy).x + e.xxx * map(p + e.xxx).x); }
+  float shadow(vec3 ro, vec3 rd) { float res = 1., t = .03;
+    for (int i = 0; i < 24; i++) { float h = map(ro + rd * t).x; res = min(res, 6. * h / t); t += clamp(h, .04, .5); if (res < .002 || t > 7.) break; }
+    return smoothstep(0., 1., clamp(res, 0., 1.)); }                       // k = 6: wide, soft penumbra
+  float occl(vec3 p, vec3 n) { float o = 0., s = 1.;
+    for (int i = 0; i < 5; i++) { float h = .02 + .13 * float(i); o += (h - map(p + n * h).x) * s; s *= .8; }
+    return clamp(1. - 1.8 * o, 0., 1.); }
+  void main() {
+    vec2 uv = (gl_FragCoord.xy - .5 * uRes) / uRes.y;
+    vec3 ww = normalize(uTa - uRo), uu = normalize(cross(ww, vec3(0, 1, 0))), vv = cross(uu, ww);
+    vec3 rd = normalize(uv.x * uu + uv.y * vv + 1.8 * ww), bg = pow(BG * (1.02 - .1 * dot(uv, uv)), vec3(2.2));
+    float t = 0., m = -1.;
+    for (int i = 0; i < 90; i++) {
+      vec3 p = uRo + rd * t; if (p.y > 3.9 && rd.y > 0.) break;
+      vec2 h = map(p); if (h.x < .0006 * t + .0004) { m = h.y; break; } t += h.x; if (t > 40.) break;
+    }
+    vec3 col = bg;
+    if (m >= 0.) {
+      vec3 p = uRo + rd * t, n = m < .5 ? vec3(0, 1, 0) : nrm(p), L = normalize(vec3(-.45, 1., .35));
+      float sh = shadow(p + n * .01, L), ao = occl(p, n);
+      if (m < .5) col = bg * mix(vec3(.66, .58, .56), vec3(1), sh * pow(ao, .7));   // floor = backdrop x occlusion: no horizon
+      else {
+        vec3 alb = pow(m < 1.5 ? uC[0] : m < 2.5 ? uC[1] : m < 3.5 ? uC[2] : uC[3], vec3(2.2));
+        float dif = clamp((dot(n, L) + .25) / 1.25, 0., 1.);                // wrapped diffuse: soft clay terminator
+        vec3 lin = 1.35 * dif * sh * vec3(1., .95, .88) + .7 * (.5 + .5 * n.y) * ao * vec3(.82, .87, 1.)
+                 + .85 * clamp(.5 - .5 * n.y, 0., 1.) * mix(.45, 1., ao) * bg      // warm floor bounce keeps undersides from going black
+                 + .18 * pow(clamp(1. + dot(n, rd), 0., 1.), 2.) * ao + .06;
+        col = 1. - exp(-alb * lin * 1.35);                                   // gentle tone curve, no clipping
+      }
+      col = mix(col, bg, 1. - exp(-.0008 * t * t));
+    }
+    col = pow(col, vec3(1. / 2.2)) + (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5) - .5) / 255.;
+    gl_FragColor = vec4(col, 1.);
+  }`;
+
+  // shape motion, shared by WebGL and the CSS fallback
+  function scene(t, port) {
+    const L = (a, b) => a + (b - a) * port;                    // landscape -> portrait layout
+    const s1 = 1 + 0.035 * Math.sin(t * 1.4), s2 = 1 + SQUISH * Math.sin(t * 2.1), s3 = 1 + 0.03 * Math.sin(t * 1.7 + 1);
+    const ph = (t / BOUNCE) % 1, air = 4 * ph * (1 - ph) * HOP - 0.14;   // parabola dipping 0.14 below the floor
+    const s4 = air < 0 ? Math.max(0.7, 1 + air / 0.5) : 1 + 0.07 * Math.pow(1 - 4 * ph * (1 - ph), 2);  // squash on contact, stretch in flight
+    return { O: [L(-0.8, -0.55), 1.02 * s1, L(-0.6, -0.8), s1,  L(1.25, 0.55), L(2.3, 2.6) + 0.14 * Math.sin(t * 1.1), L(-1.6, -1.3), s2,
+                 L(1.85, -0.2), 0.42 * s3, L(1.0, 1.55), s3,  L(0.3, 0.85), 0.5 * s4 + Math.max(0, air), L(1.1, 0.55), s4],
+             R: [0.5 * Math.sin(t * 0.45), 1.15 + 0.12 * Math.sin(t * 0.7), L(0.5, 0.65) + 0.06 * Math.sin(t * 0.8), t * 0.2], s4, air };
+  }
+  const T_STILL = 0.5;
+
+  function fallback() {                                         // CSS claymorphism (no WebGL or shader failed)
+    document.documentElement.classList.add('nogl');
+    const [c1, c2, c3, c4] = document.querySelectorAll('.clay'), sh3 = document.querySelector('.s3');
+    const draw = now => { const t = reduce ? T_STILL : now / 1000, s = scene(t, 0), lift = Math.max(0, s.air) * 60;
+      c1.style.transform = `scale(${1 / Math.sqrt(s.O[3])}, ${s.O[3]})`; c1.style.transformOrigin = '50% 100%';
+      c3.style.transformOrigin = '50% 100%'; c3.style.transform = `translateY(${-lift}px) scale(${1 / Math.sqrt(s.s4)}, ${s.s4})`;
+      sh3.style.transform = `scale(${1 - lift / 180})`; sh3.style.opacity = 1 - lift / 140;
+      c4.style.transform = `translateY(${Math.sin(t * 1.1) * 10}px) rotate(${Math.sin(t * 0.7) * 6}deg)`;
+      if (!reduce) requestAnimationFrame(draw); };
+    draw(performance.now());
+  }
+  if (!gl) return fallback();
+
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'));
+  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return fallback();
+  gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);   // one big triangle
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const U = n => gl.getUniformLocation(prog, n);
+  const uRes = U('uRes'), uT = U('uT'), uRo = U('uRo'), uTa = U('uTa'), uO = U('uO'), uR = U('uR');
+  gl.uniform3fv(U('uC'), COLORS.flat());
+
+  let scale = 1, port = 0, slow = 0, adapt = 1;
+  function resize() {
+    const w = innerWidth, h = innerHeight;
+    scale = adapt * Math.min(Math.max(Math.min(devicePixelRatio || 1, 2) * QUALITY, MIN_SCALE), Math.sqrt(MAX_PIXELS / (w * h)));
+    cv.width = Math.round(w * scale); cv.height = Math.round(h * scale);
+    gl.viewport(0, 0, cv.width, cv.height);
+    const a = w / h; port = Math.min(1, Math.max(0, (1.25 - a) / 0.6));   // 0 = landscape layout, 1 = portrait
+    if (reduce) render(T_STILL);
+  }
+  function render(t) {
+    const s = scene(t, port), L = (a, b) => a + (b - a) * port;
+    const ta = [L(-0.95, 0.0), L(1.45, 2.5), 0], d = L(10.5, 14);
+    gl.uniform2f(uRes, cv.width, cv.height); gl.uniform1f(uT, t);
+    gl.uniform3f(uTa, ta[0], ta[1], ta[2]); gl.uniform3f(uRo, ta[0], ta[1] + L(2.6, 2.2), d);
+    gl.uniform4fv(uO, s.O); gl.uniform4fv(uR, s.R);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  let last = 0;
+  function frame(now) {
+    const dt = now - (last || now); last = now;
+    slow = dt > 40 ? slow + 1 : Math.max(0, slow - 1);
+    if (slow > 30 && adapt > 0.5) { slow = 0; adapt *= 0.85; resize(); }   // adaptive: render smaller while frames run slow
+    render(now / 1000); requestAnimationFrame(frame);
+  }
+  addEventListener('resize', resize); resize();
+  if (!reduce) requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
