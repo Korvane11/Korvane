@@ -1,0 +1,179 @@
+<!doctype html>
+<!--
+STYLE: Retro VHS
+LOOK: A home-video tape playing back: a dusky sunset scene with soft colour that bleeds past its edges, faint RGB fringes, grain, a slow tracking band rolling up the picture, head-switching noise along the bottom, and the VCR's crisp on-screen display (PLAY, SP, tape counter).
+BEST FOR: music, film, nostalgia campaigns, retro product drops
+AVOID WHEN: anything that must look crisp and trustworthy (banking, health)
+PAIRS WITH: a heavy italic sans, sunset gradients, monospace OSD text
+TECHNIQUE: The scene is painted once per resize into an offscreen canvas 2D, uploaded as a texture, and played back through one WebGL fragment shader: luma and chroma are split (YIQ), chroma is blurred wide and lags to the right (colour bleed), red and blue get a 1-2px offset, lines wobble by a smooth noise, a rolling band tears lines sideways and adds streaks, grain is a per-frame hash. The HTML headline sits on top with CSS chroma fringes and is nudged sideways only while the band crosses it; a CSS scanline layer covers everything.
+KNOBS: BAND_SPEED (band passes per second); BLEED (chroma blur width, px); SPLIT (red/blue offset, px); GRAIN (noise amount); WOBBLE (line jitter); RES (render scale, VHS is soft so 1-1.5 is plenty); --scan (scanline darkness); the palette in drawScene().
+COST: One full-screen shader pass with 13 texture reads per pixel; scales with RES x screen area. Cheap on phones at RES 1. Scene repaint only on resize.
+REDUCED MOTION: One played-back frame with the band switched off and still grain; the counter does not run.
+PITFALLS: Turning every effect up makes it unreadable and cheap: here split is 1.5px, grain 6%, the band is one soft strip. Rainbow synthwave palettes are a different style: tape looks faded and warm, so lift the blacks and desaturate. Real VCR text (the OSD) is NOT distorted: keep it crisp, only the tape picture degrades. Blinking "PLAY" is a cliché: it stays on.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retro VHS</title>
+<style>
+  :root { --osd: #f4f1ea; --scan: .16; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; background: #120f18; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: #fdf6ec; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .copy { position: fixed; left: clamp(20px, 7vw, 110px); top: 22vh; right: 20px; max-width: 15ch; font-size: clamp(42px, 7.4vw, 112px); }
+  h1 { font-size: 1em; font-weight: 800; font-style: italic; line-height: .98; letter-spacing: -.02em; will-change: transform;
+       text-shadow: -.02em 0 rgba(255, 70, 100, .55), .02em 0 rgba(70, 200, 255, .5), 0 0 .3em rgba(255, 190, 150, .28); }   /* chroma fringe + soft bloom */
+  .copy p { max-width: 30ch; margin-top: .9em; font-size: clamp(15px, 1.35vw, 20px); line-height: 1.5; color: rgba(253, 246, 236, .86);
+            text-shadow: -1px 0 rgba(255, 70, 100, .45), 1px 0 rgba(70, 200, 255, .4), 0 1px 8px rgba(20, 10, 30, .5); }
+  .osd { position: fixed; inset: 0; pointer-events: none; color: var(--osd); filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, .55));
+         font: 700 clamp(16px, 2vw, 28px)/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .1em; }
+  .osd span { position: absolute; display: flex; align-items: center; gap: .45em; }
+  .tl { left: 5vw; top: 5vh; } .tr { right: 5vw; top: 5vh; } .bl { left: 5vw; bottom: 6vh; }
+  .tri { width: 0; height: 0; border-left: .72em solid currentColor; border-block: .42em solid transparent; }
+  .scan { position: fixed; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, var(--scan)) 0 1px, transparent 1px 3px); }
+  @media (max-aspect-ratio: 4/5) { .copy { top: 14vh; } }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="copy" id="copy"><h1 id="head">Rewind to the good part.</h1><p>Recorded on tape, played back with every flaw intact.</p></div>
+<div class="osd" aria-hidden="true"><span class="tl">PLAY <i class="tri"></i></span><span class="tr">SP</span><span class="bl" id="counter">0:41:07</span></div>
+<div class="scan" aria-hidden="true"></div>
+<script>
+const BAND_SPEED = 0.07, BLEED = 2.2, SPLIT = 1.5, GRAIN = 0.06, WOBBLE = 0.0012;
+const f = x => x.toFixed(4);   // numbers pasted into GLSL must be float literals
+const RES = Math.min(devicePixelRatio || 1, 1.5);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv = document.getElementById('cv'), head = document.getElementById('head'), counter = document.getElementById('counter');
+const scene = document.createElement('canvas');
+
+// The "tape": a faded dusk at the sea, painted once per resize.
+function drawScene(c, w, h) {
+  const g = c.getContext('2d'), tall = w < h, hz = h * (tall ? 0.68 : 0.64);
+  g.setTransform(RES, 0, 0, RES, 0, 0);
+  const sky = g.createLinearGradient(0, 0, 0, hz);
+  sky.addColorStop(0, '#24253f'); sky.addColorStop(0.45, '#5d4766'); sky.addColorStop(0.8, '#c4746a'); sky.addColorStop(1, '#efb07e');
+  g.fillStyle = sky; g.fillRect(0, 0, w, hz);
+  const sx = w * (tall ? 0.64 : 0.7), r = Math.min(w, h) * (tall ? 0.2 : 0.13);
+  const glow = g.createRadialGradient(sx, hz, 0, sx, hz, r * 4.5);
+  glow.addColorStop(0, 'rgba(255,196,140,.55)'); glow.addColorStop(1, 'rgba(255,196,140,0)');
+  g.fillStyle = glow; g.fillRect(0, 0, w, hz);
+  g.save(); g.beginPath(); g.rect(0, 0, w, hz); g.clip();
+  const sun = g.createLinearGradient(0, hz - r * 1.6, 0, hz);
+  sun.addColorStop(0, '#fff1cf'); sun.addColorStop(1, '#f7a76f');
+  g.fillStyle = sun; g.beginPath(); g.arc(sx, hz - r * 0.55, r, 0, Math.PI * 2); g.fill();
+  g.fillStyle = 'rgba(120, 80, 120, .35)';   // two long, soft cloud bars
+  [[0.12, 0.42, 0.55, 0.012], [0.5, 0.5, 0.42, 0.008]].forEach(([x, y, cw, ch]) => { g.beginPath(); g.ellipse(w * (x + cw / 2), hz * y + hz * 0.25, w * cw / 2, h * ch, 0, 0, Math.PI * 2); g.fill(); });
+  g.restore();
+  g.fillStyle = '#2c2438';   // headland on the left
+  g.beginPath(); g.moveTo(0, hz); g.lineTo(0, hz - h * 0.05);
+  g.bezierCurveTo(w * 0.12, hz - h * 0.085, w * 0.22, hz - h * 0.03, w * 0.38, hz); g.fill();
+  const sea = g.createLinearGradient(0, hz, 0, h);
+  sea.addColorStop(0, '#7a6077'); sea.addColorStop(1, '#1b1b2c');
+  g.fillStyle = sea; g.fillRect(0, hz, w, h - hz);
+  for (let i = 0; i < 26; i++) {   // the sun's reflection, broken into ripples
+    const y = hz + 4 + Math.pow(i / 26, 1.6) * (h - hz) * 0.9, k = 1 - i / 26;
+    const half = r * (0.4 + 0.9 * k) * (0.6 + 0.4 * Math.sin(i * 2.7));
+    g.fillStyle = `rgba(255, 200, 150, ${0.5 * k})`;
+    g.fillRect(sx - half, y, half * 2, 1.5 + 2.5 * (1 - k));
+  }
+}
+
+const VS = 'attribute vec2 p; varying vec2 v; void main(){ v = p * .5 + .5; gl_Position = vec4(p, 0., 1.); }';
+const FS = `precision mediump float;
+uniform sampler2D tex; uniform vec2 res; uniform float time, px, band;
+varying vec2 v;
+float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float n1(float x){ float i = floor(x), f = fract(x); return mix(hash(vec2(i, 1.)), hash(vec2(i + 1., 1.)), f * f * (3. - 2. * f)); }
+float luma(vec3 c){ return dot(c, vec3(.299, .587, .114)); }
+vec2 chroma(vec3 c){ return vec2(dot(c, vec3(.596, -.274, -.322)), dot(c, vec3(.211, -.523, .312))); }
+void main(){
+  float line = floor(v.y * res.y / (2. * px));                      // tape lines ~2 CSS px tall
+  float by = 1. - fract(time * ${f(BAND_SPEED)});                       // band rolls upward
+  float b = band * smoothstep(.07, 0., abs(v.y - by));
+  float hs = smoothstep(.04, 0., v.y);                              // head-switching noise along the bottom
+  float dx = (n1(line * .06 + time * 2.5) - .5) * ${f(WOBBLE)}
+           + (hash(vec2(line, floor(time * 30.))) - .5) * .025 * b
+           + hs * (.012 + .01 * sin(line * .9 + time * 13.));
+  vec2 uv = vec2(v.x + dx, v.y);
+  vec2 o = vec2(px / res.x, 0.);
+  float Y = luma(texture2D(tex, uv).rgb) * .5 + luma(texture2D(tex, uv - o).rgb) * .25 + luma(texture2D(tex, uv + o).rgb) * .25;
+  vec2 IQ = vec2(0.);
+  for (int i = 0; i < 8; i++) IQ += chroma(texture2D(tex, uv - o * (float(i) - 2.) * ${f(BLEED)}).rgb);   // wide, right-lagging colour
+  IQ *= .85 / 8.;
+  vec3 col = vec3(Y + .956 * IQ.x + .621 * IQ.y, Y - .272 * IQ.x - .647 * IQ.y, Y - 1.106 * IQ.x + 1.703 * IQ.y);
+  col.r = mix(col.r, texture2D(tex, uv + o * ${f(SPLIT)}).r, .5);      // slight RGB split
+  col.b = mix(col.b, texture2D(tex, uv - o * ${f(SPLIT)}).b, .5);
+  float streak = step(.993 - b * .05, hash(vec2(floor(v.x * res.x / (7. * px)), line + floor(time * 24.))));
+  col += b * (.05 + .55 * streak) + hs * .08 * hash(vec2(v.x * 40., line + time));
+  col += (hash(gl_FragCoord.xy + fract(time * 7.) * 91.) - .5) * ${f(GRAIN)};
+  col = col * .9 + vec3(.035, .025, .045);                         // lifted, warm blacks
+  vec2 q = v - .5; col *= 1. - dot(q, q) * .6;
+  gl_FragColor = vec4(col, 1.);
+}`;
+
+let gl = null, U = {};
+try { gl = cv.getContext('webgl', { antialias: false, alpha: false }); } catch (e) { gl = null; }
+if (gl) {
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const pr = gl.createProgram();
+  gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS));
+  gl.bindAttribLocation(pr, 0, 'p'); gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) gl = null;
+  else {
+    gl.useProgram(pr);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(k => gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE));
+    [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(k => gl.texParameteri(gl.TEXTURE_2D, k, gl.LINEAR));
+    ['res', 'time', 'px', 'band'].forEach(n => U[n] = gl.getUniformLocation(pr, n));
+  }
+}
+
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  scene.width = cv.width = Math.round(w * RES); scene.height = cv.height = Math.round(h * RES);
+  drawScene(scene, w, h);
+  if (gl) {
+    gl.viewport(0, 0, cv.width, cv.height);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, scene);
+    gl.uniform2f(U.res, cv.width, cv.height); gl.uniform1f(U.px, RES);
+  }
+  const r = head.getBoundingClientRect();
+  band.y = r.top + r.height / 2; band.reach = r.height * 0.8 + h * 0.07;
+}
+const band = { y: 0, reach: 1 };
+if (!gl) cv.replaceWith(scene);   // no WebGL: show the clean scene itself, still under the CSS scanlines
+
+function render(t, still) {
+  if (!gl) return;
+  gl.uniform1f(U.time, t); gl.uniform1f(U.band, still ? 0 : 1);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+resize();
+addEventListener('resize', () => { resize(); if (reduce) render(3.7, true); });
+if (reduce) render(3.7, true);
+else {
+  let t0 = null, sec = -1;
+  requestAnimationFrame(function frame(ms) {
+    if (t0 === null) t0 = ms;
+    const t = (ms - t0) / 1000;
+    render(t, false);
+    // The HTML headline only flinches while the band crosses it, like the picture under it.
+    const by = (1 - ((t * BAND_SPEED) % 1)) * innerHeight;
+    const near = Math.max(0, 1 - Math.abs(by - band.y) / band.reach);
+    head.style.transform = `translateX(${(Math.sin(t * 61) * Math.sin(t * 23) * 7 * near * near).toFixed(2)}px)`;
+    const s = Math.floor(t);
+    if (s !== sec) { sec = s; const c = 41 * 60 + 7 + s; counter.textContent = `${Math.floor(c / 3600)}:${String(Math.floor(c / 60) % 60).padStart(2, '0')}:${String(c % 60).padStart(2, '0')}`; }
+    requestAnimationFrame(frame);
+  });
+}
+</script>
+</body>
+</html>

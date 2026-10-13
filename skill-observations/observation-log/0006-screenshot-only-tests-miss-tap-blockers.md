@@ -1,7 +1,7 @@
 ---
 id: 6
 title: "Screenshot-only site tests shipped an invisible layer that blocked every tap; the hit tests that replaced them need on-screen points, miss pointer-events:none overlays that dim controls, and can't capture mailto by stubbing location"
-status: open
+status: actioned
 type: open-source
 skill: [webapp-testing, playwright-cli]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "smoke tests for marketing sites: interaction, not just rendering"
 date: 2026-10-12
 session_context: "SimNow site, 2026-10-12 and the 2026-10-13 multi-page split: a closed mobile menu (`<div hidden>` with author CSS `display: flex`, opacity 0, z-index above the page) covered the whole page on desktop and phone, so the hero CTAs and every in-page link were dead. It was live for several deploys. Every Playwright run had only scrolled and screenshotted. It surfaced only when a new test clicked a button and Playwright reported 'menu intercepts pointer events'"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Staged in prompts/site-blueprint.md (patch staged at skill-updates/2026-10-13/_target-files/prompts/site-blueprint.md.patch) ('Checks that count, in a browser...'); mailto and overflow lines already in CLAUDE.md; cross-cutting principle 1. webapp-testing, playwright-cli: not edited, foreign-maintained."
 reference:
 commands_verified: "run: document.elementFromPoint at the centre of '.hero__ctas a' returned the #menu element before the fix and the link after `.menu[hidden] { display: none; }`, desktop 1440x900 and phone 390x844"
 ---

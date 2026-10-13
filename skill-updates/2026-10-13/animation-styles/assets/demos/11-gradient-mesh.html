@@ -1,0 +1,150 @@
+<!doctype html>
+<!--
+STYLE: Gradient mesh
+LOOK: Soft fields of colour drifting and blending into each other like a product-launch backdrop: deep navy with violet, coral and a little warm light moving through it, under a fine film grain, with a calm headline on top.
+BEST FOR: product launches, fintech, calm premium backgrounds behind a headline
+AVOID WHEN: when the content itself must carry the colour
+PAIRS WITH: a clean geometric sans, two or three related hues, fine grain
+TECHNIQUE: One full-screen WebGL fragment shader. Five colour points move on slow Lissajous paths; each pixel takes a weighted blend of their colours in linear light (Gaussian weights plus a constant "base" weight so empty space falls back to navy), then converts back to sRGB. The coordinates are first pushed around by low-frequency value noise (domain warping), which turns round blobs into flowing, liquid boundaries. Per-pixel animated noise is added at the end: it reads as film grain and dithers away 8-bit banding.
+KNOBS: COLORS (base + five points as sRGB hex; converted to linear light so blends stay clean; keep them in one family); SIGMA (blob size: .25 tight, .5 washy); WARP (how liquid the edges are, 0 = clean circles); SPEED (1 = a slow minute-long loop); GRAIN (.02 invisible dither, .06 filmic); PIXEL_BUDGET (max canvas pixels: the field is soft, so it renders below full DPR on big screens).
+COST: One draw call per frame; cost is pixels x 5 points x 2 noise lookups. PIXEL_BUDGET (1.2 MP) keeps a 4K monitor and a DPR-3 phone at the same cost as a laptop. Falls back to a static CSS gradient when WebGL is unavailable.
+REDUCED MOTION: One frame is rendered at a chosen moment and never redrawn, grain included; with no WebGL the CSS fallback gradient shows.
+PITFALLS: Gradients without grain band visibly on 8-bit screens: the shader always adds grain. Many saturated hues at once turns into a rainbow: five related colours, one of them only a warm highlight. Fast motion makes a calm backdrop nauseating: the paths take 30-60 s per loop. White text on the lightest colour fails contrast: the warm point is kept small and the shader darkens the edges and the text band slightly.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gradient mesh</title>
+<style>
+  :root { --ink: #fbf8ff; --muted: rgba(251, 248, 255, .74); }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    background:                                                    /* fallback if WebGL is missing */
+      radial-gradient(60% 55% at 22% 30%, #5b3bd6 0%, transparent 70%),
+      radial-gradient(55% 50% at 78% 70%, #e0587c 0%, transparent 70%),
+      radial-gradient(40% 40% at 62% 28%, #8d48e8 0%, transparent 70%),
+      #0a0f2c;
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  main {
+    position: fixed; inset: 0; display: grid; place-content: center; justify-items: center;
+    gap: clamp(14px, 2.4vh, 22px); padding: 16px; text-align: center;
+  }
+  .eyebrow {
+    font: 500 12px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .26em; text-transform: uppercase;
+    color: var(--muted); padding: 9px 14px; border: 1px solid rgba(255, 255, 255, .18); border-radius: 999px;
+    background: rgba(255, 255, 255, .06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  h1 {
+    font-size: clamp(38px, 7.2vw, 104px); font-weight: 600; letter-spacing: -.045em; line-height: .98; max-width: 12ch;
+    text-shadow: 0 2px 40px rgba(10, 8, 40, .25);
+  }
+  p.support { font-size: clamp(15px, 1.4vw, 19px); line-height: 1.5; color: var(--muted); max-width: 36ch; text-wrap: balance; }
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<main>
+  <p class="eyebrow">Introducing · Autumn 2026</p>
+  <h1>Something new is taking shape.</h1>
+  <p class="support">A quieter kind of launch. Be the first to see it when the colour settles.</p>
+</main>
+<script>
+const COLORS = [                     // sRGB hex · base first, then the five moving points
+  '#0a0e2e',                         // base: deep navy
+  '#3a2fd8',                         // indigo
+  '#8a3ffc',                         // violet
+  '#ff5a7e',                         // coral
+  '#ffb08a',                         // warm peach (the highlight: keep it small)
+  '#2457d6',                         // blue
+].map((h) => [1, 3, 5].map((i) => Math.pow(parseInt(h.slice(i, i + 2), 16) / 255, 2.2)));   // to linear light
+const SIGMA = [0.42, 0.36, 0.34, 0.19, 0.38];   // per-point blob size, share of screen height
+const WARP = 0.32, SPEED = 1, GRAIN = 0.04, PIXEL_BUDGET = 1.2e6;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv = document.getElementById('c');
+const gl = cv.getContext('webgl', { antialias: false, alpha: false, premultipliedAlpha: false });
+
+const VERT = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }';
+const FRAG = `precision highp float;
+uniform vec2 uRes; uniform float uTime, uWarp, uGrain;
+uniform vec3 uBase, uCol[5]; uniform float uSig[5];
+float hash(vec2 p){ vec3 q = fract(p.xyx * .1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }  // no sin(): no diagonal patterns
+float noise(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3. - 2. * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y); }
+void main(){
+  vec2 uv = gl_FragCoord.xy / uRes;
+  float asp = uRes.x / uRes.y, t = uTime;
+  vec2 p = vec2((uv.x - .5) * asp, uv.y - .5);                 // centred, height = 1
+  // domain warp: low-frequency noise bends the space so edges flow like liquid
+  vec2 w = vec2(noise(p * 1.4 + vec2(t * .05, 0.)), noise(p * 1.4 + vec2(3.7, -t * .04))) - .5;
+  p += w * uWarp;
+  vec3 col = uBase * .28; float sum = .28;                       // base weight: empty space falls back to navy
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i);
+    vec2 c = vec2(sin(t * (.071 + fi * .013) + fi * 2.1) * .42 * max(asp, .75),
+                  cos(t * (.057 + fi * .017) + fi * 1.3) * .34);   // slow Lissajous path per point
+    vec2 d = p - c;
+    float wgt = exp(-dot(d, d) / (uSig[i] * uSig[i]));
+    col += uCol[i] * wgt; sum += wgt;
+  }
+  col = pow(col / sum, vec3(1. / 2.2));                          // blended in linear light: clean mixes, no grey mud
+  col *= 1. - .35 * dot(uv - .5, uv - .5) * 2.2;                // gentle vignette
+  col *= 1. - .1 * exp(-pow((uv.y - .5) * 4., 2.));              // a touch darker behind the headline
+  float g = hash(gl_FragCoord.xy + fract(t * 7.13) * 917.) - .5;  // per-frame grain, also kills banding
+  gl_FragColor = vec4(col + g * uGrain, 1.);
+}`;
+
+function compile(type, src) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+
+let prog, loc = {}, t0 = performance.now();
+function setup() {
+  prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);   // one big triangle
+  const a = gl.getAttribLocation(prog, 'p');
+  gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+  ['uRes', 'uTime', 'uWarp', 'uGrain', 'uBase', 'uCol', 'uSig'].forEach((n) => (loc[n] = gl.getUniformLocation(prog, n)));
+  gl.uniform3fv(loc.uBase, COLORS[0]);
+  gl.uniform3fv(loc.uCol, COLORS.slice(1).flat());
+  gl.uniform1fv(loc.uSig, SIGMA);
+  gl.uniform1f(loc.uWarp, WARP); gl.uniform1f(loc.uGrain, GRAIN);
+}
+
+function resize() {
+  const css = innerWidth * innerHeight;
+  const scale = Math.min(Math.min(devicePixelRatio || 1, 2), Math.sqrt(PIXEL_BUDGET / css));   // DPR cap 2, then pixel budget
+  cv.width = Math.round(innerWidth * scale); cv.height = Math.round(innerHeight * scale);
+  gl.viewport(0, 0, cv.width, cv.height);
+  gl.uniform2f(loc.uRes, cv.width, cv.height);
+  if (reduce) draw(38);
+}
+
+function draw(t) { gl.uniform1f(loc.uTime, t); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+
+function frame(now) {
+  draw(40 + (now - t0) / 1000 * SPEED);           // start mid-loop so the first frame is already composed
+  requestAnimationFrame(frame);
+}
+
+try {
+  if (!gl) throw new Error('no webgl');
+  setup(); resize();
+  addEventListener('resize', resize);
+  cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); cv.remove(); });   // CSS fallback shows through
+  if (!reduce) requestAnimationFrame(frame);
+} catch (e) {
+  cv.remove();                                    // presentable static gradient from the body background
+}
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 ---
 id: 4
 title: "A yes to 'is this photo yours?' was read as 'make it the background'"
-status: open
+status: actioned
 type: open-source
 skill: [redesign-existing-projects, design-taste-frontend]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "discovery: confirming how an owner-supplied asset should be used"
 date: 2026-10-12
 session_context: "SimNow site: the owner sent an SVJ photo as the reference for which car to show, then confirmed it was theirs"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Already applied: prompts/site-blueprint.md, ground rules, 'Material they sent to show their taste is not material for the site unless they say so. Ask when it's unclear.' Also cross-cutting principle 3. redesign-existing-projects, design-taste-frontend: not edited, foreign-maintained."
 reference:
 commands_verified: "none"
 ---

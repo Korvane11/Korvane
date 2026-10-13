@@ -1,0 +1,130 @@
+<!doctype html>
+<!--
+STYLE: Halftone
+LOOK: A printed poster that breathes: a sphere and a soft sun rendered entirely in ink dots on cream paper, two inks on their own rotated screens, the dots swelling and shrinking as the light slides across.
+BEST FOR: posters, editorial, music and culture, print-inspired brands
+AVOID WHEN: photo-real or glossy product brands
+PAIRS WITH: a condensed bold sans, warm paper, one dark ink plus one spot colour
+TECHNIQUE: Canvas 2D. For each ink, walk a grid rotated to that ink's screen angle (45° for the dark ink, 15° for the red, as in print, so the two screens don't beat into a moiré), sample a brightness field at every dot, and draw a dot whose AREA follows the darkness (radius = maxR * sqrt(darkness)). All dots of one ink go into a single path and one fill; the second ink is laid over with 'multiply', like ink on ink.
+KNOBS: CELL (screen spacing in CSS px, scaled down on small screens); MAX_R (largest dot as a share of CELL: 0.7 lets neighbours just touch in the darkest areas); INKS (colour and screen angle of each ink); LIGHT_SPEED (how fast the light orbits); the sphere's centre and radius in layout().
+COST: About 10-14k dots per ink at 1440x900, drawn as one path per ink: fine on laptops and recent phones. Cost grows with screen area / CELL², so raise CELL before adding inks. The canvas pixel ratio is capped at 2.
+REDUCED MOTION: One frame is drawn with the light at the upper left, a classic print pose; nothing moves.
+PITFALLS: Radius proportional to darkness (not its square root) crushes the mid-tones into black blobs: area must follow tone. Screens at the same angle, or 30° apart with similar frequency, make moiré stripes: 45° and 15° with a slightly different CELL each avoids it. Dots on pure white with pure black ink look like a filter preset: warm paper, an ink that isn't quite black, and a little per-dot jitter make it read as print.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halftone</title>
+<style>
+  :root { --paper: #f2ebdd; --ink: #1c2436; --red: #d9472e; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { background: var(--paper); color: var(--ink); overflow: hidden; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .copy {
+    position: fixed; left: clamp(20px, 6vw, 96px); bottom: clamp(28px, 9vh, 110px);
+    max-width: min(560px, calc(100vw - 40px));
+  }
+  .kicker { font-size: 12px; letter-spacing: .28em; text-transform: uppercase; font-weight: 600; color: var(--red); }
+  h1 {
+    margin-top: 14px; font-family: "Arial Narrow", "Roboto Condensed", sans-serif-condensed, sans-serif;
+    font-weight: 800; font-stretch: condensed; text-transform: uppercase;
+    font-size: clamp(52px, 10vw, 148px); line-height: .86; letter-spacing: -.01em;
+  }
+  p.lead { margin-top: 18px; max-width: 36ch; font-size: clamp(15px, 1.25vw, 18px); line-height: 1.5; color: #3a4153; }
+  /* a printed paper look: a faint fibre noise over everything */
+  .grain { position: fixed; inset: 0; pointer-events: none; opacity: .22; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .4 0 0 0 0 .32 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="copy">
+  <div class="kicker">Two inks · one light</div>
+  <h1>Print<br>the light.</h1>
+  <p class="lead">Every tone is a dot, and every dot is a choice: bigger where it's dark, smaller where the light lands.</p>
+</div>
+<script>
+const MAX_R = 0.7, LIGHT_SPEED = 0.35;
+const INKS = [
+  { color: '#d9472e', angle: 15, cellScale: 1.18, field: sunField },     // red, under
+  { color: '#1c2436', angle: 45, cellScale: 1.0, field: sphereField },   // dark ink, over (multiply)
+];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+let W, H, DPR, CELL, S = { x: 0, y: 0, r: 0 }, SUN = { x: 0, y: 0, r: 0 };
+
+function layout() {
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  CELL = W < 600 ? 8 : 10;                                   // finer screen on phones, like a smaller print
+  const portrait = H > W;
+  S.r = Math.min(W, H) * (portrait ? 0.36 : 0.34);
+  S.x = portrait ? W * 0.5 : W * 0.68;
+  S.y = portrait ? H * 0.32 : H * 0.48;
+  SUN.x = S.x + S.r * 0.95; SUN.y = S.y - S.r * 0.85; SUN.r = S.r * 1.25;
+}
+
+// brightness fields: return ink coverage 0..1 at (x, y) for time t
+function sphereField(x, y, t) {
+  const dx = (x - S.x) / S.r, dy = (y - S.y) / S.r, d2 = dx * dx + dy * dy;
+  if (d2 > 1) {
+    // a soft cast shadow on the "floor" below-right of the sphere
+    const sx = (x - S.x - S.r * 0.35) / (S.r * 1.25), sy = (y - S.y - S.r * 1.02) / (S.r * 0.28);
+    return Math.max(0, 0.42 * (1 - (sx * sx + sy * sy)));
+  }
+  const nz = Math.sqrt(1 - d2);
+  const a = t * LIGHT_SPEED;                                  // the light orbits the sphere
+  const lx = Math.cos(a) * 0.62 - 0.3, ly = -0.55 + Math.sin(a) * 0.25, lz = 0.62;
+  const ll = Math.hypot(lx, ly, lz);
+  const lambert = Math.max(0, (dx * lx + dy * ly + nz * lz) / ll);
+  const rim = Math.pow(1 - nz, 3) * 0.25;                     // a little reflected light at the edge
+  return Math.min(1, Math.max(0, 0.96 - lambert * 0.95 - rim));
+}
+function sunField(x, y, t) {
+  const pulse = 1 + 0.06 * Math.sin(t * 0.9);
+  const d = Math.hypot(x - SUN.x, y - SUN.y) / (SUN.r * pulse);
+  const wave = 0.06 * Math.sin(x * 0.012 + t * 0.6) * Math.sin(y * 0.01 - t * 0.4);
+  return Math.max(0, Math.min(1, (1 - d) * 0.85 + wave * (1 - Math.min(d, 1))));
+}
+
+function screen(ink, t) {
+  const cell = CELL * ink.cellScale, th = ink.angle * Math.PI / 180, c = Math.cos(th), s = Math.sin(th);
+  const R = Math.hypot(W, H) / 2, n = Math.ceil(R / cell), cx = W / 2, cy = H / 2, maxR = cell * MAX_R;
+  g.beginPath();
+  for (let j = -n; j <= n; j++) {
+    for (let i = -n; i <= n; i++) {
+      const u = i * cell, v = j * cell;
+      const x = cx + u * c - v * s, y = cy + u * s + v * c;
+      if (x < -cell || y < -cell || x > W + cell || y > H + cell) continue;
+      const k = ink.field(x, y, t);
+      if (k < 0.02) continue;
+      const r = maxR * Math.sqrt(k);                           // the decisive line: dot AREA follows tone
+      g.moveTo(x + r, y);
+      g.arc(x, y, r, 0, Math.PI * 2);
+    }
+  }
+  g.fillStyle = ink.color;
+  g.fill();
+}
+
+function draw(t) {
+  g.globalCompositeOperation = 'source-over';
+  g.clearRect(0, 0, W, H);
+  screen(INKS[0], t);
+  g.globalCompositeOperation = 'multiply';                     // ink over ink darkens, as on paper
+  screen(INKS[1], t);
+}
+
+let t0 = performance.now();
+function frame(now) { draw((now - t0) / 1000 + 1.2); requestAnimationFrame(frame); }
+addEventListener('resize', () => { layout(); if (reduce) draw(2.2); });
+layout();
+if (reduce) draw(2.2); else requestAnimationFrame(frame);
+</script>
+</body>
+</html>

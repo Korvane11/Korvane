@@ -1,7 +1,7 @@
 ---
 id: 14
 title: "Rebuilding a site-builder site: its photos were the builder's own stock (licensed for that platform only) and its Book Now buttons were dead; reading the pages showed neither, and the redesign audit has no step for either"
-status: open
+status: actioned
 type: open-source
 skill: [redesign-existing-projects, design-taste-frontend]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Design Audit / §11.B Audit Before Touching: what to verify on the curren
 date: 2026-10-13
 session_context: "New client site for a Tucson cleaning company, rebuilt from its Wix site ('keep all their info but just make their website way better')"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Staged in prompts/site-blueprint.md (patch staged at skill-updates/2026-10-13/_target-files/prompts/site-blueprint.md.patch) ('Carry over everything ... that works and is theirs to move'); cross-cutting principle 3. redesign-existing-projects, design-taste-frontend: not edited, foreign-maintained."
 reference: "sites/rc-cleaning/README.md, 'What their site had that this one doesn't' and 'Photos'"
 commands_verified: "run: Playwright crawl of all seven pages; image URLs on static.wixstatic.com/media without a site prefix (74e6c854..., 3b65f3e3..., a4bb5686..., 1c8e62f8..., 64a3fe0d...) are Wix's free media library, alt text 'Warm Interior', 'Scrubbing the Sink' etc; the one uploaded image (d9ba69_..~mv2.jpg, 249x203) is a generic lobby. run: clicking 'Book Now' on each of the three service pages showed 'Sorry, this service is not yet available for online bookings. Please contact us for more information.'"
 ---

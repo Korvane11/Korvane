@@ -1,7 +1,7 @@
 ---
 id: 11
 title: "The redesign audit checks that share tags and a favicon exist, not that they work: a relative og:image and a squashed wide-logo favicon both passed, and the URL actually shared (a redirect page) had no tags at all"
-status: open
+status: actioned
 type: open-source
 skill: [redesign-existing-projects]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Design Audit: Code Quality 'Missing meta tags' and Iconography 'Missing f
 date: 2026-10-12
 session_context: "SimNow site: the owner asked 'what else could I do to make this even better'; an audit of the live site against the skill's checklist"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Mostly already applied (blueprint: 'Basics that get checked, not just added'); the remainder (check the preview from the address people share) staged in prompts/site-blueprint.md (patch staged at skill-updates/2026-10-13/_target-files/prompts/site-blueprint.md.patch); cross-cutting principle 1. redesign-existing-projects: not edited, foreign-maintained."
 reference:
 commands_verified: "run: grep of sites/simnow/index.html head: og:image content=\"assets/og.jpg\" (relative), no og:url, no canonical; the icon and apple-touch-icon are assets/simnow-logo.png, 400x226 (not square); grep of the design-direction skills for og:image and favicon: only redesign-existing-projects lines 111 and 124"
 ---

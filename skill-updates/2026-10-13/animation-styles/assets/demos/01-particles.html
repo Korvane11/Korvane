@@ -1,0 +1,174 @@
+<!doctype html>
+<!--
+STYLE: Particles
+LOOK: A few thousand fine, softly glowing points gather into a word, hold, drift apart on a slow current and re-form. The pointer parts them like a hand through smoke.
+BEST FOR: a launch hero, an AI or data product, a logo reveal
+AVOID WHEN: the page is text-heavy or needs to load instantly on old phones
+PAIRS WITH: a single bold sans headline, near-black navy, one cool accent
+TECHNIQUE: Draw the word once on an offscreen canvas, read it back with getImageData and keep one lit pixel per grid cell (with jitter) as a target. Each particle homes to its target (exponential pull, so it settles in the same time at any frame rate) after a random delay, then is released into a smooth sine flow field. Canvas 2D: one pre-rendered glow sprite drawn per particle with 'lighter' (additive), and short trails from fading the last frame with 'destination-out'.
+KNOBS: WORD (the headline the particles draw); MAX_DESK / MAX_PHONE (particle budget, sets the grid gap); T_DRIFT / CYCLE (seconds: release time, loop length); PULL (homing rate per second: 2 floaty, 6 snappy); DAMP (how long drift and pointer pushes coast); FLOW (drift strength); PUSH + RADIUS (pointer force, CSS px); FADE (0.2 long trails, 1 none); WARM (share of amber particles); --bg / --ink colours.
+COST: Linear in particles: ~3k drawImage calls is 1-3 ms a frame on a laptop. The fade pass is a full-canvas fill, so fill-rate scales with pixels (DPR capped at 2). Phones get ~1.6k particles; drop MAX_PHONE further for low-end Android.
+REDUCED MOTION: Every particle is placed on the word and drawn once: a finished glowing headline, no drift, no pointer response.
+PITFALLS: Big round dots read as confetti: cores stay under 2 px, sprite size follows the font size, and a soft sprite carries the glow. Pure white with additive blending blows out into a blob: alpha per particle is .35-.85 and the palette is cool white with a few warm points. Everything arriving at once looks mechanical: a per-particle delay with a left-to-right bias plus the flow still acting during the pull makes it assemble like smoke. Frame-count physics (v += a per frame) crawls on slow devices: the homing uses real seconds. Sampling every pixel gives 50k+ points: the grid gap is derived from the budget.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Particles</title>
+<style>
+  :root { --bg: #05060a; --ink: #e9eef7; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(110% 75% at 50% 44%, #10141e 0%, #080a10 45%, var(--bg) 80%);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .support {
+    position: fixed; left: 16px; right: 16px; top: var(--below, 62%);
+    text-align: center; font-size: clamp(14px, 1.25vw, 17px); line-height: 1.5; letter-spacing: .01em; text-wrap: balance;
+    color: rgba(233, 238, 247, .62); pointer-events: none;
+    animation: rise 1.2s 1.1s cubic-bezier(.2, .7, .2, 1) both;
+  }
+  .hint {
+    position: fixed; left: 50%; bottom: max(18px, 4vh); transform: translateX(-50%);
+    font: 11px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .22em;
+    text-transform: uppercase; color: rgba(233, 238, 247, .3); white-space: nowrap; pointer-events: none;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  @media (prefers-reduced-motion: reduce) { .support { animation: none; } }
+</style>
+</head>
+<body>
+<h1 class="sr">Emerge</h1>
+<canvas id="c" aria-hidden="true"></canvas>
+<p class="support">Thousands of points, one idea. Move through them.</p>
+<p class="hint">Move or touch to disturb</p>
+<script>
+const WORD = 'Emerge';
+const MAX_DESK = 4200, MAX_PHONE = 2000;
+const T_DRIFT = 6.4, CYCLE = 10.8;                 // seconds: release time, loop length
+const PULL = 4.5, DAMP = 0.86;                     // homing rate (1/s) / velocity kept per 60 Hz frame
+const FLOW = 0.11, PUSH = 2.4, RADIUS = 120;
+const FADE = 0.34, WARM = 0.14;
+const FONT = '800 {s}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+let W, H, dpr, fontSize, n = 0, P, t0 = 0, last = 0, pointer = null;
+
+function makeSprite(rgb) {                          // one soft dot, drawn thousands of times
+  const s = document.createElement('canvas'); s.width = s.height = 32;
+  const g = s.getContext('2d'), r = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+  r.addColorStop(0, `rgba(${rgb},1)`);
+  r.addColorStop(0.18, `rgba(${rgb},.8)`);          // tight core...
+  r.addColorStop(0.42, `rgba(${rgb},.16)`);         // ...then a wide, faint halo
+  r.addColorStop(1, `rgba(${rgb},0)`);
+  g.fillStyle = r; g.fillRect(0, 0, 32, 32);
+  return s;
+}
+const SPRITES = [makeSprite('214,228,255'), makeSprite('255,214,178')];
+
+function sampleWord() {
+  const o = document.createElement('canvas'); o.width = W; o.height = H;
+  const g = o.getContext('2d', { willReadFrequently: true });
+  g.font = FONT.replace('{s}', 100);
+  const ratio = g.measureText(WORD).width / 100;
+  const size = fontSize = Math.min(W * 0.84 / ratio, H * 0.3);
+  const cy = H * 0.45;
+  g.font = FONT.replace('{s}', size.toFixed(1));
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff';
+  g.fillText(WORD, W / 2, cy);
+  const d = g.getImageData(0, 0, W, H).data;
+  let lit = 0;
+  for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) if (d[(y * W + x) * 4 + 3] > 128) lit++;
+  const max = W < 640 ? MAX_PHONE : MAX_DESK;
+  const gap = Math.max(2, Math.sqrt(lit * 4 / max));  // grid gap that lands near the budget
+  const pts = [];
+  for (let y = 0; y < H; y += gap) for (let x = 0; x < W; x += gap) {
+    const px = Math.min(W - 1, (x + Math.random() * gap) | 0), py = Math.min(H - 1, (y + Math.random() * gap) | 0);
+    if (d[(py * W + px) * 4 + 3] > 128) pts.push(px, py);
+  }
+  document.documentElement.style.setProperty('--below', `${cy + size * 0.48 + 26}px`);
+  return pts;
+}
+
+function init() {
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pts = sampleWord();
+  n = pts.length / 2;
+  const dot = Math.min(6.2, Math.max(3.2, fontSize / 40));  // glow scales with the type
+  P = { x: new Float32Array(n), y: new Float32Array(n), vx: new Float32Array(n), vy: new Float32Array(n),
+        tx: new Float32Array(n), ty: new Float32Array(n), delay: new Float32Array(n),
+        a: new Float32Array(n), s: new Float32Array(n), k: new Uint8Array(n) };
+  for (let i = 0; i < n; i++) {
+    P.tx[i] = pts[i * 2]; P.ty[i] = pts[i * 2 + 1];
+    P.x[i] = Math.random() * W; P.y[i] = Math.random() * H;
+    P.delay[i] = Math.random() * 0.5 + (P.tx[i] / W) * 0.25;  // slight left-to-right sweep
+    P.a[i] = 0.35 + Math.random() * 0.5;
+    P.s[i] = dot * (0.75 + Math.random() * 0.85);   // sprite size in CSS px (visible core ~1/5 of it)
+    P.k[i] = Math.random() < WARM ? 1 : 0;
+  }
+  t0 = last = performance.now();
+  ctx.clearRect(0, 0, W, H);
+  if (reduce) { P.x.set(P.tx); P.y.set(P.ty); draw(); }
+}
+
+const smooth = (v) => (v <= 0 ? 0 : v >= 1 ? 1 : v * v * (3 - 2 * v));
+
+function step(t, f, dt) {
+  const c = t % CYCLE, damp = Math.pow(DAMP, f), R2 = RADIUS * RADIUS;
+  for (let i = 0; i < n; i++) {
+    const att = smooth((c - P.delay[i]) / 0.9) * (1 - smooth((c - T_DRIFT - P.delay[i]) / 1.4));
+    const pull = 1 - Math.exp(-PULL * att * dt);    // exact exponential homing: same look at any frame rate
+    let x = P.x[i], y = P.y[i], ax = 0, ay = 0;
+    // flow field: two crossed sine waves give a smooth, slowly evolving angle
+    const ang = (Math.sin(x * 0.0043 + t * 0.31) + Math.cos(y * 0.0057 - t * 0.23) + Math.sin((x + y) * 0.0021 + t * 0.17)) * 1.4;
+    const fl = FLOW * (1 - att * 0.94);             // a whisper of flow even when formed keeps it alive
+    ax += Math.cos(ang) * fl; ay += Math.sin(ang) * fl - 0.012 * (1 - att);
+    if (pointer) {
+      const dx = x - pointer.x, dy = y - pointer.y, d2 = dx * dx + dy * dy;
+      if (d2 < R2 && d2 > 0.01) { const d = Math.sqrt(d2), k = (1 - d / RADIUS) ** 2 * PUSH / d; ax += dx * k; ay += dy * k; }
+    }
+    P.vx[i] = (P.vx[i] + ax * f) * damp; P.vy[i] = (P.vy[i] + ay * f) * damp;
+    x += P.vx[i] * f; y += P.vy[i] * f;
+    P.x[i] = x + (P.tx[i] - x) * pull; P.y[i] = y + (P.ty[i] - y) * pull;
+  }
+}
+
+function draw() {
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < n; i++) {
+    const s = P.s[i];
+    ctx.globalAlpha = P.a[i];
+    ctx.drawImage(SPRITES[P.k[i]], P.x[i] - s / 2, P.y[i] - s / 2, s, s);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function frame(now) {
+  const dt = Math.min(0.25, (now - last) / 1000); last = now;
+  step((now - t0) / 1000, Math.min(4, dt * 60), dt);          // f = frames' worth of motion
+  ctx.globalCompositeOperation = 'destination-out';           // fade last frame -> soft trails
+  ctx.fillStyle = `rgba(0,0,0,${FADE})`; ctx.fillRect(0, 0, W, H);
+  draw();
+  requestAnimationFrame(frame);
+}
+
+addEventListener('pointermove', (e) => { pointer = { x: e.clientX, y: e.clientY }; });
+addEventListener('pointerdown', (e) => { pointer = { x: e.clientX, y: e.clientY }; });
+addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') pointer = null; });
+addEventListener('pointerout', (e) => { if (!e.relatedTarget) pointer = null; });
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(init, 150); });
+
+init();
+if (!reduce) requestAnimationFrame(frame);
+</script>
+</body>
+</html>

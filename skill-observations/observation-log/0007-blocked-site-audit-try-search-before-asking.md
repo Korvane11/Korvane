@@ -1,7 +1,7 @@
 ---
 id: 7
 title: "The existing site was unreachable; the owner was asked to change settings before the search route was tried, and the search-derived facts then published on the new site were stale"
-status: open
+status: actioned
 type: open-source
 skill: [redesign-existing-projects, design-taste-frontend]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "redesign audit: getting the current site's content when the sandbox block
 date: 2026-10-12
 session_context: "SimNow site rebuild in a sandboxed cloud container: the owner asked why the agent couldn't read their current site to see everything that must carry over; follow-up the same day once the owner opened network access"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Partly already applied (blueprint: search summaries go stale); the remainder (try search and archives before asking the owner; render web-app sites) staged in prompts/site-blueprint.md (patch staged at skill-updates/2026-10-13/_target-files/prompts/site-blueprint.md.patch). redesign-existing-projects, design-taste-frontend: not edited, foreign-maintained."
 reference:
 commands_verified: "run: curl to both hosts returned 'CONNECT tunnel failed, response 403'; the web fetch tool returned ENOTFOUND for the site and for a public DNS resolver; WebSearch returned summaries of the site's homepage, including its phone, email and hours"
 ---

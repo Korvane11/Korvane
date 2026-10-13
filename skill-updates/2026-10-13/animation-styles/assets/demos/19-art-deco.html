@@ -1,0 +1,188 @@
+<!doctype html>
+<!--
+STYLE: Art deco
+LOOK: Gatsby-era luxury, kept restrained: a double stepped frame, fan medallions and a fine sunburst in gold draw
+  outward from the centre over deep emerald-black, then a slow metallic sheen glides across the gold and the
+  high-contrast serif headline.
+BEST FOR: hospitality, events, cocktail bars, jewellery, luxury invitations
+AVOID WHEN: tech products or casual brands
+PAIRS WITH: a high-contrast Didone or geometric deco caps, gold on black or emerald
+TECHNIQUE: Canvas 2D for the ornament. Each frame quarter is a polyline drawn to a fraction of its length, so all
+  four quarters start on the vertical axis and meet at the sides (symmetry is the style). Rays grow from just
+  outside the frame, staggered by their angle from the vertical. The sheen is one gradient band painted with
+  globalCompositeOperation = 'source-atop', so it lands only on gold already drawn; the headline gets the same band
+  through a second background layer clipped to its text, positioned to line up with the canvas band.
+KNOBS: CSS --bg-1/--bg-2/--bg-3 (emerald-black backdrop), --gold-hi/--gold/--gold-lo (metal), --serif and --sans;
+  JS RAYS (sunburst density), STEP (corner step size), GAP (space between the two frames), SHEEN_EVERY / SHEEN_DUR
+  (seconds between sweeps / per sweep), DRAW (seconds of the opening draw).
+COST: Low. About 130 strokes per frame during the 2.6 s opening and during each 1.9 s sheen; between sweeps the
+  canvas is not redrawn at all. The headline sheen repaints only the h1 box. Fine on phones.
+REDUCED MOTION: The finished composition (frames, fans, sunburst, headline), no sheen.
+PITFALLS: Flat yellow reads as costume, not gold: every stroke uses a multi-stop bronze-to-champagne gradient.
+  Thick strokes and big glows look cheap: hairlines, with a faint wide under-stroke as the only glow. Asymmetry
+  breaks deco: every element is mirrored and draws symmetrically. A constant shimmer cheapens it: one slow sweep
+  every few seconds, nothing in between.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Art Deco</title>
+<style>
+  :root {
+    --bg-1: #10302a; --bg-2: #07150f; --bg-3: #020605;
+    --gold-hi: #f7e8b8; --gold: #d4ab5c; --gold-lo: #9c7232; --ink: #d9c38c;
+    --serif: "Didot", "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+    --sans: "Futura", "Century Gothic", "Avenir Next", "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
+  }
+  html, body { margin: 0; height: 100%; }
+  body {
+    min-height: 100svh; overflow: hidden; display: grid; place-items: center;
+    background: radial-gradient(70% 60% at 50% 50%, var(--bg-1), var(--bg-2) 60%, var(--bg-3));
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+  .copy { position: relative; text-align: center; max-width: 86vw; padding: 0 4px; opacity: 0; }
+  .kicker, .sub { margin: 0; font-family: var(--sans); text-transform: uppercase; color: var(--ink); }
+  .kicker { font-size: clamp(10px, 1.3vmin, 13px); letter-spacing: .6em; margin-right: -.6em; }
+  h1 {
+    margin: .32em 0 0; font: 400 min(9.4vw, 12.5vh, 108px)/1.02 var(--serif); letter-spacing: .07em; text-transform: uppercase;
+    /* layer 1: the sheen band (moved by JS), layer 2: the metal, both clipped to the letters */
+    background-image: linear-gradient(105deg, transparent 43%, rgb(255 250 232 / .95) 50%, transparent 57%),
+      linear-gradient(180deg, var(--gold-hi), var(--gold) 46%, var(--gold-lo) 54%, #e8c97f);
+    background-size: 250% 100%, 100% 100%; background-repeat: no-repeat;
+    background-position: var(--sx, 150%) 0, 0 0;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .rule { display: flex; align-items: center; gap: .9em; width: min(56%, 240px); margin: 1.1em auto 1.15em; }
+  .rule::before, .rule::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+  .rule::after { transform: scaleX(-1); }
+  .rule i { width: 7px; height: 7px; border: 1px solid var(--gold); transform: rotate(45deg); }
+  .sub { font-size: clamp(10px, 1.35vmin, 13px); letter-spacing: .34em; margin-right: -.34em; line-height: 1.9; }
+</style>
+</head>
+<body>
+  <canvas id="c" aria-hidden="true"></canvas>
+  <main class="copy" id="copy">
+    <p class="kicker">MCMXXV</p>
+    <h1>The Gilded<br>Hour</h1>
+    <div class="rule" aria-hidden="true"><i></i></div>
+    <p class="sub">Cocktails at nine · Dancing until dawn</p>
+  </main>
+<script>
+(() => {
+  const RAYS = 72, STEP = 13, GAP = 9, DRAW = 2.6, SHEEN_EVERY = 6.5, SHEEN_DUR = 1.9;
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const copy = document.getElementById('copy'), h1 = copy.querySelector('h1');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const css = getComputedStyle(document.documentElement), v = (n) => css.getPropertyValue(n).trim();
+  const clamp = (x, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, x));
+  const outCubic = (u) => 1 - (1 - u) ** 3, inOut = (u) => (u < .5 ? 4 * u ** 3 : 1 - (-2 * u + 2) ** 3 / 2);
+  let W, H, cx, cy, a, b, f, rays, gold, rayGold, lastT = 0, wasSweeping = false;
+  const sweep = (t) => { const st = (t - DRAW) % SHEEN_EVERY; return !reduce && t > DRAW && st < SHEEN_DUR ? st / SHEEN_DUR : -1; };
+
+  // A quarter of a stepped frame: from the top-centre to the side-middle. sx/sy mirror it into the other quarters.
+  const quarter = (a, b, s) => [[0, -b], [a - 2 * s, -b], [a - 2 * s, -b + s], [a - s, -b + s], [a - s, -b + 2 * s], [a, -b + 2 * s], [a, 0]];
+  function poly(pts, u, sx, sy) {   // stroke the first u (0-1) of a polyline's length
+    const segs = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
+    let left = u * segs.reduce((m, n) => m + n, 0);
+    ctx.moveTo(cx + pts[0][0] * sx, cy + pts[0][1] * sy);
+    for (let i = 0; i < segs.length && left > 0; i++) {
+      const k = Math.min(1, left / segs[i]), [x0, y0] = pts[i], [x1, y1] = pts[i + 1];
+      ctx.lineTo(cx + (x0 + (x1 - x0) * k) * sx, cy + (y0 + (y1 - y0) * k) * sy);
+      left -= segs[i];
+    }
+  }
+
+  function resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx = W / 2; cy = H / 2;
+    const pad = clamp(Math.min(W, H) * .05, 18, 46);
+    a = Math.min(copy.offsetWidth / 2 + pad * 1.4, W / 2 - 12);
+    b = Math.min(copy.offsetHeight / 2 + pad, H / 2 - 40);
+    f = clamp(Math.min(b * .36, H / 2 - b - 14), 14, 58);   // fan radius: whatever room is left above and below
+    gold = ctx.createLinearGradient(cx - a, cy - b, cx + a, cy + b);   // bronze to champagne, several times over
+    [[0, '#8f6a2b'], [.22, '#ecd28c'], [.4, '#b1873a'], [.58, '#f6e5ae'], [.78, '#a57b33'], [1, '#e2c27a']].forEach(([o, c]) => gold.addColorStop(o, c));
+    const R = Math.hypot(W, H) / 2;
+    rayGold = ctx.createRadialGradient(cx, cy, Math.min(a, b), cx, cy, R);
+    rayGold.addColorStop(0, 'rgba(236,210,140,.75)'); rayGold.addColorStop(.45, 'rgba(200,160,80,.28)'); rayGold.addColorStop(1, 'rgba(200,160,80,0)');
+    rays = Array.from({ length: RAYS }, (_, i) => {
+      const th = i / RAYS * Math.PI * 2, sn = Math.sin(th), cs = -Math.cos(th);   // th = 0 points straight up
+      let r0 = Math.min((a + 14) / Math.abs(sn || 1e-6), (b + 14) / Math.abs(cs || 1e-6));
+      const reach = (f + 12) ** 2 - (b * sn) ** 2;   // clear the fan medallions on the vertical axis
+      if (reach > 0) r0 = Math.max(r0, b * Math.abs(cs) + Math.sqrt(reach));
+      const fromAxis = Math.min(th, Math.abs(Math.PI - th), Math.PI * 2 - th) / (Math.PI / 2);   // 0 on the vertical, 1 on the horizontal
+      return { sn, cs, r0, r1: R * (i % 2 ? .78 : 1.02), w: i % 2 ? .6 : 1, delay: .45 + fromAxis * .75 };
+    });
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = rayGold;   // sunburst
+    for (const r of rays) {
+      const u = outCubic(clamp((t - r.delay) / 1.2));
+      if (!u) continue;
+      const len = r.r0 + (r.r1 - r.r0) * u;
+      ctx.lineWidth = r.w; ctx.beginPath();
+      ctx.moveTo(cx + r.sn * r.r0, cy + r.cs * r.r0); ctx.lineTo(cx + r.sn * len, cy + r.cs * len); ctx.stroke();
+    }
+    ctx.strokeStyle = gold;
+    const frames = [[a, b, STEP, 1.5, 0], [a - GAP, b - GAP, STEP - 4, .9, .18]];
+    for (const pass of [0, 1]) {   // pass 0: a faint wide under-stroke (the only glow); pass 1: the crisp line
+      ctx.globalAlpha = pass ? 1 : .14;
+      for (const [fa, fb, s, lw, d] of frames) {
+        const u = inOut(clamp((t - d) / 1.7));
+        ctx.lineWidth = pass ? lw : lw + 5; ctx.beginPath();
+        for (const sx of [-1, 1]) for (const sy of [-1, 1]) poly(quarter(fa, fb, s), u, sx, sy);
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+    const u = outCubic(clamp((t - 1) / 1.3));   // fan medallions, opening from the axis
+    ctx.lineWidth = 1; ctx.beginPath();
+    for (const sy of [-1, 1]) {
+      const fy = cy + b * sy, mid = sy < 0 ? Math.PI * 1.5 : Math.PI / 2;
+      for (const k of [1, .74, .48]) { ctx.moveTo(cx + Math.cos(mid - u * Math.PI / 2) * f * k, fy + Math.sin(mid - u * Math.PI / 2) * f * k); ctx.arc(cx, fy, f * k, mid - u * Math.PI / 2, mid + u * Math.PI / 2); }
+      for (let i = 1; i < 8; i++) {
+        const an = (sy < 0 ? Math.PI : 0) + i / 8 * Math.PI, r1 = f * (.48 + .52 * u);
+        if (Math.abs(an - mid) / (Math.PI / 2) <= u) { ctx.moveTo(cx + Math.cos(an) * f * .48, fy + Math.sin(an) * f * .48); ctx.lineTo(cx + Math.cos(an) * r1, fy + Math.sin(an) * r1); }
+      }
+      ctx.moveTo(cx - 4, fy + 10 * sy); ctx.lineTo(cx, fy + 14 * sy); ctx.lineTo(cx + 4, fy + 10 * sy); ctx.lineTo(cx, fy + 6 * sy); ctx.closePath();
+    }
+    ctx.stroke();
+
+    const sw = sweep(t);
+    if (sw >= 0) {   // the sheen: one soft band, only on pixels already painted gold
+      const bx = -W * .25 + W * 1.5 * inOut(sw);
+      const g = ctx.createLinearGradient(bx - 240, cy - 60, bx + 240, cy + 60);
+      g.addColorStop(0, 'rgba(255,248,226,0)'); g.addColorStop(.5, 'rgba(255,248,226,.95)'); g.addColorStop(1, 'rgba(255,248,226,0)');
+      ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over';
+      const r = h1.getBoundingClientRect();   // put the headline's band at the same x
+      h1.style.setProperty('--sx', ((r.left + 1.25 * r.width - bx) / (1.5 * r.width) * 100).toFixed(2) + '%');
+    } else h1.style.setProperty('--sx', '150%');
+  }
+
+  function showCopy(t) {
+    const u = outCubic(clamp((t - .5) / 1.3));
+    copy.style.opacity = u; copy.style.transform = `translateY(${(1 - u) * 14}px)`;
+  }
+
+  resize();
+  addEventListener('resize', () => { resize(); draw(lastT); });
+  if (reduce) { copy.style.opacity = 1; lastT = 99; draw(lastT); return; }
+  let t0 = null;
+  requestAnimationFrame(function loop(now) {
+    if (t0 === null) t0 = now;
+    const t = lastT = (now - t0) / 1000, opening = t < DRAW + .2, sweeping = sweep(t) >= 0;
+    if (opening) showCopy(t);
+    if (opening || sweeping || wasSweeping) draw(t);   // between sweeps the canvas is left alone
+    wasSweeping = sweeping;
+    requestAnimationFrame(loop);
+  });
+})();
+</script>
+</body>
+</html>

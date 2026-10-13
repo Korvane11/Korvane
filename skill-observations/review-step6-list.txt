@@ -1,0 +1,15 @@
+0001-scroll-film-sites-need-a-render-pipeline-skill.md
+0002-confirm-exact-asset-before-long-renders.md
+0003-tool-calls-before-session-start-protocol.md
+0004-permission-to-use-is-not-a-design-brief.md
+0005-medium-swap-dropped-a-beat-of-the-brief.md
+0006-screenshot-only-tests-miss-tap-blockers.md
+0007-blocked-site-audit-try-search-before-asking.md
+0008-social-clip-to-site-background-workflow.md
+0009-intro-gated-on-full-buffer.md
+0010-existing-logo-refinement-gap.md
+0011-presence-checks-pass-broken-meta-and-icons.md
+0012-mobile-overflow-check-vacuous.md
+0013-restructure-reworked-approved-opening.md
+0014-redesign-audit-assets-and-flows.md
+0015-validator-index-ignores-link-entries.md

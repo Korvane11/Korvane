@@ -1,7 +1,7 @@
 ---
 id: 5
 title: "Swapping the background medium silently dropped a beat of the owner's brief (headlights turning on), and the work was reported finished"
-status: open
+status: actioned
 type: open-source
 skill: [design-taste-frontend, redesign-existing-projects]
 proposes_skill: [scroll-film-renders]
@@ -11,8 +11,8 @@ area: "completion check: verifying the owner's brief, beat by beat, after the im
 date: 2026-10-12
 session_context: "SimNow site: the owner's brief was 'opens on black, the Lambo's lights come on, then the site opens over it driving at night'. The first build (3D render) had the lights-on beat inside its rendered intro frames; when the owner supplied a real clip, the intro became a plain fade-up from black, and the clip already starts with the lights on"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Staged in prompts/site-blueprint.md (patch staged at skill-updates/2026-10-13/_target-files/prompts/site-blueprint.md.patch) ('Write the experience they describe as numbered beats...'); cross-cutting principle 2. redesign-existing-projects, design-taste-frontend: not edited, foreign-maintained. The scroll-film-renders part is carried by open #1 and #9."
 reference:
 commands_verified: "none"
 ---

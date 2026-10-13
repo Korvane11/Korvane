@@ -1,7 +1,7 @@
 ---
 id: 12
 title: "A phone overflow check of scrollWidth > innerWidth passes a page that overflows: under Playwright's isMobile emulation wide content widens the layout viewport, so innerWidth grows with it"
-status: open
+status: actioned
 type: open-source
 skill: [animation-styles, webapp-testing]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "check-demos.cjs phone pass; SKILL.md 'How to use it' step 5"
 date: 2026-10-13
 session_context: "SimNow site split into six pages; the scratch page test (pages.cjs) reported 'fits' for gear.html on a 390px phone while the screenshot showed a card cut off at the right"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Staged for animation-styles at skill-updates/2026-10-13/animation-styles (check-demos.cjs compares with clientWidth; proven on a deliberately too-wide demo; 20/20 demos pass). webapp-testing: not edited, foreign-maintained; the recipe is in CLAUDE.md and the staged blueprint patch."
 reference:
 commands_verified: "run: Playwright Chromium, viewport 390x844, isMobile true, hasTouch true, gear.html before the fix: innerWidth 661, documentElement.scrollWidth 661, documentElement.clientWidth 390, visualViewport.width 390; after '.shop__grid .card { grid-column: auto; }' all three read 390 on all six pages"
 ---

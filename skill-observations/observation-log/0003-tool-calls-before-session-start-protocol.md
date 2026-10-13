@@ -1,7 +1,7 @@
 ---
 id: 3
 title: "Tool calls made in a new session before the task-observer Session Start Protocol ran"
-status: open
+status: actioned
 type: open-source
 skill: [task-observer]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "activation: session start in resumed cloud sessions"
 date: 2026-10-12
 session_context: "SimNow site: a resumed cloud session (instruction files re-read) where the owner asked whether GitHub Pages was live"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Staged a SessionStart reminder hook for .claude/settings.json at skill-updates/2026-10-13/_target-files/.claude/settings.json.patch (owner approved 2026-10-13). task-observer: not edited, foreign-maintained (rebelytics)."
 reference:
 commands_verified: "none"
 ---

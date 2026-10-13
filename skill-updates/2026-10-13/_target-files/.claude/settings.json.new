@@ -1,0 +1,26 @@
+{
+  "enabledMcpjsonServers": ["21st"],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v playwright-cli >/dev/null 2>&1 || npm install -g --no-audit --no-fund @playwright/cli@0.1.22 >/dev/null 2>&1 || true",
+            "timeout": 120,
+            "statusMessage": "Installing Playwright CLI"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Session start (new or resumed): before any other tool call, invoke the task-observer skill and run its Session Start Protocol, as CLAUDE.md (Task observer) says.'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

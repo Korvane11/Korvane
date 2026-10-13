@@ -1,7 +1,7 @@
 ---
 id: 13
 title: "Asked to split a site into pages and 'make it better in every way', the redesign reworked the home page's approved scroll story and nav labels too; the owner had to ask for the opening to be kept"
-status: open
+status: actioned
 type: open-source
 skill: [redesign-existing-projects]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "How This Works (Scan, Diagnose, Fix) and Rules"
 date: 2026-10-13
 session_context: "SimNow site: 'keep working on the simnow website refine it and make it better in every way you can have separate tabs for like booking and other stuff'; the follow-up was 'make sure you keep the same opening and the car and stuff and the same dashboard part when you first open the website'"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Staged in prompts/site-blueprint.md (patch staged at skill-updates/2026-10-13/_target-files/prompts/site-blueprint.md.patch) ('Before reworking a site they have already seen, list what they approved...'); cross-cutting principle 2. redesign-existing-projects: not edited, foreign-maintained."
 reference:
 commands_verified: "run: diff of the story section of the pre-split index.html (commit 7efd2d1) against the split version: five chapters (Lights out, Rent by the hour, Every driver welcome, Race with Salem, Take it home) had become four (Every driver welcome and Race with Salem replaced by We bring the race), each with an added link, story height 640vh to 540vh; nav labels Prices, Events, Gear, Contact had become Experience, Events, Gear, Visit; after restoring, a test asserts the six original headings and the nav labels"
 ---

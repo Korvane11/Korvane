@@ -1,0 +1,207 @@
+<!doctype html>
+<!--
+STYLE: Comic book
+LOOK: A printed comic page: cream newsprint, thick ink panel borders, flat process colours shaded with halftone dots, speed lines, and a "POW!" burst that slams in with a snappy overshoot after the panels land one by one.
+BEST FOR: events, games, playful announcements, kids' brands
+AVOID WHEN: serious, premium or minimal brands
+PAIRS WITH: heavy italic display type, flat primaries, black ink outlines
+TECHNIQUE: CSS grid of panels with 4px ink borders. Halftone shading is drawn once per resize into a canvas per panel (dots on a rotated grid, radius from a coverage function: r = cell * sqrt(coverage / pi)). Speed lines are tapered wedges on one canvas, redrawn each frame around the burst. The burst is an SVG star polygon; panels, burst and balloon animate with transform/opacity using back-out easing, then a short damped "punch" repeats.
+KNOBS: --paper --ink --red --yellow --blue (the process palette); CELL (halftone dot pitch, px); SCREEN (dot screen angle); LINES (speed-line count); PUNCH_EVERY (seconds between punches); the backOut overshoot (2.8 for the burst, 1.4 for panels).
+COST: Low. Halftone canvases redraw only on resize; per frame it is ~80 canvas wedges plus a few transforms. Fine on phones.
+REDUCED MOTION: The finished page: all panels in, burst at rest, speed lines still, no punch.
+PITFALLS: Comic Sans and rainbow palettes read as parody: use heavy uppercase italics and four flat inks. Soft shadows and gradients break the print look: only hard offsets and flat fills. Uniform-opacity dots look like a texture, not print: vary dot SIZE, never opacity. A punch that never stops shaking is tiring: it is short, damped and spaced out.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comic book</title>
+<style>
+  :root { --paper: #f3e9cf; --ink: #171411; --red: #e0362c; --yellow: #ffd23f; --blue: #3a86c8; --gut: clamp(10px, 1.4vw, 18px); }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--paper); overflow: hidden; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+  .page { height: 100%; height: 100svh; padding: var(--gut); display: grid; gap: var(--gut);
+          grid-template-columns: 1fr 1.75fr; grid-template-rows: 1fr 1fr; grid-template-areas: "a b" "c b"; }
+  @media (max-aspect-ratio: 1/1) { .page { grid-template-columns: 1fr; grid-template-rows: .8fr 2.1fr .95fr; grid-template-areas: "a" "b" "c"; } }
+  .panel { position: relative; overflow: hidden; border: 4px solid var(--ink); opacity: 0; will-change: transform; }
+  .a { grid-area: a; background: var(--blue); } .b { grid-area: b; background: #fff3cf; } .c { grid-area: c; background: var(--red); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .comic { font-family: "Avenir Next Condensed", "Arial Narrow", "Roboto Condensed", sans-serif-condensed, ui-sans-serif, system-ui, sans-serif;
+           font-weight: 900; font-style: italic; text-transform: uppercase; }
+  .caption { position: absolute; left: 12px; top: 12px; max-width: 78%; padding: .45em .7em; background: var(--yellow); border: 3px solid var(--ink);
+             font-size: clamp(13px, 1.35vw, 19px); letter-spacing: .02em; line-height: 1.15; will-change: transform; }
+  .caption.end { left: auto; top: auto; right: 10px; bottom: 10px; font-size: clamp(11px, 1vw, 14px); }
+  .moon { position: absolute; right: 9%; top: 14%; width: 22%; aspect-ratio: 1; border-radius: 50%; background: #fff1bf; border: 3px solid var(--ink); }
+  .city { position: absolute; left: 0; bottom: 0; width: 100%; height: 52%; }
+  h1 { position: absolute; left: 5%; top: 6%; font-size: clamp(40px, 5.6vw, 96px); line-height: .92; letter-spacing: .035em; color: #fff;
+       -webkit-text-stroke: .075em var(--ink); paint-order: stroke fill;   /* outer ink line: stroke drawn under the fill */
+       text-shadow: .06em .06em 0 var(--ink); }
+  h1 span { display: block; will-change: transform; }
+  .burst { position: absolute; left: 0; top: 0; overflow: visible; will-change: transform; }
+  .balloon { position: absolute; left: 50%; top: 50%; width: min(90%, 360px); padding: 1.4em 1.3em 1.6em; text-align: center; font: 800 clamp(13px, 1.3vw, 17px)/1.25 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+             text-transform: uppercase; letter-spacing: .03em; will-change: transform; }
+  .balloon svg { position: absolute; left: 0; top: 0; width: 100%; height: 116%; overflow: visible; }   /* one path = ellipse + tail, one clean outline */
+  .balloon p { position: relative; }
+</style>
+</head>
+<body>
+<div class="page">
+  <section class="panel a" aria-hidden="true"><canvas class="dots"></canvas><div class="moon"></div>
+    <svg class="city" id="city" viewBox="0 0 400 120" preserveAspectRatio="xMidYMax slice"></svg>
+    <p class="caption comic" id="cap">Meanwhile, on the homepage…</p></section>
+  <section class="panel b"><canvas class="dots"></canvas><canvas id="speed"></canvas>
+    <h1 class="comic" id="title"><span>Big news,</span><span>told loud.</span></h1>
+    <svg class="burst" id="burst" viewBox="-100 -100 200 200" aria-label="Pow!" role="img">
+      <polygon id="outer" fill="#ffd23f" stroke="#171411" stroke-width="5" stroke-linejoin="miter"/>
+      <polygon id="inner" fill="#fff6d6" opacity=".85"/>
+      <g id="word"><text class="comic" text-anchor="middle" y="17" font-size="54" fill="#e0362c" stroke="#171411" stroke-width="8"
+         stroke-linejoin="round" paint-order="stroke" transform="rotate(-8) skewX(-6)">POW!</text></g>
+    </svg></section>
+  <section class="panel c"><canvas class="dots"></canvas>
+    <div class="balloon" id="balloon"><svg viewBox="0 0 200 128" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M83.2 106.2 A97 52 0 1 0 51.5 100 L30 127 Z" fill="#fff" stroke="#171411" stroke-width="3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg><p>Every panel lands in order.<br>Then the punch.</p></div>
+    <p class="caption end comic" id="end">To be continued…</p></section>
+</div>
+<script>
+const INK = '#171411';
+const CELL = 9;               // halftone pitch in CSS px: 7-12 reads as print at arm's length
+const SCREEN = 22;            // dot screen angle (deg)
+const LINES = 120;            // speed-line wedges
+const PUNCH_EVERY = 3.8;      // seconds between punches after the reveal
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DPR = Math.min(devicePixelRatio || 1, 2);
+
+let seed = 7;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+const smooth = (a, b, v) => { const x = clamp01((v - a) / (b - a)); return x * x * (3 - 2 * x); };
+const backOut = (p, s) => { p -= 1; return 1 + (s + 1) * p * p * p + s * p * p; };
+const expoOut = p => p >= 1 ? 1 : 1 - Math.pow(2, -10 * p);
+const T = (t, start, dur) => clamp01((t - start) / dur);
+
+// Burst: star polygon with jittered spikes (seeded, so every load matches).
+const spikes = 15, outerPts = [], innerPts = [];
+for (let i = 0; i < spikes * 2; i++) {
+  const a = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2, r = i % 2 ? 58 + rnd() * 8 : 86 + rnd() * 13;
+  outerPts.push((Math.cos(a) * r).toFixed(1) + ',' + (Math.sin(a) * r * 0.86).toFixed(1));
+  innerPts.push((Math.cos(a) * r * 0.74).toFixed(1) + ',' + (Math.sin(a) * r * 0.64).toFixed(1));
+}
+document.getElementById('outer').setAttribute('points', outerPts.join(' '));
+document.getElementById('inner').setAttribute('points', innerPts.join(' '));
+
+// Skyline for the "meanwhile" panel: ink blocks with a few lit windows.
+let city = '';
+for (let x = -4; x < 404;) {
+  const w = 22 + rnd() * 34, h = 34 + rnd() * 72;
+  city += `<rect x="${x.toFixed(1)}" y="${120 - h}" width="${w.toFixed(1)}" height="${h}" fill="${INK}"/>`;
+  for (let wy = 120 - h + 8; wy < 112; wy += 11) for (let wx = x + 5; wx < x + w - 7; wx += 9)
+    if (rnd() < 0.22) city += `<rect x="${wx.toFixed(1)}" y="${wy}" width="4" height="5" fill="#ffd23f"/>`;
+  x += w + 2;
+}
+document.getElementById('city').innerHTML = city;
+
+const lines = Array.from({ length: LINES }, (_, i) => ({
+  a: (i / LINES) * Math.PI * 2 + rnd() * 0.04, r: rnd(), w: 2 + Math.pow(rnd(), 2) * 16, ph: rnd() * 6.28,   // mostly thin, a few heavy
+}));
+
+const panels = [...document.querySelectorAll('.panel')];
+const pb = panels[1], speed = document.getElementById('speed'), sctx = speed.getContext('2d');
+const burst = document.getElementById('burst'), word = document.getElementById('word');
+const cap = document.getElementById('cap'), end = document.getElementById('end'), balloon = document.getElementById('balloon');
+const titleLines = [...document.querySelectorAll('h1 span')];
+const B = { w: 1, h: 1, cx: 0, cy: 0, size: 1 };
+
+// Halftone: dots on a rotated grid; coverage(x, y) in 0..1 sets the dot AREA.
+function halftone(canvas, color, cov) {
+  const w = canvas.clientWidth, h = canvas.clientHeight, g = canvas.getContext('2d');
+  canvas.width = Math.round(w * DPR); canvas.height = Math.round(h * DPR);
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  g.fillStyle = color; g.beginPath();
+  const ca = Math.cos(SCREEN * Math.PI / 180), sa = Math.sin(SCREEN * Math.PI / 180);
+  const n = Math.ceil(Math.hypot(w, h) / 2 / CELL) + 1;
+  for (let j = -n; j <= n; j++) for (let i = -n; i <= n; i++) {
+    const x = w / 2 + (i * ca - j * sa) * CELL, y = h / 2 + (i * sa + j * ca) * CELL;
+    if (x < -CELL || y < -CELL || x > w + CELL || y > h + CELL) continue;
+    const r = CELL * Math.sqrt(cov(x / w, y / h) / Math.PI);
+    if (r > 0.35) { g.moveTo(x + r, y); g.arc(x, y, Math.min(r, CELL * 0.62), 0, Math.PI * 2); }
+  }
+  g.fill();
+}
+
+function layout() {
+  const tall = innerWidth <= innerHeight;
+  B.w = pb.clientWidth; B.h = pb.clientHeight;
+  B.size = Math.min(B.w * (tall ? 0.74 : 0.54), B.h * 0.62);
+  B.cx = B.w * (tall ? 0.5 : 0.62); B.cy = B.h * (tall ? 0.66 : 0.6);
+  burst.style.width = burst.style.height = B.size + 'px';
+  speed.width = Math.round(B.w * DPR); speed.height = Math.round(B.h * DPR);
+  const d = document.querySelectorAll('.dots');
+  halftone(d[0], '#1f5a94', (x, y) => 0.08 + 0.62 * smooth(0.05, 1, y));                        // night sky deepening downward
+  halftone(d[1], '#f39a6b', (x, y) => 0.6 * smooth(0.45, 1.05, Math.hypot((x - B.cx / B.w) * B.w, (y - B.cy / B.h) * B.h) / Math.max(B.w, B.h) * 1.6));
+  halftone(d[2], '#a8211b', (x, y) => 0.12 + 0.5 * smooth(0, 1, (x + y) / 2));
+}
+
+function render(t) {
+  // 1. Panels drop onto the page one after another.
+  panels.forEach((p, i) => {
+    const e = T(t, 0.1 + i * 0.26, 0.55);
+    p.style.opacity = e > 0 ? 1 : 0;
+    const s = 0.9 + 0.1 * backOut(e, 1.4);
+    p.style.transform = `translateY(${(1 - expoOut(e)) * 26}px) scale(${s.toFixed(4)}) rotate(${((1 - expoOut(e)) * (i % 2 ? 2 : -2)).toFixed(3)}deg)`;
+  });
+  cap.style.transform = `translateX(${(1 - backOut(T(t, 0.45, 0.5), 1.6)) * -120}%)`;
+  titleLines.forEach((l, i) => {
+    const e = T(t, 0.6 + i * 0.12, 0.5);
+    l.style.transform = `translateX(${(1 - backOut(e, 1.5)) * -60}%) skewX(${(1 - expoOut(e)) * -14}deg)`;
+    l.style.opacity = e > 0 ? 1 : 0;
+  });
+  end.style.transform = `translateX(${(1 - backOut(T(t, 1.7, 0.5), 1.6)) * 130}%)`;
+  const bl = backOut(T(t, 0.95, 0.45), 2);
+  balloon.style.transform = `translate(-50%, -62%) scale(${Math.max(0, bl).toFixed(4)})`;
+
+  // 2. The burst slams in with a hard overshoot; the word lands a beat later.
+  let pop = backOut(T(t, 1.15, 0.5), 2.8), wpop = backOut(T(t, 1.25, 0.45), 3.2), shake = [0, 0], punch = 0;
+  if (t > 2.4) {   // 3. A short, damped punch every few seconds.
+    const l = (t - 2.4) % PUNCH_EVERY;
+    punch = Math.exp(-l * 7);
+    pop *= 1 + 0.13 * Math.exp(-l * 9) * Math.sin(l * 30);
+    wpop *= 1 + 0.18 * Math.exp(-l * 8) * Math.sin(l * 26 + 0.6);
+    shake = [5 * Math.exp(-l * 12) * Math.sin(l * 57), 3.5 * Math.exp(-l * 12) * Math.cos(l * 43)];
+  }
+  const rot = -26 * (1 - expoOut(T(t, 1.15, 0.6))) - 6;
+  burst.style.transform = `translate(${B.cx - B.size / 2}px, ${B.cy - B.size / 2}px) rotate(${rot.toFixed(2)}deg) scale(${Math.max(0, pop).toFixed(4)})`;
+  word.setAttribute('transform', `scale(${Math.max(0, wpop).toFixed(4)})`);
+  if (t > 1) pb.style.transform += ` translate(${shake[0].toFixed(2)}px, ${shake[1].toFixed(2)}px)`;
+
+  // Speed lines: tapered wedges aimed at the burst; they shoot in with it and flinch on each punch.
+  const R = Math.hypot(B.w, B.h), intro = expoOut(T(t, 1.05, 0.7));
+  sctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  sctx.clearRect(0, 0, B.w, B.h);
+  if (intro <= 0) return;
+  sctx.fillStyle = INK; sctx.beginPath();
+  for (const L of lines) {
+    const a = L.a + t * 0.025;
+    const target = B.size * (0.56 + L.r * 0.42 + 0.03 * Math.sin(t * 4 + L.ph) - 0.1 * punch);
+    const r0 = R + (target - R) * intro, hw = L.w / R;
+    sctx.moveTo(B.cx + Math.cos(a) * r0, B.cy + Math.sin(a) * r0);
+    sctx.lineTo(B.cx + Math.cos(a - hw) * R, B.cy + Math.sin(a - hw) * R);
+    sctx.lineTo(B.cx + Math.cos(a + hw) * R, B.cy + Math.sin(a + hw) * R);
+  }
+  sctx.fill();
+}
+
+layout();
+addEventListener('resize', () => { layout(); if (reduce) render(2.39); });
+if (reduce) render(2.39);   // finished page, before the first punch
+else {
+  let t0 = null;
+  requestAnimationFrame(function frame(now) {
+    if (t0 === null) t0 = now;
+    render((now - t0) / 1000);
+    requestAnimationFrame(frame);
+  });
+}
+</script>
+</body>
+</html>

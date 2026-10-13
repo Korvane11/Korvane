@@ -1,0 +1,4 @@
+# Activation tiers found by the 2026-10-13 review
+instruction-file: present (CLAUDE.md, "## Task observer" block: invoke the skill and run the Session Start Protocol before the first tool call)
+session-start-hook: present but carries no task-observer reminder (.claude/settings.json SessionStart installs playwright-cli only); a reminder hook is staged at skill-updates/2026-10-13/_target-files/.claude/settings.json.patch
+scheduled-task: none registered

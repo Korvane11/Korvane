@@ -1,8 +1,82 @@
-# Skill review, 2026-10-13: decision list (awaiting approval)
+# Skill review, 2026-10-13
+
+Approved by the owner ("approve all") and applied to staged copies. The
+decision list that was approved follows the summary.
 
 First review of this log. 14 open observations, all read in full. Nothing
 has been changed in any skill or project file yet: the items below are
 proposals, waiting for the owner's approval.
+
+## Weekly Skill Review Complete — 2026-10-13
+
+Updated skills (10 observations, 3 principles applied):
+
+**animation-styles** — the phone overflow check compares with
+`clientWidth`, not `innerWidth` (it passed overflowing pages); the
+reference generator writes plain Contents entries so the bundle validator
+accepts it; observation #12. Staged at
+`skill-updates/2026-10-13/animation-styles`, bundle
+`animation-styles.skill`. Proof: the old checker passed a deliberately
+700 px-wide demo, the new one failed it; all 20 demos pass.
+
+**prompts/site-blueprint.md** (state file, staged as a patch) — 35 added
+lines; observations #2 (in part), #5, #6, #7, #9 (in part), #10, #11,
+#12, #13, #14.
+
+**.claude/settings.json** (state file, staged as a patch) — a SessionStart
+hook that prints the task-observer reminder; observation #3.
+
+**Workspace files written directly:** `cross-cutting-principles.md` (three
+principles added: a check counts once seen failing; the brief beat by
+beat; an asset's role, right to move and working order),
+`skill-families.md` (created: two pattern groups), `activation-tiers.txt`
+(created), `skill-updates/PENDING.md` (created).
+
+### Observations Actioned
+#3, #4 (already applied in the blueprint), #5, #6, #7, #10, #11, #12,
+#13, #14.
+
+### Family coherence
+- Every multi-skill observation names skills maintained by others
+  (redesign-existing-projects, design-taste-frontend, webapp-testing,
+  playwright-cli, design, task-observer). None was edited; each entry's
+  resolution says so, and the lesson went to the project blueprint and the
+  cross-cutting principles. The owner chose not to send upstream reports.
+- Drift audit: no registry existed; `skill-families.md` is the first
+  draft (design direction; browser testing, both pattern groups).
+- 0 observations logged without a sibling check.
+
+### Published skills
+None published from this repository.
+
+### Parked
+None.
+
+### Still open
+- #1, #2, #8, #9: the `scroll-film-renders` new-skill candidate (cinematic
+  backgrounds). A review can't create skills; building it is a separate
+  task when the owner wants it. The general parts of #2 and #9 are in the
+  blueprint patch.
+
+### Arrived during this run
+- #15 — the bundle validator's index check rejects Markdown link entries
+  — written by this review while packing animation-styles; targets
+  task-observer (maintained by rebelytics), left OPEN for the next review.
+
+### Log integrity
+No duplicate ids; id floor matches (15 after #15); 0 non-conforming
+headers; 15 files, 15 parsed. `skill:` names all bare. Inbox not read: no
+user-scoped memory store exists in this environment.
+
+### Skipped (needs manual review)
+- Weekly scheduled review: approved, not yet registered; it needs the
+  owner's time zone for the schedule.
+
+1 bundles staged, 1 bundles presented
+
+---
+
+# The approved decision list
 
 ## How the targets were classified (Step 2)
 

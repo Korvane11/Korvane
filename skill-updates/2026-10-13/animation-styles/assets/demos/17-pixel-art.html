@@ -1,0 +1,217 @@
+<!doctype html>
+<!--
+STYLE: Pixel art
+LOOK: A 16-bit night drive: a low-resolution city scrolls past in parallax layers, windows switch on and off, stars
+  step through three brightnesses, a red coupe cruises with a dithered headlight beam, and the title is set in a
+  hand-made bitmap font.
+BEST FOR: games, indie products, playful retro campaigns, 404 pages
+AVOID WHEN: premium or corporate brands
+PAIRS WITH: a bitmap-style display face, a limited palette, dark night blues
+TECHNIQUE: Everything is drawn into a tiny canvas (about 110 art pixels on the short side) and scaled up by a WHOLE
+  number of device pixels with image-rendering: pixelated, so every art pixel is a crisp square. The sky is a Bayer
+  ordered-dither gradient, buildings are seeded procedural strips drawn once and tiled at integer offsets, light is
+  dithered (checkerboard) instead of blended, and all motion advances on a 20 Hz tick from the rAF timestamp.
+KNOBS: ART (art pixels on the short side: lower = chunkier), TPS (ticks per second: the stepped frame rate), SPEED
+  (art px per tick for each parallax layer), P (the palette), CAR (sprite rows; one letter = one palette colour),
+  TITLE / SUB (text; add any missing glyph to FONT5 / FONT3 as row bitmasks).
+COST: Tiny: the buffer is ~200x120 pixels whatever the screen, and the canvas only redraws when the tick changes
+  (20 times a second). The DPR is not capped because the integer scale is computed from real device pixels; the
+  buffer size does not grow with it.
+REDUCED MOTION: One finished frame of the scene (city, moon, stars, car, title); nothing moves.
+PITFALLS: Blurry or uneven pixels from fractional scaling: the scale is a whole number of device pixels and smoothing
+  is off. Mixed pixel sizes ("mixels") look amateur: text, sprites and scenery all share one pixel grid. Smooth
+  sub-pixel motion breaks the illusion: every position is an integer advanced on the tick. Anti-aliased gradients
+  and alpha glows: the sky and the lights are dithered from a fixed palette instead.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Art</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #090a1c; }
+  canvas { position: fixed; left: 0; top: 0; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+</style>
+</head>
+<body>
+  <h1 class="sr">Night drive. The city never sleeps.</h1>
+  <canvas id="c" aria-hidden="true"></canvas>
+<script>
+(() => {
+  const ART = 104, TPS = 20, SPEED = { far: .25, mid: .5, road: 2 };
+  const TITLE = 'NIGHT DRIVE', SUB = 'THE CITY NEVER SLEEPS';
+  const P = {
+    sky: ['#090a1c', '#0d0f26', '#141632', '#1e1c43', '#2e2253', '#452b62'],
+    far: '#28265a', farWin: '#4a4a86', mid: '#0d0e24', rim: '#25285a', winOff: '#191b3c',
+    win: ['#ffd27a', '#ffd27a', '#ffd27a', '#f2a65e', '#9cc7e6'],
+    post: '#07081a', lamp: '#fff0b8', glow: ['#4b3f5c', '#e9c27e'], pool: ['#34304e', '#5d5068'],
+    walk: '#24264a', walkTop: '#363a63', curb: '#0a0b1b', road: '#13142a', dash: '#6f6b84', beam: ['#6a5f6e', '#f3e2ab'],
+    moon: '#f3ead0', crater: '#d2c7a8', halo: '#2b2a5e', star: ['#34366c', '#8d90c4', '#ece8ff'],
+    title: ['#fff3d2', '#fff3d2', '#ffe09c', '#ffd27a', '#ffbd73', '#ffa766', '#ff9160'], shade: '#05051a', sub: '#a4a7d8',
+  };
+  const CAR = { k: '#0a0a16', b: '#c33a4c', B: '#ee6b6f', d: '#7a2338', g: '#3b4b82', G: '#9dbbe6', t: '#ff4d5e', h: '#fff4c8' };
+  const CAR_ROWS = [
+    '..........kkkkkkkkk.........',
+    '........kkgggggkGGGGkk......',
+    '......kkggggggkkGGGGGGkk....',
+    '...kkkkbbbbbbbbbbbbbbbbbbkkk',
+    '..kBBBBBBBBBBBBBBBBBBBBBBBBk',
+    '.ktbbbbbbbbbbbbbbbbbbbbbbbbh',
+    '.kbbbbbbbbbbbbbbbbbbbbbbbbbk',
+    '..kdddddddddddddddddddddddk.',
+  ];
+  // Bitmap fonts: one number per row, bits read left to right.
+  const FONT5 = { N: [17, 25, 21, 19, 17, 17, 17], I: [14, 4, 4, 4, 4, 4, 14], G: [14, 17, 16, 23, 17, 17, 15],
+    H: [17, 17, 17, 31, 17, 17, 17], T: [31, 4, 4, 4, 4, 4, 4], D: [30, 17, 17, 17, 17, 17, 30],
+    R: [30, 17, 17, 30, 20, 18, 17], V: [17, 17, 17, 17, 17, 10, 4], E: [31, 16, 16, 30, 16, 16, 31], ' ': [0] };
+  const FONT3 = { T: [7, 2, 2, 2, 2], H: [5, 5, 7, 5, 5], E: [7, 4, 6, 4, 7], C: [3, 4, 4, 4, 3], I: [7, 2, 2, 2, 7],
+    Y: [5, 5, 2, 2, 2], N: [6, 5, 5, 5, 5], V: [5, 5, 5, 5, 2], R: [6, 5, 6, 5, 5], S: [3, 4, 2, 1, 6],
+    L: [4, 4, 4, 4, 7], P: [6, 5, 6, 4, 4], ' ': [0] };
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  const dith = (x, y, a) => (BAYER[(y & 3) * 4 + (x & 3)] + .5) / 16 < a;   // ordered dither: 'a' = coverage 0-1
+
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rng = (s) => () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const layer = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
+  const px = (g, c, x, y, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+  const glow = (x, y, a, [lo, hi]) => {   // two-tone dithered light, a = 0..2: soft falloff from a fixed palette
+    if (dith(x, y, a - 1)) px(ctx, hi, x, y); else if (dith(x, y, a)) px(ctx, lo, x, y);
+  };
+  let W, H, y0, sky, far, mid, hud, stars, carX, lampGap, lastTick = -1, nextFlip = 0;
+
+  function text(g, str, x, y, font, cw, colors) {
+    for (const pass of [0, 1]) {   // shadow first, then the letters, so no shadow lands on a letter
+      [...str].forEach((ch, i) => font[ch].forEach((row, r) => {
+        for (let c = 0; c < cw; c++) if (row >> (cw - 1 - c) & 1)
+          px(g, pass ? colors[Math.min(r, colors.length - 1)] : P.shade, x + i * (cw + 1) + c + 1 - pass, y + r + 1 - pass);
+      }));
+    }
+  }
+
+  function strip(seed, L, lo, hi, body, rim, lit) {   // a wrap-around row of buildings
+    const [c, g] = layer(L, H), r = rng(seed), wins = [];
+    for (let x = 0; x < L;) {
+      const w = Math.min(L - x, 7 + (r() * 13 | 0)), h = lo + (r() * (hi - lo) | 0), top = y0 - h;
+      px(g, body, x, top, w, h);
+      if (rim) px(g, rim, x + w - 1, top, 1, h);   // moonlit edge
+      if (r() < .35) px(g, body, x + (w >> 1), top - 2 - (r() * 3 | 0), 1, 5);   // antenna
+      for (let wy = top + 2; wy < y0 - 1; wy += 3) for (let wx = x + 2; wx < x + w - 2; wx += 2) {
+        if (r() > .82) continue;
+        const on = r() < lit, col = lit > .3 ? (on ? P.win[r() * P.win.length | 0] : P.winOff) : (on ? P.farWin : body);
+        wins.push({ x: wx, y: wy, on, col: on ? col : P.win[0] });
+        px(g, col, wx, wy);
+      }
+      x += w + (r() < .25 ? 2 : 0);
+    }
+    return { c, g, wins, L };
+  }
+
+  function build() {
+    y0 = H - 19;   // top of the pavement
+    const land = W > H * 1.2, R = rng(7);
+    [sky] = layer(W, H);
+    const sg = sky.getContext('2d'), img = sg.createImageData(W, H), d = img.data;
+    const mr = land ? 8 : 9, mx = land ? W - 24 : Math.round(W * .72), my = land ? 19 : Math.round(H * .085);
+    const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const SKY = P.sky.map(hex), MOON = hex(P.moon), CR = hex(P.crater), HALO = hex(P.halo);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const f = Math.min(y / y0, 1) * (SKY.length - 1), i = Math.min(f | 0, SKY.length - 2);
+      let c = (BAYER[(y & 3) * 4 + (x & 3)] + .5) / 16 < f - i ? SKY[i + 1] : SKY[i];   // ordered dither between bands
+      const dd = Math.hypot(x - mx + .5, y - my + .5);
+      if (dd < mr) c = [[-3, -2], [2, 1], [-1, 3], [3, -3]].some(([a, b]) => x - mx === a && y - my === b) ? CR : MOON;
+      else if (dd < mr + 2 && (x + y) % 2 === 0) c = HALO;
+      else if (dd < mr + 4 && (x + 2 * y) % 4 === 0) c = HALO;
+      d.set([...c, 255], (y * W + x) * 4);
+    }
+    sg.putImageData(img, 0, 0);
+
+    [hud] = layer(W, H);
+    const hg = hud.getContext('2d'), tw = TITLE.length * 6 - 1, sw = SUB.length * 4 - 1;
+    const tx = land ? Math.round(W * .06) : (W - tw) >> 1, ty = land ? 10 : Math.round(H * .17);
+    text(hg, TITLE, tx, ty, FONT5, 5, P.title);
+    text(hg, SUB, land ? tx : (W - sw) >> 1, ty + 12, FONT3, 3, [P.sub]);
+
+    stars = Array.from({ length: Math.round(W * H / 260) }, () => ({
+      x: R() * W | 0, y: R() * y0 * .55 | 0, ph: R() * 6.28, sp: .4 + R() * .8, big: R() < .06,
+    })).filter((s) => Math.hypot(s.x - mx, s.y - my) > mr + 6 && !(s.y > ty - 3 && s.y < ty + 20 && s.x > tx - 3 && s.x < Math.max(tx + tw, (W + sw) / 2) + 3));
+
+    far = strip(11, 240, Math.round(y0 * .22), Math.round(y0 * .5), P.far, null, .12);
+    mid = strip(23, 320, Math.round(y0 * .14), Math.round(y0 * .38), P.mid, P.rim, .55);
+    carX = Math.round(land ? W * .3 : W * .1);
+    lampGap = land ? 60 : 52;
+  }
+
+  function resize() {
+    const dpr = devicePixelRatio || 1, pw = innerWidth * dpr, ph = innerHeight * dpr;
+    const S = Math.max(1, Math.floor(Math.min(pw, ph) / ART));   // WHOLE device pixels per art pixel: crisp squares
+    W = Math.ceil(pw / S); H = Math.ceil(ph / S);
+    cv.width = W; cv.height = H;
+    cv.style.width = W * S / dpr + 'px'; cv.style.height = H * S / dpr + 'px';
+    build(); lastTick = -1;
+  }
+
+  const tile = (s, off) => { for (let x = -(off % s.L); x < W; x += s.L) ctx.drawImage(s.c, x, 0); };
+
+  function frame(t) {
+    const tick = Math.floor(t * TPS);
+    if (tick === lastTick) return;
+    lastTick = tick;
+    if (!reduce && t > nextFlip) {   // one window at a time switches: a living city, not a blinking one
+      const w = mid.wins[Math.random() * mid.wins.length | 0];
+      w.on = !w.on; px(mid.g, w.on ? w.col : P.winOff, w.x, w.y);
+      nextFlip = t + .25 + Math.random() * .5;
+    }
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(sky, 0, 0);
+    stars.forEach((s) => {   // smooth timing, stepped brightness: 3 palette levels, never on/off
+      const lv = Math.max(0, Math.min(2, Math.floor((Math.sin(t * s.sp + s.ph) + 1) * 1.5)));
+      px(ctx, P.star[lv], s.x, s.y);
+      if (s.big && lv === 2) { px(ctx, P.star[0], s.x - 1, s.y, 3, 1); px(ctx, P.star[0], s.x, s.y - 1, 1, 3); px(ctx, P.star[2], s.x, s.y); }
+    });
+    tile(far, Math.floor(tick * SPEED.far));
+    tile(mid, Math.floor(tick * SPEED.mid));
+
+    const road = Math.floor(tick * SPEED.road);
+    px(ctx, P.walk, 0, y0, W, 3); px(ctx, P.walkTop, 0, y0, W, 1); px(ctx, P.curb, 0, y0 + 3, W, 1);
+    px(ctx, P.road, 0, y0 + 4, W, H - y0 - 4);
+    for (let x = -(road % 12); x < W; x += 12) px(ctx, P.dash, x, y0 + 10, 5, 1);
+    for (let lx = -(road % lampGap) + lampGap - 6; lx < W + 8; lx += lampGap) {   // street lamps, road speed
+      for (let y = y0 - 24; y < y0 + 6; y++) for (let x = lx - 9; x <= lx + 14; x++) {   // light as dither, not alpha
+        if (y >= y0) glow(x, y, 1.3 * (1 - Math.hypot((x - lx - 2.5) / 10, (y - y0 - 1.5) / 3.5)), P.pool);
+        else glow(x, y, 1.25 * (1 - Math.hypot(x - lx - 2.5, (y - y0 + 16.5) * 1.15) / 7.5) ** 1.5, P.glow);
+      }
+      px(ctx, P.post, lx, y0 - 18, 1, 19); px(ctx, P.post, lx, y0 - 18, 4, 1); px(ctx, P.lamp, lx + 2, y0 - 17, 2, 1);
+    }
+
+    const bob = (tick % 9 === 0) ? 1 : 0, cy = y0 + 4 + bob, fx = carX + 28;
+    for (let x = 0; x < 34; x++) for (let y = -Math.floor(x * .12); y <= Math.floor(x * .34); y++) {   // headlight beam
+      const edge = Math.abs(y - x * .11) / (x * .23 + 1);   // 0 on the beam's axis, 1 at its edge
+      if (cy + 5 + y < H) glow(fx + x, cy + 5 + y, 1.7 * (1 - x / 34) ** .8 * (1 - edge * .75), P.beam);
+    }
+    px(ctx, CAR.t, carX - 1, cy + 5); px(ctx, CAR.t, carX - 3, cy + 5);   // tail-light spill, dithered
+    CAR_ROWS.forEach((row, r) => [...row].forEach((ch, c) => { if (ch !== '.') px(ctx, CAR[ch], carX + c, cy + r); }));
+    const spin = (tick >> 1) & 1;
+    for (const wx of [carX + 6, carX + 21]) for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const q = dx * dx + dy * dy;   // wheel: tyre, hub, and one spoke pixel that steps round
+      if (q > 10) continue;
+      const spoke = spin ? (dx === 1 && dy === -1) || (dx === -1 && dy === 1) : (dx === -1 && dy === -1) || (dx === 1 && dy === 1);
+      px(ctx, q <= 2 ? (spoke || q === 0 ? '#c9cbe0' : '#5d6080') : '#06060e', wx + dx, cy + 8 + dy);
+    }
+    ctx.drawImage(hud, 0, 0);
+  }
+
+  resize();
+  addEventListener('resize', () => { resize(); if (reduce) frame(3.3); });
+  if (reduce) { frame(3.3); return; }
+  let t0 = null;
+  requestAnimationFrame(function loop(now) {
+    if (t0 === null) t0 = now;
+    frame((now - t0) / 1000);
+    requestAnimationFrame(loop);
+  });
+})();
+</script>
+</body>
+</html>

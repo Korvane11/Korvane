@@ -1,0 +1,18 @@
+--- .claude/settings.json	2026-10-11 23:53:56.336820699 +0000
++++ skill-updates/2026-10-13/_target-files/.claude/settings.json.new	2026-10-13 06:31:42.010740876 +0000
+@@ -11,6 +11,15 @@
+             "statusMessage": "Installing Playwright CLI"
+           }
+         ]
++      },
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "echo 'Session start (new or resumed): before any other tool call, invoke the task-observer skill and run its Session Start Protocol, as CLAUDE.md (Task observer) says.'",
++            "timeout": 10
++          }
++        ]
+       }
+     ]
+   }

@@ -1,0 +1,157 @@
+<!doctype html>
+<!--
+STYLE: Neon glow
+LOOK: A pink neon sign on a dark brick wall at night: bent glass tubes with a white-hot core and layered glow, one stuttering power-on, then a steady light with a barely-there hum that tints the bricks around and below it.
+BEST FOR: nightlife, bars, music, gaming, a 'we're open' moment
+AVOID WHEN: daytime, corporate or medical brands
+PAIRS WITH: rounded monoline lettering, one or two tube colours, dark textured walls
+TECHNIQUE: Letters are hand-drawn monoline SVG paths (a real tube is one line, never an outlined font glyph), stroked four times with <use>: wide blurred halo, tight blurred bloom, coloured tube, near-white core. The same paths stroked faint and grey are the unlit glass you see before power-on. The wall is a generated SVG brick tile at full "lit" brightness; a fixed layer with mix-blend-mode: multiply darkens it to near-black except where a pink radial pool (the light) sits, so lit bricks keep their mortar shadows like real light does. The ignition is a stepped timeline per word driven by rAF time; afterwards only compositor-friendly opacity moves (the hum).
+KNOBS: --neon / --tube / --core (halo, tube and core colours: change all three together); --brick (wall scale); IGNITE (ms -> level steps per word: the flicker script); WARM_MS (gas warm-up after ignition); HUM (0.02-0.04: steady-state shimmer, 0 to switch off); halo and bloom stdDeviation in the SVG (glow width); the .beam gradients (how far the light spills and how much reaches the wall below).
+COST: Two SVG blur filters, but they re-render only while the sign flickers in the first ~1.5 s; after that the hum changes only opacity on the sign and the light layer, which the compositor handles. Cheap on phones.
+REDUCED MOTION: The sign appears already lit and steady, with the wall lit and the caption shown; no flicker, no hum.
+PITFALLS: Neon from a stroked or outlined font (-webkit-text-stroke) gives double, broken outlines: use single-line paths with round caps. One big box-shadow/text-shadow glow looks boxy and flat: stack a wide faint halo, a tight bloom and a white core. Continuous random blinking reads as broken and tacky: flicker once on power-on, then hold. A glow that doesn't touch the wall looks pasted on: the multiply light layer makes the bricks pick up the colour.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon glow</title>
+<style>
+  :root { --neon: #ff2b6e; --tube: #ff7ba3; --core: #fff2f6; --brick: 1; --cx: 50vw; --cy: 45vh; --sw: 700px; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; background: #0a0809; }
+  .wall, .light, .haze { position: fixed; inset: 0; pointer-events: none; }
+  .wall { background-color: #3a3230; background-size: calc(488px * var(--brick)) calc(168px * var(--brick)); }
+  .light { mix-blend-mode: multiply; background: #120e10; }     /* ambient: what the wall gets with the sign off */
+  .beam, .air {
+    position: absolute; left: var(--cx); top: var(--cy); transform: translate(-50%, -50%);
+    opacity: 0; will-change: opacity;
+  }
+  .beam {
+    width: calc(var(--sw) * 2); height: calc(var(--sw) * 1.5);
+    background:
+      radial-gradient(40% 26% at 50% 68%, rgba(255, 120, 150, .5), rgba(255, 120, 150, 0)),            /* spill on the wall below */
+      radial-gradient(closest-side, rgba(255, 214, 224, 1) 0%, rgba(255, 128, 160, .85) 24%, rgba(190, 48, 90, .38) 52%, rgba(120, 20, 52, .08) 78%, rgba(120, 20, 52, 0) 100%);
+  }
+  .haze { mix-blend-mode: screen; }
+  .air {
+    width: calc(var(--sw) * 1.5); height: calc(var(--sw) * .95);
+    background: radial-gradient(closest-side, rgba(255, 50, 110, .2), rgba(255, 50, 110, .07) 55%, rgba(255, 50, 110, 0));
+  }
+  main {
+    position: fixed; inset: 0; display: grid; place-content: center; justify-items: center;
+    gap: clamp(8px, 2vh, 20px); padding: 16px;
+  }
+  .sign { width: min(88vw, 760px, 108vh); height: auto; overflow: visible; will-change: opacity; }
+  .glass use { stroke: rgba(255, 236, 240, .09); stroke-width: 11; }
+  .glass use + use { stroke: rgba(255, 255, 255, .1); stroke-width: 2.2; }
+  .lit { opacity: 0; }
+  .halo { stroke: var(--neon); stroke-width: 20; opacity: .85; filter: url(#halo); }
+  .bloom { stroke: var(--neon); stroke-width: 11; opacity: .9; filter: url(#bloom); }
+  .tube { stroke: var(--tube); stroke-width: 8; }
+  .core { stroke: var(--core); stroke-width: 3; }
+  .caption {
+    font: 500 clamp(11px, 1.05vw, 14px)/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    letter-spacing: .32em; text-transform: uppercase; text-align: center; color: rgba(255, 228, 234, .8);
+    opacity: 0; transform: translateY(6px); transition: opacity 1.4s ease, transform 1.4s cubic-bezier(.2, .7, .2, 1);
+  }
+  .caption.on { opacity: 1; transform: none; }
+  .caption i { font-style: normal; }
+  @media (max-width: 600px) { :root { --brick: .7; } .caption i { display: none; } .caption span { display: block; } }
+</style>
+</head>
+<body>
+<div class="wall" id="wall"></div>
+<div class="light"><div class="beam" id="beam"></div></div>
+<div class="haze"><div class="air" id="air"></div></div>
+<main>
+  <svg class="sign" id="sign" viewBox="0 30 700 440" role="img" aria-label="Open late">
+    <defs>
+      <g id="w1" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M66 140a60 60 0 1 0 120 0a60 60 0 1 0-120 0"/>
+        <path d="M222 80v185M222 140a60 60 0 1 0 120 0a60 60 0 1 0-120 0"/>
+        <path d="M378 140h120A60 60 0 1 0 480.4 182.4"/>
+        <path d="M534 200V80m0 50a50 50 0 0 1 100 0v70"/>
+      </g>
+      <g id="w2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M134 225v161q0 24 22 24"/>
+        <path d="M192 350a60 60 0 1 0 120 0a60 60 0 1 0-120 0M312 290v120"/>
+        <path d="M376 250v136q0 24 24 24M348 290h62"/>
+        <path d="M446 350h120A60 60 0 1 0 548.4 392.4"/>
+      </g>
+      <filter id="halo" filterUnits="userSpaceOnUse" x="-60" y="-30" width="820" height="560"><feGaussianBlur stdDeviation="16"/></filter>
+      <filter id="bloom" filterUnits="userSpaceOnUse" x="-60" y="-30" width="820" height="560"><feGaussianBlur stdDeviation="4.5"/></filter>
+    </defs>
+    <g class="glass"><use href="#w1"/><use href="#w1" transform="translate(-1.6 -1.6)"/><use href="#w2"/><use href="#w2" transform="translate(-1.6 -1.6)"/></g>
+    <g class="lit" id="lit1"><use href="#w1" class="halo"/><use href="#w1" class="bloom"/><use href="#w1" class="tube"/><use href="#w1" class="core"/></g>
+    <g class="lit" id="lit2"><use href="#w2" class="halo"/><use href="#w2" class="bloom"/><use href="#w2" class="tube"/><use href="#w2" class="core"/></g>
+  </svg>
+  <p class="caption" id="caption"><span>Kitchen until 2 a.m.</span><i> · </i><span>Walk-ins welcome</span></p>
+</main>
+<script>
+// Power-on script: [ms, level] steps per word. Stepped on purpose: a ballast catching is abrupt.
+const IGNITE = [
+  [[0, 0], [480, .65], [530, 0], [640, 0], [690, .9], [730, .18], [790, .82]],
+  [[0, 0], [760, .35], [790, 0], [930, .8], [965, .1], [1040, .82]],
+];
+const WARM_MS = 900, HUM = .03;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (id) => document.getElementById(id);
+const lit = [$('lit1'), $('lit2')], sign = $('sign'), beam = $('beam'), air = $('air'), caption = $('caption');
+
+(function brickTile() {                                       // 4 x 4 staggered bricks, varied albedo, stitched noise
+  const tones = ['#6c4c45', '#5f433d', '#76554c', '#664741', '#5a3f3a', '#704f47', '#634540'];
+  let r = '';
+  for (let row = 0; row < 4; row++) for (let k = -1; k < 5; k++) {
+    const x = k * 122 + (row % 2) * 61, tone = tones[(row * 5 + ((k + 4) % 4) * 3) % tones.length];   // a brick cut by the tile edge keeps one tone
+    r += `<rect x="${x}" y="${row * 42 + 3}" width="116" height="36" rx="2" fill="${tone}"/><rect x="${x}" y="${row * 42 + 3}" width="116" height="36" rx="2" fill="url(#f)"/>`;
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="488" height="168"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 -.05"/></filter><linearGradient id="f" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".25" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>${r}<rect width="488" height="168" filter="url(#n)"/></svg>`;
+  $('wall').style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+})();
+
+function measure() {                                          // centre the light pool on the sign
+  const b = sign.getBoundingClientRect(), s = document.documentElement.style;
+  s.setProperty('--cx', b.left + b.width / 2 + 'px');
+  s.setProperty('--cy', b.top + b.height * .48 + 'px');
+  s.setProperty('--sw', b.width + 'px');
+}
+
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+function level(seq, ms) {
+  const end = seq[seq.length - 1];
+  if (ms >= end[0]) return end[1] + (1 - end[1]) * easeOut(Math.min(1, (ms - end[0]) / WARM_MS));
+  let v = 0;
+  for (const [t, l] of seq) if (ms >= t) v = l;
+  return v;
+}
+
+let t0 = 0, done = false;
+function frame(now) {
+  if (!t0) t0 = now;
+  const ms = now - t0;
+  if (!done) {
+    const a = level(IGNITE[0], ms), b = level(IGNITE[1], ms);
+    lit[0].style.opacity = a; lit[1].style.opacity = b;
+    beam.style.opacity = air.style.opacity = ((a + b) / 2).toFixed(3);   // the wall flickers with the tubes
+    if (ms > 1200) caption.classList.add('on');
+    done = ms > 1040 + WARM_MS;
+  } else {
+    // steady hum: two slow, unrelated sines, 3% deep at most; opacity only, so no filter re-renders
+    const h = 1 - HUM * (.5 + .5 * Math.sin(ms * .0047)) * (.55 + .45 * Math.sin(ms * .0011 + 1.3));
+    sign.style.opacity = h.toFixed(4);
+    beam.style.opacity = air.style.opacity = (1 - (1 - h) * 1.6).toFixed(4);
+  }
+  requestAnimationFrame(frame);
+}
+
+addEventListener('resize', measure);
+measure();
+if (reduce) {
+  lit.forEach((g) => (g.style.opacity = 1));
+  beam.style.opacity = air.style.opacity = 1;
+  caption.style.transition = 'none'; caption.classList.add('on');
+} else requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 ---
 id: 10
 title: "'Make the logo look better' for a client with an existing raster badge: the design skill's logo route only generates new logos, so cleaning up the existing one had no procedure"
-status: open
+status: actioned
 type: open-source
 skill: [design]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "logo work for an existing client brand: vectorising and small-size varian
 date: 2026-10-12
 session_context: "SimNow site: the owner asked to 'make the company logo look better'. SimNow's logo is a 585x330 raster oval badge (an F1 car behind the SIMNOW lettering), shown at 30 px tall in the nav, where neither the car nor the name could be read"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-13
+resolution: "Staged in prompts/site-blueprint.md (patch staged at skill-updates/2026-10-13/_target-files/prompts/site-blueprint.md.patch) ('Their logo is theirs. Present it better first...'). design and its references/logo-design.md: not edited, foreign-maintained (claudekit)."
 reference: "sites/simnow/render/trace_logo.py; sites/simnow/assets/simnow-wordmark.svg"
 commands_verified: "run: trace_logo.py traced the badge's own lettering into a 25 KB SVG (colour scores per pixel, 8x bicubic upsample, Gaussian blur, potrace); rendered at 16x beside the original and at 20-28 px, where it read clearly and the badge did not; run: potracer's Bitmap fills the False pixels of a numpy mask, so the first trace came out inverted"
 ---
