@@ -41,7 +41,10 @@ heights above the surface and compares the result with those heights, so
 it read the approximation's error as occlusion (and the 0.8 marching margin
 in the scene function biased it everywhere). Fixed with an exact ellipse
 distance (three iterations of a trig-free nearest-point solve) and the
-exact flag set while occlusion samples.
+exact flag set while occlusion samples. The profile then changed again, to
+a power curve fitted to the photo, whose distance is not exact; the
+outside's occlusion was limited to the handle (see 0023), which a convex
+outside loses nothing by.
 
 **Suggested improvement:** For the candidate skill, in the post effects /
 lighting section for offline raymarched renders:

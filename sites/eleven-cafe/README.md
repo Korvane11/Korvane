@@ -87,10 +87,10 @@ site).
 
 1. **The scene** (`render/pour.html`, a WebGL raymarcher rendered offline
    frame by frame): that mug, a wide round bowl of white, finely speckled,
-   glossy stoneware, widest at the rim and half as tall, on a small flat
-   base, with a thin raw tan lip and a narrow loop handle (proportions
-   measured on the photo), on a walnut counter by a tall window, late in
-   the day. Low amber
+   glossy stoneware, widest at the rim and half as tall, tapering to a
+   small flat base, with a thin raw tan lip and a tall loop handle
+   (proportions measured on the photo), on a walnut counter by a tall
+   window, late in the day. Low amber
    sun comes through the panes in stripes, the air is hazy with it, and
    everything but the cup is in soft focus. The light comes up from black
    (0.75 s), espresso pours in from above, crema rises, the stream stops
@@ -251,20 +251,24 @@ Depth is kept as the nearest value over the passes (an average at the
 cup's edge would belong to neither the cup nor the background, and the soft
 focus would spray the edge into the background).
 
-The cup (`sdSide`, `sdHandle`): a flat base of radius `RB` and a quarter
-ellipse up to the rim (`RR`, height `H`), measured on the owner's photo;
-the wall is an even offset of the outside (`sdCav`), and the coffee fills
-that cavity up to `LMAX`.
+The cup (`rOut`, `sdSide`, `sdHandle`) follows the owner's photo, measured
+on it with a grid: the rim `RR` (about 10 cm across), the height `H` (0.49
+of the rim's width), a flat base `RB` (0.44 of the rim), and a side whose
+radius rises from the base as `1 - (1 - h)^3.15` (every measured point gave
+an exponent between 3.0 and 3.3). The handle is a tilted oval loop of a flat
+strap, about 3 cm tall and 1.7 cm out from the rim. The wall is an even
+offset of the outside (`sdCav`), and the coffee fills that cavity up to
+`LMAX`. Compare any change with the photo side by side.
 
-Shadow and occlusion rays read the cup's exact distance (`gExact`): the
-ellipse distance is solved exactly, and neither the bounding cylinder's
-distance nor the 0.8 marching margin is used. Both effects read the
-distance's size, so an approximate one shows: the bound drew a false,
-saw-toothed penumbra on the counter, and an approximate ellipse put rings
-into the occlusion. The bowl's outside takes shadow only from the handle
-(`gOnlyHandle`): rays grazing the bowl, which is widest at the rim, banded
-its own shadow, and the wrapped light already darkens it past the
-terminator. Shadow rays are jittered per pass.
+Shadow and occlusion rays read the true distance (`gExact`): never the
+bounding cylinder's, nor the 0.8 marching margin. Both effects read the
+distance's size, so a stand-in shows: the bound drew a false, saw-toothed
+penumbra on the counter, and an approximate ellipse distance put rings
+into the occlusion. The bowl's outside takes shadow and occlusion only
+from the handle (`gOnlyHandle`): rays grazing the bowl, which is widest at
+the rim, banded its own shadow, the wrapped light already darkens it past
+the terminator, and a convex outside occludes nothing of itself. Shadow
+rays are jittered per pass.
 
 The coffee is filled close to the rim (`LMAX`): the camera is low, and with
 a wide bowl the near rim hides the far wall's lower part, so a lower level

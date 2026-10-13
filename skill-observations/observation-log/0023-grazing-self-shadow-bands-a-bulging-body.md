@@ -28,7 +28,10 @@ the passes would average the bands out, only softened them.
 The bowl's outside did not need that shadow: the wrapped diffuse term
 already darkens it past the terminator, and the smooth version (self-shadow
 off) looked right. What did need shadow was the inside (the rim shades the
-far wall and the coffee) and anything the handle covers.
+far wall and the coffee) and anything the handle covers. The same flag
+later served the occlusion too: a convex outside occludes nothing of
+itself, so its occlusion rays need only the handle, and they stop reading
+an inexact distance there.
 
 **Suggested improvement:** For the candidate skill, under lighting for
 raymarched renders: when a smooth, convex-ish object shows banding along
