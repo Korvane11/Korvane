@@ -182,25 +182,26 @@ headline with its buttons (the first two lines are left out).
 
 ## Checked
 
-2026-10-13, in Chromium, desktop (1440 x 900) and phone (390 x 844):
-`tests/behave.cjs`, 65 of 65, no page errors. Serve the site on port 8790,
-then `NODE_PATH=$(npm root -g) node tests/behave.cjs` (or pass the live
-address). `PAGES_ONLY=1` leaves out the opening; `VIEWS=desk` or `VIEWS=mob`
-times the opening in one layout. The live site passed 65 of 65 too, on the
-second run: the first, a minute after the deploy, timed out waiting for
-the pour (a cold first request through this container's proxy); a trace
-right after showed the video playing 0.76 s after load. A stalled wait
-now reports a failed check instead of stopping the run.
+2026-10-13, in Chromium, desktop (1440 x 900) and phone (390 x 844), with
+the stoneware mug rendered: `tests/behave.cjs`, 71 of 71, no page errors.
+Serve the site on port 8790, then `NODE_PATH=$(npm root -g) node
+tests/behave.cjs` (or pass the live address). `PAGES_ONLY=1` leaves out the
+opening; `VIEWS=desk` or `VIEWS=mob` times the opening in one layout. A
+stalled wait reports a failed check instead of stopping the run.
 
-- The opening, both layouts: the pour shows through an opening in the
-  dark wall with nothing else on screen; the site opens about 3.55 s in;
-  the steam loop takes over with no black frame; the pause button works.
-- At 13 screen sizes, from 360 x 640 to 2560 x 1080: the cup sits inside
-  the opening with 16 px or more to spare, and the two videos are in step
-  at the hand-over.
+- The opening, both layouts: the pour plays on a dark screen with nothing
+  else showing; the nav and the first line come in about 0.65 s in; the
+  steam loop takes over at the end with no black frame; the pause button
+  works; scrolling, the scene stays while the second line and then the
+  headline (with both buttons tappable) take over; the page carries on
+  after it.
+- At 13 screen sizes, from 360 x 640 to 2560 x 1080: the headline and
+  buttons stay 16 px or more clear of the cup (its box measured from a
+  cup-only mask render) and on screen.
 - When it plays: on opening and refresh; not when coming back to home from
   another page; it does play when home is first reached from another page.
-- No video, or one that takes 6 s: the still comes up within 3 s.
+- No video, or one that takes 6 s: the still comes up within 3 s, with the
+  words and the nav.
 - Reduced motion and no JavaScript, every page: nothing hidden, no video.
 - Open-now status and today's row at seven moments of the week (Tucson
   time).
@@ -213,15 +214,14 @@ now reports a failed check instead of stopping the run.
 
 Each check written for a bug was first seen failing on the code before
 the fix: the black frame at the hand-over, the still left hidden after a
-failed video, the cup 7 px from the opening's edge at 1024 x 768, the
-videos out of step, and the font check (with the Vietnamese subset
-blocked).
+failed video, the words over the cup on a short phone, the videos out of
+step, and the font check (with the Vietnamese subset blocked).
 
 ## Rendering the pour again
 
 `bash render/render_all.sh <frames dir>` renders every frame in headless
-Chromium (SwiftShader on 4 cores: about 11 s a pour frame at 1600 x 900
-with 4 samples, about 8 s a steam frame with 2; about 1.5 hours for
+Chromium (SwiftShader on 4 cores: about 8.5 s a pour frame at 1600 x 900
+with 4 samples, 5-8 s a steam frame with 2; about an hour for
 everything), then `bash render/encode.sh <frames dir>` writes
 `assets/pour/` (add `l` or `p` to encode one layout), and
 `node render/make_og.cjs` the link-preview image from the new still.
