@@ -1,5 +1,5 @@
 ---
-name: animation-styles
+name: "animation-styles"
 description: "Twenty web animation and art styles, each with a tested, dependency-free demo to lift code from: particles, liquid morph, holographic foil, neon glow, wireframe 3D, glassmorphism, kinetic type, isometric, clay 3D, ASCII art, gradient mesh, comic book, split-flap, retro VHS, halftone, Bauhaus, pixel art, blueprint, art deco and neo-brutalism. Use it whenever someone names one of these looks, asks for a crazy, eye-catching or 'wow' animation, an animated hero, background, logo, headline or loading moment, or wants a page or component to feel retro, futuristic, techy, playful, luxurious or raw, even if they never say 'animation style'. Also use it to choose a style that fits a brand before building one."
 license: MIT
 metadata:
@@ -38,7 +38,9 @@ This skill needs no network: nothing here fetches anything.
    right on a 390px phone and on desktop, a finished still frame with
    reduced motion, and it actually moves. `scripts/check-demos.cjs` does
    this for the demos (it needs Node, Playwright and Chromium); reuse its
-   approach for the project's own page.
+   approach for the project's own page. Measure phone overflow against
+   `document.documentElement.clientWidth`, never `innerWidth`: under phone
+   emulation a too-wide page widens `innerWidth` with it.
 
 ## The twenty
 

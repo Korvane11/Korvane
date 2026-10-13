@@ -52,8 +52,9 @@ def main():
     ]
     for p, h in entries:
         n = p.name[:2]
-        anchor = f'{n}-' + re.sub(r'[^a-z0-9]+', '-', h['STYLE'].lower()).strip('-')
-        lines.append(f'- [{n} {h["STYLE"]}](#{anchor})')
+        # plain entries, the heading text exactly: index checkers match an
+        # entry against its heading as text and don't read link syntax
+        lines.append(f'- {n} {h["STYLE"]}')
     for p, h in entries:
         lines += ['', f'## {p.name[:2]} {h["STYLE"]}', '', f'Demo: `assets/demos/{p.name}` · still: `assets/demos/thumbs/{p.stem}.jpg`', '']
         for label, key in SHOWN:

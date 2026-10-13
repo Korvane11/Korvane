@@ -2,7 +2,8 @@
 // verified when they were written:
 //   - no page errors and no console errors
 //   - it animates: two desktop frames 1 s apart differ
-//   - no horizontal overflow on a 390px phone
+//   - no horizontal overflow on a 390px phone (measured against the screen,
+//     not innerWidth: under phone emulation wide content widens innerWidth too)
 //   - with prefers-reduced-motion the frame is finished, not blank
 //
 //   NODE_PATH=$(npm root -g) node scripts/check-demos.cjs [out-dir] [--thumbs] [NN ...]
@@ -57,7 +58,14 @@ const files = fs.readdirSync(DEMOS)
 
     const phone = await open({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     await phone.page.screenshot({ path: path.join(out, `${name}-mob.png`) });
-    const overflow = await phone.page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+    // innerWidth is no use here: with isMobile emulation, content wider than the
+    // screen widens the layout viewport, so innerWidth grows with it and a
+    // scrollWidth > innerWidth test passes a page that overflows. Compare with
+    // the screen (clientWidth), and treat a widened layout viewport as overflow.
+    const overflow = await phone.page.evaluate(() => {
+      const de = document.documentElement;
+      return de.scrollWidth > de.clientWidth || innerWidth !== de.clientWidth;
+    });
     await phone.ctx.close();
 
     const still = await open({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });

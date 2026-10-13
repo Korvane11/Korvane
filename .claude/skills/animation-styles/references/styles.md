@@ -7,26 +7,26 @@ to tune, what it costs, what reduced motion shows, and what makes it look cheap.
 
 ## Contents
 
-- [01 Particles](#01-particles)
-- [02 Liquid morph](#02-liquid-morph)
-- [03 Holographic](#03-holographic)
-- [04 Neon glow](#04-neon-glow)
-- [05 Wireframe 3D (ink on paper)](#05-wireframe-3d-ink-on-paper)
-- [06 Glassmorphism](#06-glassmorphism)
-- [07 Kinetic type](#07-kinetic-type)
-- [08 Isometric](#08-isometric)
-- [09 Clay 3D](#09-clay-3d)
-- [10 ASCII art](#10-ascii-art)
-- [11 Gradient mesh](#11-gradient-mesh)
-- [12 Comic book](#12-comic-book)
-- [13 Split-flap](#13-split-flap)
-- [14 Retro VHS](#14-retro-vhs)
-- [15 Halftone](#15-halftone)
-- [16 Bauhaus](#16-bauhaus)
-- [17 Pixel art](#17-pixel-art)
-- [18 Blueprint](#18-blueprint)
-- [19 Art deco](#19-art-deco)
-- [20 Neo-brutalism](#20-neo-brutalism)
+- 01 Particles
+- 02 Liquid morph
+- 03 Holographic
+- 04 Neon glow
+- 05 Wireframe 3D (ink on paper)
+- 06 Glassmorphism
+- 07 Kinetic type
+- 08 Isometric
+- 09 Clay 3D
+- 10 ASCII art
+- 11 Gradient mesh
+- 12 Comic book
+- 13 Split-flap
+- 14 Retro VHS
+- 15 Halftone
+- 16 Bauhaus
+- 17 Pixel art
+- 18 Blueprint
+- 19 Art deco
+- 20 Neo-brutalism
 
 ## 01 Particles
 

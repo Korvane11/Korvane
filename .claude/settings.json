@@ -11,6 +11,15 @@
             "statusMessage": "Installing Playwright CLI"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Session start (new or resumed): before any other tool call, invoke the task-observer skill and run its Session Start Protocol, as CLAUDE.md (Task observer) says.'",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }

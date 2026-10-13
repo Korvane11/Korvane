@@ -39,8 +39,16 @@ Facts
   Search-engine summaries go stale; don't use them as a source.
 - A fact you can't confirm becomes a visible placeholder and a question to
   the owner, never a plausible guess.
-- Carry over everything their current site offers (booking, contact routes,
-  FAQ, legal pages), or say plainly what is left out and why.
+- If their site can't be opened directly, try search and web archives
+  before asking the owner to change anything, and treat what they return
+  as a draft to confirm, never as fact. A site built as a web app needs
+  rendering in a browser; a plain fetch returns an empty shell.
+- Carry over everything their current site offers that works and is
+  theirs to move (booking, contact routes, FAQ, legal pages), and say
+  plainly what is left out and why. Check where each photo, video and font
+  came from: a site builder's stock library usually can't leave the
+  platform. Run every booking, form and checkout flow end to end before
+  keeping it; a button that leads nowhere is not a feature to carry over.
 
 The owner's words
 - Write their requests into CLAUDE.md in their own words, with the date.
@@ -48,6 +56,19 @@ The owner's words
   spec for the next attempt.
 - Material they sent to show their taste is not material for the site
   unless they say so. Ask when it's unclear.
+- Write the experience they describe as numbered beats, in their words, in
+  the site README, and name what delivers each one. After any change
+  underneath (a new clip, a new structure, another library), re-check
+  every beat in a browser.
+- Before reworking a site they have already seen, list what they approved
+  (the opening, the hero, a signature sequence, the menu labels). Keep
+  those as they are unless the request names them, and report each as
+  unchanged or changed. "Make it better" is not a request to change them.
+- When the brief names a specific real thing (a car, a product, a
+  building), check the asset against their reference before any long
+  build, and ask them for the exact asset first.
+- Their logo is theirs. Present it better first (size, sharpness, a small
+  version for the menu); redesigning it is their call.
 - Credit any third-party footage or images in the footer, and record the
   permission in the site README.
 
@@ -61,9 +82,21 @@ Build
   JavaScript off (content readable, links live).
 - Large media is compressed and has a poster frame. The first screen stays
   fast on a phone connection.
+- An intro starts on the first frame the browser can play (call play() at
+  once, start on the first `playing` event), falls back to a still after
+  2 to 3 s, and has no loader, label or skip button unless the brief asks
+  for one.
 - Basics that get checked, not just added: a title and description per
   page, an absolute og:image with og:url and a canonical link, a square
   favicon, LocalBusiness structured data that matches the visible facts.
+  Check the link preview from the address people actually share,
+  following any redirect.
+- Checks that count, in a browser: every main control hit-tested at its
+  centre at phone and desktop width, with the menu open and closed, plus
+  screenshots, because a layer can dim a control without blocking it;
+  phone overflow measured against `document.documentElement.clientWidth`,
+  not `innerWidth`; email forms checked by reading the mailto address they
+  open. A check counts once you have seen it fail on a broken case.
 
 Honesty in reports
 - Say "done" only for what you opened and checked in a browser this
