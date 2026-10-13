@@ -135,6 +135,26 @@ The main ones:
 - Setup: `claude-automation-recommender` (Anthropic's Claude Code Setup
   plugin) for recommending hooks, skills, MCP servers and subagents.
 - `task-observer`: see below.
+- `animation-styles` (built here, 2026-10-12/13): twenty web animation styles
+  from a reel's list (particles to neo-brutalism), each a tested,
+  dependency-free demo in `assets/demos/`; notes in `references/styles.md`
+  are generated from the demo headers (`scripts/build-reference.py`), and
+  `scripts/check-demos.cjs` checks them in Chromium. Still to do: take the
+  gallery thumbnails from the reduced-motion stills (two are mid-animation),
+  one trial run, then package it as a .skill file for the owner's Claude app.
+
+## Plugins
+
+Installed on the owner's claude.ai account on 2026-10-13, from a "top 5
+plugins" video: Superpowers (obra), caveman (short, terse replies; turn it
+off if it gets in the way of explaining things to the owner),
+claude-code-setup (its skill is also in `.claude/skills/` as
+`claude-automation-recommender`) and claude-security (Anthropic's scanner).
+Account plugins load when a session starts, not mid-session. Copying a
+plugin's skills into a running session was refused by the auto-mode
+classifier (untrusted code), so don't retry that; use a new session.
+OmniRoute, also in that video, was not installed (Working rules: no API
+proxies).
 
 ## Task observer
 
