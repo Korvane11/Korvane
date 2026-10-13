@@ -49,3 +49,5 @@
 2026-10-12 21:28 [Korvane] session-start scan: files=11 parsed=11 principles=0
 2026-10-12 21:28 loaded skill-creator — 0 open observations
 2026-10-13 01:35 [Korvane] flush after classifier denial (copying plugin skills): no pending observations
+2026-10-13 01:37 loaded task-observer — 1 open observations
+2026-10-13 01:37 [Korvane] session-start scan: files=11 parsed=11 principles=0
