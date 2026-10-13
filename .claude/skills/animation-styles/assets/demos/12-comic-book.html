@@ -2,6 +2,9 @@
 <!--
 STYLE: Comic book
 LOOK: A printed comic page: cream newsprint, thick ink panel borders, flat process colours shaded with halftone dots, speed lines, and a "POW!" burst that slams in with a snappy overshoot after the panels land one by one.
+BEST FOR: events, games, playful announcements, kids' brands
+AVOID WHEN: serious, premium or minimal brands
+PAIRS WITH: heavy italic display type, flat primaries, black ink outlines
 TECHNIQUE: CSS grid of panels with 4px ink borders. Halftone shading is drawn once per resize into a canvas per panel (dots on a rotated grid, radius from a coverage function: r = cell * sqrt(coverage / pi)). Speed lines are tapered wedges on one canvas, redrawn each frame around the burst. The burst is an SVG star polygon; panels, burst and balloon animate with transform/opacity using back-out easing, then a short damped "punch" repeats.
 KNOBS: --paper --ink --red --yellow --blue (the process palette); CELL (halftone dot pitch, px); SCREEN (dot screen angle); LINES (speed-line count); PUNCH_EVERY (seconds between punches); the backOut overshoot (2.8 for the burst, 1.4 for panels).
 COST: Low. Halftone canvases redraw only on resize; per frame it is ~80 canvas wedges plus a few transforms. Fine on phones.

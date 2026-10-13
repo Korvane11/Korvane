@@ -2,6 +2,9 @@
 <!--
 STYLE: Holographic
 LOOK: A dark foil card that catches the light: a pastel iridescent sheen and a soft specular glare slide across it as it tilts, over fine diffraction lines. It follows the pointer and sways on its own on touch screens or before any pointer input.
+BEST FOR: a membership or ticket card, a product badge, a pricing tier
+AVOID WHEN: the whole page: foil works on one object, not as a background
+PAIRS WITH: a clean grotesk, dark neutral surroundings so the foil is the only colour
 TECHNIQUE: One element, four stacked layers sharing a few CSS custom properties. JS eases a 2D "light" position (pointer, or a slow Lissajous sway) and writes --rx/--ry (3D tilt), --mx/--my (glare centre) and --pow (how hard the light hits). The foil is a repeating pastel gradient in color-dodge whose background-position slides with the tilt and is masked to the lit area; the diffraction lines are a 1px repeating gradient in overlay; the glare is a radial gradient in soft-light/overlay. CSS does all the drawing.
 KNOBS: --tilt (max rotation in deg); --foil-a / --lines-a / --glare-a (layer strengths); the hue stops in .foil (keep 4-5 pastel hues, saturation <= 70%); SWAY_X / SWAY_Y (idle sway, 0-1) and SWAY_SPEED; EASE (how quickly the card chases the pointer); IDLE_MS (pointer silence before it goes back to swaying).
 COST: Cheap: one card, transforms on the compositor, but the gradient layers repaint each frame because background-position and mask move. Card-sized repaints are fine on phones; don't do this full-screen or on dozens of cards at once (pause off-screen cards with IntersectionObserver).

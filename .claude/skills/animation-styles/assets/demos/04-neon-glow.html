@@ -2,6 +2,9 @@
 <!--
 STYLE: Neon glow
 LOOK: A pink neon sign on a dark brick wall at night: bent glass tubes with a white-hot core and layered glow, one stuttering power-on, then a steady light with a barely-there hum that tints the bricks around and below it.
+BEST FOR: nightlife, bars, music, gaming, a 'we're open' moment
+AVOID WHEN: daytime, corporate or medical brands
+PAIRS WITH: rounded monoline lettering, one or two tube colours, dark textured walls
 TECHNIQUE: Letters are hand-drawn monoline SVG paths (a real tube is one line, never an outlined font glyph), stroked four times with <use>: wide blurred halo, tight blurred bloom, coloured tube, near-white core. The same paths stroked faint and grey are the unlit glass you see before power-on. The wall is a generated SVG brick tile at full "lit" brightness; a fixed layer with mix-blend-mode: multiply darkens it to near-black except where a pink radial pool (the light) sits, so lit bricks keep their mortar shadows like real light does. The ignition is a stepped timeline per word driven by rAF time; afterwards only compositor-friendly opacity moves (the hum).
 KNOBS: --neon / --tube / --core (halo, tube and core colours: change all three together); --brick (wall scale); IGNITE (ms -> level steps per word: the flicker script); WARM_MS (gas warm-up after ignition); HUM (0.02-0.04: steady-state shimmer, 0 to switch off); halo and bloom stdDeviation in the SVG (glow width); the .beam gradients (how far the light spills and how much reaches the wall below).
 COST: Two SVG blur filters, but they re-render only while the sign flickers in the first ~1.5 s; after that the hum changes only opacity on the sign and the light layer, which the compositor handles. Cheap on phones.

@@ -2,6 +2,9 @@
 <!--
 STYLE: Gradient mesh
 LOOK: Soft fields of colour drifting and blending into each other like a product-launch backdrop: deep navy with violet, coral and a little warm light moving through it, under a fine film grain, with a calm headline on top.
+BEST FOR: product launches, fintech, calm premium backgrounds behind a headline
+AVOID WHEN: when the content itself must carry the colour
+PAIRS WITH: a clean geometric sans, two or three related hues, fine grain
 TECHNIQUE: One full-screen WebGL fragment shader. Five colour points move on slow Lissajous paths; each pixel takes a weighted blend of their colours in linear light (Gaussian weights plus a constant "base" weight so empty space falls back to navy), then converts back to sRGB. The coordinates are first pushed around by low-frequency value noise (domain warping), which turns round blobs into flowing, liquid boundaries. Per-pixel animated noise is added at the end: it reads as film grain and dithers away 8-bit banding.
 KNOBS: COLORS (base + five points as sRGB hex; converted to linear light so blends stay clean; keep them in one family); SIGMA (blob size: .25 tight, .5 washy); WARP (how liquid the edges are, 0 = clean circles); SPEED (1 = a slow minute-long loop); GRAIN (.02 invisible dither, .06 filmic); PIXEL_BUDGET (max canvas pixels: the field is soft, so it renders below full DPR on big screens).
 COST: One draw call per frame; cost is pixels x 5 points x 2 noise lookups. PIXEL_BUDGET (1.2 MP) keeps a 4K monitor and a DPR-3 phone at the same cost as a laptop. Falls back to a static CSS gradient when WebGL is unavailable.

@@ -2,6 +2,9 @@
 <!--
 STYLE: Split-flap
 LOOK: A station departure board: rows of dark character tiles split by a hinge, each flapping through the drum of characters until the next message settles, with a mechanical clatter of staggered starts. A small flap clock keeps real time.
+BEST FOR: travel, transport, schedules, countdowns, menus that change
+AVOID WHEN: brands with nothing to 'announce'
+PAIRS WITH: a bold condensed sans in caps, cream on charcoal, one warm accent
 TECHNIQUE: Each tile is four half-height layers: a static top (next character) and static bottom (current), plus two flaps. The top flap folds down (rotateX 0 to -90deg, hinge at its bottom edge, accelerating), then the bottom flap lands (rotateX 90deg to 0, hinge at its top edge) with a small bounce. Each half shows its slice of the character by clipping a full-height line box. A tile steps one drum character per flip until it reaches its target; start delays per column and row give the cascade.
 KNOBS: --tile-top / --tile-bot / --ink (tile colours); --amber (accent); COLS (tiles per row); MESSAGES (each row COLS characters or fewer); DRUM (character order the tiles turn through); FLIP (seconds per flap); CYCLE (seconds per message); the 6deg landing bounce in step().
 COST: Low: only tiles that are flipping are touched, two transforms and an opacity per frame each. 36 + 4 tiles here; hundreds are fine.

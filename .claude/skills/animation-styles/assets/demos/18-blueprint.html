@@ -4,6 +4,9 @@ STYLE: Blueprint
 LOOK: White technical linework on blue drafting paper with a fine and a coarse grid: a flanged hub in plan and in
   section draws itself line by line, dimensions and leaders follow, the hatching fades in and the title block types
   itself out. Calm, exact, engineering-grade.
+BEST FOR: engineering, manufacturing, architecture, process explainers
+AVOID WHEN: consumer lifestyle brands
+PAIRS WITH: a technical sans in caps, white line work on blueprint blue
 TECHNIQUE: An inline SVG built from a few helpers (line, circle, path, dimension, leader). Every stroke draws on with
   stroke-dasharray = stroke-dashoffset = its getTotalLength(), eased to 0 on a declarative timeline (data-t start,
   data-d duration). Dash-dot centre lines cannot use their own dash for this, so each gets a solid twin inside a

@@ -2,6 +2,9 @@
 <!--
 STYLE: Clay 3D
 LOOK: Soft, matte, pastel clay shapes (a breathing blob, a squishy torus, a lying pill, a bouncing ball) on a seamless warm-cream table, with soft contact shadows and gentle squash-and-stretch.
+BEST FOR: friendly consumer apps, kids, onboarding, playful SaaS
+AVOID WHEN: luxury or serious financial brands
+PAIRS WITH: a soft rounded sans, warm off-white, pastel shapes
 TECHNIQUE: One full-screen WebGL fragment shader raymarches signed-distance shapes; matte look = wrapped diffuse + sky fill + warm floor bounce + 5-tap ambient occlusion + a 24-step soft shadow, no specular. The floor is shaded as background colour x (shadow, AO), so it melts into the backdrop with no horizon. Motion lives in JS: positions and a volume-preserving squash factor per shape are passed as uniforms (y scaled by s, x/z by 1/sqrt(s)). The ball's squash is its "penetration" of the floor in a parabolic bounce, so it squashes only on contact.
 KNOBS: --bg (must match BG in the shader), --ink. JS: QUALITY (render scale per device pixel; 0.5-0.8), MIN_SCALE (floor for 1x screens), MAX_PIXELS (hard cap on rendered pixels), BOUNCE (period s), HOP (bounce height), SQUISH (torus wobble), COLORS (sRGB albedos per shape). Shader: STEPS (raymarch), the light vector L, and the AO / shadow loop counts.
 COST: Per-pixel raymarch, so cost = rendered pixels x steps. Rendered at 0.75 x device pixels (min 0.9 x CSS px) (soft matte surfaces hide upscaling), capped at 1.1 MP, and stepped down (x0.85, to half) while frames take over 40 ms. Phones are fine at this scale; raise QUALITY only on desktop.

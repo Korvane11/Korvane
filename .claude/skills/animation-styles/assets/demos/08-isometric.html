@@ -2,6 +2,9 @@
 <!--
 STYLE: Isometric
 LOOK: A small stone-and-terracotta city on a floating slab, built block by block in true 2:1 isometric: each block rises with a soft overshoot, its shadow growing with it, holds, then sinks away and the build starts again.
+BEST FOR: platforms, infrastructure, logistics, 'how it works' sections
+AVOID WHEN: brands that want to feel human and organic
+PAIRS WITH: a geometric sans, three tones per material, one accent colour
 TECHNIQUE: Plain SVG polygons from one projection, iso(x, y, z) = [(x - y) * TW/2, (x + y) * TH/2 - z * ZH] with TH = TW/2 and ZH = TW * 0.6124 (so a unit cube is a cube). Three tones per block (top light, left mid, right dark, light from the front-left), painter's order by x + y, heights re-projected every frame from a staggered timeline; ground shadows are one rectangle per block stretched along -y, drawn in a single group so overlaps never double up.
 KNOBS: --bg-1 / --bg-2 (backdrop), --ink, --accent. JS: TW (tile width; scales nothing visually, the viewBox does), MAP (heights + palette letter per cell: a = accent, n = slate, p = park, - = empty), PAL (top/left/right tones per palette), STAGGER (s per diagonal), GROW (rise time), HOLD_AT / SINK_AT / LOOP (timeline in s), OVERSHOOT (easeOutBack strength), SHADOW (shadow length per unit height).
 COST: ~180 SVG nodes, attributes rewritten only while a block is moving. Cheap everywhere; phones fine.

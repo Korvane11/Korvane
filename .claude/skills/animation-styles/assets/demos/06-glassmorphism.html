@@ -2,6 +2,9 @@
 <!--
 STYLE: Glassmorphism
 LOOK: Frosted-glass panels floating over slow, saturated shapes on a deep ink backdrop; the shapes smear into soft colour behind the glass while their crisp edges stay visible around it.
+BEST FOR: dashboards and app marketing, cards over a colourful hero
+AVOID WHEN: plain backgrounds (glass over flat colour is just a grey box) or long text
+PAIRS WITH: a modern grotesk, vivid shapes behind, white glass with 1px light borders
 TECHNIQUE: backdrop-filter: blur() saturate() on a barely-tinted translucent fill; a 1px gradient border drawn with a masked ::before (bright top-left, faint bottom-right) plus an inset top highlight; a long, soft, low-opacity drop shadow. Shapes move on slow Lissajous paths, cards parallax with the pointer at different depths (rAF, transforms only).
 KNOBS: --blur (frost strength), --sat (colour boost through the glass), --tint (glass fill alpha), --edge (border brightness), --radius. JS: DRIFT (shape travel in px), SPEED (shape speed), PARALLAX (px per depth unit), TILT (deg of pointer tilt).
 COST: backdrop-filter re-blurs whatever is behind each card every frame the background moves; cost scales with card area x blur radius. Fine for 2-4 cards; on phones keep --blur at 18-24px and avoid stacking glass on glass.

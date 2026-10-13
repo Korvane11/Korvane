@@ -2,6 +2,9 @@
 <!--
 STYLE: Wireframe 3D (ink on paper)
 LOOK: A (2,3) torus-knot tube drawn as a fine blue-violet ink wireframe on warm engineering paper; it inks itself on, then turns slowly, far lines fading like a lighter pen stroke.
+BEST FOR: engineering, architecture, product design studios, technical launches
+AVOID WHEN: playful consumer brands
+PAIRS WITH: a refined serif or a technical mono, ink blue on warm grid paper
 TECHNIQUE: Build the tube mesh by hand (rings of RADIAL points around the knot curve, oriented with a cheap Frenet frame), rotate and perspective-project every vertex in plain canvas 2D, then sort edges into BUCKETS depth bins and stroke each bin once with its own alpha and line width (8 strokes per frame, not 4,000). The paper grid is pure CSS gradients.
 KNOBS: --paper / --ink / --grid / --cell (paper colour, ink colour, grid tint, grid pitch). JS: P,Q (knot winding), TUBULAR, RADIAL (mesh density), TUBE (tube radius), CAM (camera distance: lower = stronger perspective), BUCKETS (depth bins), ALPHA_FAR/ALPHA_NEAR and LW_FAR/LW_NEAR (the depth fade), SPIN (rad/s), DRAW_MS (ink-on duration), TILT (pointer influence in rad).
 COST: Canvas 2D, ~4,300 segments per frame batched into 8 paths; scales with TUBULAR x RADIAL. Cheap on phones; drop TUBULAR to 120 for very old devices.

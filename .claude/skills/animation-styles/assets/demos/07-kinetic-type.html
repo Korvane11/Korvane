@@ -2,6 +2,9 @@
 <!--
 STYLE: Kinetic type
 LOOK: Editorial poster type in motion: a heavy condensed line and a serif-italic word that swaps every few seconds, letters rising out of a mask one by one, with a slow marquee rule along the bottom.
+BEST FOR: editorial heroes, portfolios, announcements, agency sites
+AVOID WHEN: small text or anything people must read quickly
+PAIRS WITH: one big grotesk plus one italic serif accent, warm paper or black
 TECHNIQUE: Split each word into letter spans yourself, each inside a line that clips vertically (overflow-y: clip). Every frame, a tiny timeline maps time to each letter's translateY / rotate. "Tracking" changes are done with per-letter translateX (no letter-spacing animation, so no layout). A fit() pass sizes the headline to the viewport whatever font the system substitutes.
 KNOBS: --paper / --ink / --accent colours; WORDS (the rotating line); HOLD (seconds per word); IN / OUT (letter durations); STAG_IN / STAG_OUT (stagger per letter); SPREAD (start tracking, em per letter); MARQUEE_SPEED (px/s); MAX_FS (largest headline size).
 COST: Very low: ~60 spans get a transform per frame; no canvas. Scales with letter count. Fine on phones.

@@ -2,6 +2,9 @@
 <!--
 STYLE: Retro VHS
 LOOK: A home-video tape playing back: a dusky sunset scene with soft colour that bleeds past its edges, faint RGB fringes, grain, a slow tracking band rolling up the picture, head-switching noise along the bottom, and the VCR's crisp on-screen display (PLAY, SP, tape counter).
+BEST FOR: music, film, nostalgia campaigns, retro product drops
+AVOID WHEN: anything that must look crisp and trustworthy (banking, health)
+PAIRS WITH: a heavy italic sans, sunset gradients, monospace OSD text
 TECHNIQUE: The scene is painted once per resize into an offscreen canvas 2D, uploaded as a texture, and played back through one WebGL fragment shader: luma and chroma are split (YIQ), chroma is blurred wide and lags to the right (colour bleed), red and blue get a 1-2px offset, lines wobble by a smooth noise, a rolling band tears lines sideways and adds streaks, grain is a per-frame hash. The HTML headline sits on top with CSS chroma fringes and is nudged sideways only while the band crosses it; a CSS scanline layer covers everything.
 KNOBS: BAND_SPEED (band passes per second); BLEED (chroma blur width, px); SPLIT (red/blue offset, px); GRAIN (noise amount); WOBBLE (line jitter); RES (render scale, VHS is soft so 1-1.5 is plenty); --scan (scanline darkness); the palette in drawScene().
 COST: One full-screen shader pass with 13 texture reads per pixel; scales with RES x screen area. Cheap on phones at RES 1. Scene repaint only on resize.

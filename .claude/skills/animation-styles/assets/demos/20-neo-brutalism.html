@@ -1,0 +1,140 @@
+<!doctype html>
+<!--
+STYLE: Neo-brutalism
+LOOK: Loud and honest: cream paper, flat bright fills, thick black outlines and hard offset shadows, chunky type, stickers slapped on at an angle, a marquee band running across, and buttons that physically press down.
+BEST FOR: startups, indie tools, creators, loud honest marketing pages
+AVOID WHEN: luxury, healthcare or anything that must feel calm
+PAIRS WITH: a black geometric sans, cream paper, four flat fills, hard black shadows
+TECHNIQUE: Pure CSS. Every surface is a flat fill with a 3px black border and a hard shadow (box-shadow: 6px 6px 0 #000, no blur). Pressing moves the element by the shadow's offset while the shadow shrinks to nothing, so it looks pushed into the page. The marquee is two copies of one strip translated by -50% in a loop. Cards drop in once with a short overshoot; stickers sway a few degrees.
+KNOBS: --line (outline width), --shadow (hard-shadow offset; the press distance follows it), --paper and the four fill colours (--sun, --coral, --mint, --violet), --marquee-speed, the sticker rotations (--tilt on each sticker).
+COST: Negligible: a handful of transforms on the compositor. Works the same on phones (press states run on :active for touch).
+REDUCED MOTION: The marquee, entrance and sticker sway are switched off; the layout is complete and still, and buttons still press (that's feedback, not decoration).
+PITFALLS: Soft blurred shadows or rounded pastel cards turn it into ordinary flat UI: shadows stay hard and black, corners nearly square. Too many colours at once reads as a children's toy: four fills, one per job, on cream. Brutalist doesn't mean careless: the grid, spacing and type sizes are strict, which is what keeps the loudness clean. A press that doesn't move by the shadow's exact offset looks like a glitch.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neo-brutalism</title>
+<style>
+  :root {
+    --paper: #fff3dc; --ink: #111; --line: 3px; --shadow: 6px;
+    --sun: #ffd23f; --coral: #ff6b5e; --mint: #3dd9a8; --violet: #8a6cff;
+    --marquee-speed: 22s;
+    --display: "Arial Black", "Helvetica Neue", Helvetica, ui-sans-serif, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { overflow-x: clip; }
+  body { min-height: 100dvh; background: var(--paper); color: var(--ink); overflow-x: clip;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: grid; grid-template-rows: auto 1fr auto; }
+  .box { border: var(--line) solid var(--ink); box-shadow: var(--shadow) var(--shadow) 0 var(--ink); }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px clamp(16px, 4vw, 48px); }
+  .logo { font: 900 20px/1 var(--display); padding: 8px 12px; background: var(--sun); }
+  nav { display: flex; gap: 8px; }
+  nav a { font-weight: 700; font-size: 14px; color: var(--ink); text-decoration: none; padding: 8px 12px; border: var(--line) solid transparent; }
+  nav a:hover { border-color: var(--ink); background: #fff; }
+
+  main { padding: clamp(12px, 3vw, 40px) clamp(16px, 4vw, 48px) 40px; display: grid; gap: clamp(28px, 4vw, 48px); align-content: start; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, .7fr); align-items: center; gap: clamp(24px, 4vw, 64px); max-width: 1240px; }
+  .hero-copy { position: relative; display: grid; gap: 22px; }
+  h1 { font: 900 clamp(44px, 7.2vw, 108px)/.92 var(--display); letter-spacing: -.035em; text-transform: uppercase; }
+  .hl { display: inline-block; background: var(--sun); border: var(--line) solid var(--ink); padding: 0 .12em; transform: rotate(-1.5deg); }
+  .lead { max-width: 46ch; font-size: clamp(16px, 1.4vw, 19px); line-height: 1.5; font-weight: 500; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 14px; }
+  .btn {
+    font: 900 15px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; color: var(--ink);
+    padding: 16px 22px; background: var(--coral); cursor: pointer; text-decoration: none;
+    transition: transform 90ms ease-out, box-shadow 90ms ease-out;
+  }
+  .btn.alt { background: #fff; }
+  .btn:hover { transform: translate(-2px, -2px); box-shadow: calc(var(--shadow) + 2px) calc(var(--shadow) + 2px) 0 var(--ink); }
+  /* the decisive rule: pressed = moved by exactly the shadow's offset, shadow gone */
+  .btn:active { transform: translate(var(--shadow), var(--shadow)); box-shadow: 0 0 0 var(--ink); }
+  .btn:focus-visible { outline: 3px dashed var(--ink); outline-offset: 6px; }
+
+  /* the right column: one chunky stat card, a sticker slapped on its corner */
+  .hero-art { position: relative; justify-self: center; width: min(100%, 340px); padding-top: 34px; }
+  .stat { background: var(--violet); color: #fff; padding: 26px 24px 24px; transform: rotate(2.5deg); display: grid; gap: 8px; }
+  .stat strong { font: 900 clamp(64px, 8vw, 104px)/.9 var(--display); letter-spacing: -.04em; }
+  .stat span { font-weight: 700; font-size: 16px; line-height: 1.35; }
+  .stat .bar { height: 14px; background: #fff; border: var(--line) solid var(--ink); margin-top: 10px; position: relative; }
+  .stat .bar::after { content: ""; position: absolute; inset: 0 32% 0 0; background: var(--sun); border-right: var(--line) solid var(--ink); }
+  .sticker { position: absolute; z-index: 2; font: 900 14px/1 var(--display); text-transform: uppercase; text-align: center;
+    display: grid; place-items: center; transform: rotate(var(--tilt)); }
+  .s1 { --tilt: 9deg; top: 0; right: -14px; width: 100px; height: 100px; border-radius: 50%; background: var(--mint); }
+  .s2 { --tilt: -7deg; position: static; align-self: center; margin-left: 6px; padding: 9px 12px; font-size: 13px; background: var(--sun); }   /* sits in the button row, never on a button */
+
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 2.4vw, 28px); max-width: 1100px; }
+  .card { background: #fff; padding: 22px; display: grid; gap: 10px; }
+  .card:nth-child(1) .icon { background: var(--sun); border-radius: 50%; }
+  .card:nth-child(2) .icon { background: var(--mint); }
+  .card:nth-child(3) .icon { background: var(--coral); clip-path: polygon(50% 0, 100% 100%, 0 100%); border: 0; box-shadow: none; }
+  .icon { width: 44px; height: 44px; border: var(--line) solid var(--ink); }
+  .card h2 { font: 900 22px/1.05 var(--display); text-transform: uppercase; letter-spacing: -.01em; }
+  .card p { font-size: 15px; line-height: 1.45; }
+
+  .marquee { border-block: var(--line) solid var(--ink); background: var(--ink); color: var(--paper); overflow: hidden; }
+  .track { display: flex; width: max-content; }
+  .track span { font: 900 clamp(18px, 2.2vw, 28px)/1 var(--display); text-transform: uppercase; padding: 16px 0; white-space: nowrap; }
+  .track b { color: var(--sun); font-weight: 900; padding: 0 .6em; }
+
+  @media (max-width: 760px) {
+    nav { display: none; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-art { width: min(100%, 300px); justify-self: start; margin-left: 6px; }
+    .cards { grid-template-columns: 1fr; }
+    .s1 { width: 84px; height: 84px; font-size: 12px; right: -6px; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .track { animation: slide var(--marquee-speed) linear infinite; }
+    .sticker { animation: sway 5s ease-in-out infinite alternate; }
+    .s2 { animation-duration: 6.5s; }
+    .card { animation: drop 700ms cubic-bezier(.3, 1.6, .5, 1) both; }
+    .card:nth-child(2) { animation-delay: 110ms; }
+    .card:nth-child(3) { animation-delay: 220ms; }
+  }
+  @keyframes slide { to { transform: translateX(-50%); } }
+  @keyframes sway { from { transform: rotate(var(--tilt)); } to { transform: rotate(calc(var(--tilt) * -0.4)); } }
+  @keyframes drop { from { transform: translateY(-28px) rotate(-2deg); opacity: 0; } to { transform: none; opacity: 1; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo box">BLOK.</div>
+  <nav aria-label="Demo">
+    <a href="#">Work</a><a href="#">Pricing</a><a href="#">About</a>
+  </nav>
+</header>
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>Loud, <span class="hl">honest</span>,<br>actually useful.</h1>
+      <p class="lead">No gradients hiding a weak idea. Big type, flat colour, hard edges, and buttons you can feel.</p>
+      <div class="ctas">
+        <a class="btn box" href="#">Start building</a>
+        <a class="btn alt box" href="#">See examples</a>
+        <div class="sticker s2 box">Free to try</div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="stat box"><strong>48h</strong><span>from first idea to a live page, on average</span><div class="bar"></div></div>
+      <div class="sticker s1 box">New<br>&amp; loud</div>
+    </div>
+  </section>
+  <section class="cards" aria-label="Features">
+    <article class="card box"><div class="icon"></div><h2>Say it plainly</h2><p>One message per screen, set big enough to read from across the room.</p></article>
+    <article class="card box"><div class="icon"></div><h2>Flat, bright, few</h2><p>Four colours with one job each, on warm paper instead of white.</p></article>
+    <article class="card box"><div class="icon"></div><h2>Hard shadows</h2><p>No blur. Shadows are offsets, and pressing a button pushes it into them.</p></article>
+  </section>
+</main>
+<div class="marquee" aria-hidden="true">
+  <div class="track">
+    <span>Ship it loud<b>✱</b>Make it plain<b>✱</b>Flat colour<b>✱</b>Hard edges<b>✱</b>Big type<b>✱</b>Press here<b>✱</b></span>
+    <span>Ship it loud<b>✱</b>Make it plain<b>✱</b>Flat colour<b>✱</b>Hard edges<b>✱</b>Big type<b>✱</b>Press here<b>✱</b></span>
+  </div>
+</div>
+</body>
+</html>

@@ -2,11 +2,14 @@
 <!--
 STYLE: Liquid morph
 LOOK: Mercury-like drops that drift, stretch into each other and pinch apart behind a headline, with a soft specular sheen so they read as heavy liquid metal rather than flat shapes.
+BEST FOR: a calm premium hero, a beauty or wellness brand, a loading state
+AVOID WHEN: the content needs the centre of the screen
+PAIRS WITH: a high-contrast serif with italics, cool metal greys on deep charcoal
 TECHNIQUE: Plain SVG circles on slow Lissajous paths, run through one "gooey" filter: blur them together (feGaussianBlur), then crush the blurred alpha back to a hard edge (feColorMatrix alpha row "0 0 0 A B"), so overlapping halos fuse into one surface. A wider blur of that shape is used as a height map for feSpecularLighting, clipped back inside the shape and added on top: the highlight slides over the bulges as they merge. Each circle has its own off-centre radial gradient so the body has volume and a dark rim.
 KNOBS: BLOBS (radius as a share of the short side, orbit size, speed, phase); BLUR (merge distance, share of the short side); the alpha row values "20 -8" in #goo (higher = crisper edge, the offset sets how fat the bridges are); feSpecularLighting surfaceScale / specularExponent and feDistantLight azimuth / elevation (sheen size and direction); #metal stops (the metal colour); SPEED.
 COST: The SVG filter re-runs on every frame over the whole stage, and cost scales with screen pixels and blur radius. Fine on laptops; on phones it holds 60 fps at this size but drop BLOBS or SPEED before adding more. For many blobs or full-bleed 4K, move to a WebGL metaball shader.
 REDUCED MOTION: The blobs are drawn once in a pose where two pairs are mid-merge, so the liquid character still shows.
-PITFALLS: A threshold without the sheen looks like flat clip art: the specular pass is what makes it liquid. Blur larger than the smallest drop erases it: BLUR stays under the smallest radius. A filter region left at the default clips the goo into straight edges near the frame: the filter uses userSpaceOnUse over the whole viewBox. Busy, fast motion looks like a lava-lamp screensaver: orbits are slow and the palette is a single cool metal.
+PITFALLS: A threshold without the sheen looks like flat clip art: the specular pass is what makes it liquid. Blur larger than the smallest drop erases it: BLUR stays under the smallest radius. A filter region left at the default clips the goo into straight edges near the frame: the filter uses userSpaceOnUse over the whole viewBox. Busy, fast motion looks like a lava-lamp screensaver: orbits are slow and the palette is a single cool metal. Type over moving metal needs its own contrast: a mix-blend-mode: difference headline goes grey-on-grey over the metal's mid-tones, so the words are plain white with a soft dark shadow and a faint dark pool behind them.
 -->
 <html lang="en">
 <head>
@@ -25,14 +28,17 @@ PITFALLS: A threshold without the sheen looks like flat clip art: the specular p
   .copy {
     position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 18px;
     padding: 16px; text-align: center; pointer-events: none;
-    mix-blend-mode: difference;              /* white on the dark room, dark on the bright metal */
+    /* a soft dark pool behind the words: white type stays readable where the metal passes under it
+       (a difference blend looked clever but turns grey on the metal's mid-tones) */
+    background: radial-gradient(closest-side, rgba(11, 13, 17, .55), rgba(11, 13, 17, 0)) center / min(92vw, 980px) min(40vh, 360px) no-repeat;
   }
   h1 {
     font-family: "Didot", "Bodoni 72", "Times New Roman", serif; font-weight: 400;
     font-size: clamp(44px, 9vw, 132px); line-height: .95; letter-spacing: -.02em; color: #fff;
+    text-shadow: 0 2px 28px rgba(8, 10, 14, .75), 0 0 2px rgba(8, 10, 14, .5);
   }
   h1 em { font-style: italic; }
-  p { font-size: clamp(14px, 1.3vw, 17px); letter-spacing: .14em; text-transform: uppercase; color: #fff; opacity: .8; }
+  p { font-size: clamp(14px, 1.3vw, 17px); letter-spacing: .14em; text-transform: uppercase; color: #fff; opacity: .88; text-shadow: 0 1px 14px rgba(8, 10, 14, .9), 0 0 2px rgba(8, 10, 14, .8); }
 </style>
 </head>
 <body>

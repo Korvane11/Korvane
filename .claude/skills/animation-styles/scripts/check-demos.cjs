@@ -9,7 +9,7 @@
 //
 // Screenshots go to out-dir (default: a new temp folder). --thumbs also
 // rewrites assets/demos/thumbs/NN-slug.jpg (640x400: the 1280x800 layout at
-// half scale), which the gallery uses. Needs Node, the playwright package and
+// half scale, reduced-motion still), which the gallery uses. Needs Node, the playwright package and
 // Chromium; set CHROMIUM_PATH if it is not at /opt/pw-browsers/chromium.
 const { chromium } = require('playwright');
 const fs = require('fs');
@@ -66,7 +66,8 @@ const files = fs.readdirSync(DEMOS)
     await still.ctx.close();
 
     if (thumbs) {
-      const t = await open({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 0.5 });
+      // the reduced-motion frame is each demo's designed, finished still: the best preview
+      const t = await open({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 0.5, reducedMotion: 'reduce' });
       await t.page.screenshot({ path: path.join(DEMOS, 'thumbs', `${name}.jpg`), type: 'jpeg', quality: 80 });
       await t.ctx.close();
     }

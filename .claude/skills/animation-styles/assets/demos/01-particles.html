@@ -2,6 +2,9 @@
 <!--
 STYLE: Particles
 LOOK: A few thousand fine, softly glowing points gather into a word, hold, drift apart on a slow current and re-form. The pointer parts them like a hand through smoke.
+BEST FOR: a launch hero, an AI or data product, a logo reveal
+AVOID WHEN: the page is text-heavy or needs to load instantly on old phones
+PAIRS WITH: a single bold sans headline, near-black navy, one cool accent
 TECHNIQUE: Draw the word once on an offscreen canvas, read it back with getImageData and keep one lit pixel per grid cell (with jitter) as a target. Each particle homes to its target (exponential pull, so it settles in the same time at any frame rate) after a random delay, then is released into a smooth sine flow field. Canvas 2D: one pre-rendered glow sprite drawn per particle with 'lighter' (additive), and short trails from fading the last frame with 'destination-out'.
 KNOBS: WORD (the headline the particles draw); MAX_DESK / MAX_PHONE (particle budget, sets the grid gap); T_DRIFT / CYCLE (seconds: release time, loop length); PULL (homing rate per second: 2 floaty, 6 snappy); DAMP (how long drift and pointer pushes coast); FLOW (drift strength); PUSH + RADIUS (pointer force, CSS px); FADE (0.2 long trails, 1 none); WARM (share of amber particles); --bg / --ink colours.
 COST: Linear in particles: ~3k drawImage calls is 1-3 ms a frame on a laptop. The fade pass is a full-canvas fill, so fill-rate scales with pixels (DPR capped at 2). Phones get ~1.6k particles; drop MAX_PHONE further for low-end Android.

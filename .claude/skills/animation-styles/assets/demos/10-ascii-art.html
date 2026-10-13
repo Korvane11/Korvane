@@ -2,6 +2,9 @@
 <!--
 STYLE: ASCII art
 LOOK: A torus turning in plain monospaced characters, phosphor green on near-black with a faint glow, beside a crisp mono headline and a prompt line. Add ?paper (or class "paper" on <html>) for ink on paper.
+BEST FOR: developer tools, CLIs, hacker or terminal brands, retro tech
+AVOID WHEN: audiences who aren't technical, or long reading
+PAIRS WITH: a monospace everywhere, phosphor green or ink on paper
 TECHNIQUE: Every character cell is a pixel. Per cell, cast a ray, clip it to a bounding sphere, sphere-trace the torus distance field, light the hit with diffuse + a small specular, and map brightness onto the ramp " .:-=+*#%@" (any hit gets at least "."). Rotation is applied to the ray, not the shape (one 3x3 per frame). The whole frame is written as one string into a <pre> with line-height 1; cell width is measured, so aspect stays correct.
 KNOBS: --fg / --bg / --glow / --head / --head-glow (colours), RAMP (dark to bright), R / TUBE (torus radii), SPIN_A / SPIN_B (rad/s on two axes), LIGHT (light direction), SPEC (highlight strength), FADE_MS (intro: the shape densifies from dots), FONT_MIN / FONT_MAX (cell size range in px).
 COST: CPU only: about cols x rows rays per frame (~12k on desktop, ~8k on phones), but the bounding sphere skips most of them and hits take ~10-20 steps. Text layout of one <pre> per frame is cheap; the glow (text-shadow) is the paint cost, so drop --glow on weak devices.
