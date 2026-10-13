@@ -259,7 +259,7 @@ address { font-style: normal; }
 .menu__cta { align-self: flex-start; }
 
 /* ---------- story ---------- */
-.story { position: relative; z-index: 2; height: 540vh; }
+.story { position: relative; z-index: 2; height: 640vh; }
 .story__sticky { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; }
 .chapter {
   --y: 0px;
@@ -483,16 +483,15 @@ address { font-style: normal; }
 .footer__logo img { display: block; height: 92px; width: auto; }   /* the full badge, big enough to read */
 .footer__credit { font-size: 0.8rem; opacity: 0.8; }
 
-/* ---------- chapter links: each home chapter points to its page ---------- */
-.chapter__link, .lane__go {
+/* ---------- "Where to next?" card links ---------- */
+.lane__go {
   display: inline-flex; align-items: center; gap: 10px;
   padding-bottom: 6px; border-bottom: 1px solid var(--brand);
   font-size: 0.78rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--text); text-decoration: none;
 }
-.chapter__link { margin-top: 28px; }
-.chapter__link span, .lane__go span { transition: transform 400ms var(--ease-spring); }
-.chapter__link:hover span, a.lane:hover .lane__go span { transform: translateX(4px); }
+.lane__go span { transition: transform 400ms var(--ease-spring); }
+a.lane:hover .lane__go span { transform: translateX(4px); }
 
 /* ---------- pages other than home ---------- */
 .is-page .film__shade {
@@ -618,7 +617,7 @@ a.lane:focus-visible { outline-offset: 6px; border-radius: var(--radius-xl); }
   .nav__toggle[aria-expanded="true"] span:first-child { transform: rotate(45deg); }
   .nav__toggle[aria-expanded="true"] span:last-child { transform: rotate(-45deg); }
 
-  .story { height: 500vh; }
+  .story { height: 600vh; }
   .chapter { left: var(--gutter); right: var(--gutter); width: auto; top: auto; bottom: clamp(40px, 9vh, 90px); transform: translateY(var(--y)); text-align: left; }
   .chapter__title { font-size: clamp(3rem, 15vw, 5rem); }
   .chapter__text { margin-top: 14px; }
@@ -633,7 +632,6 @@ a.lane:focus-visible { outline-offset: 6px; border-radius: var(--radius-xl); }
   .is-page .film__shade { background: linear-gradient(0deg, rgba(3, 3, 4, 0.95) 0%, rgba(3, 3, 4, 0.7) 40%, rgba(3, 3, 4, 0.25) 70%, rgba(3, 3, 4, 0.1) 100%); }
   .shop__photo .card__core { min-height: 420px; }
   .map, .map iframe { min-height: 340px; }
-  .chapter__link { margin-top: 18px; }
   .card--photo .card__core { min-height: 440px; }
   .card--event .card__img { aspect-ratio: 16 / 9; }
   .card--event .card__body { position: relative; background: none; padding-top: 18px; }

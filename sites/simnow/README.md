@@ -46,7 +46,7 @@ or footer is made in all six files.
 
 | Page | What's on it |
 | --- | --- |
-| `index.html` | Home: the intro, the hero, a short scroll story whose four chapters each link to a page, "Where to next?" cards, hours and address |
+| `index.html` | Home: the intro, the hero and the scroll story exactly as on the one-page site (five chapters), then "Where to next?" cards to the other pages, hours and address |
 | `book.html` | Sessions and prices (the four packages, each linking to its booking calendar), how a first visit works, FAQ, hours |
 | `experience.html` | The rigs, the hardware, who it's for |
 | `events.html` | Event rentals: the four kinds of event, how it works, and a quote form |
@@ -54,16 +54,25 @@ or footer is made in all six files.
 | `visit.html` | Address and map, directions, hours, contact details and a note form, FAQ |
 
 How the pages hang together:
-- **The nav** marks the current page (`aria-current`). Phones get a menu
-  plus a Book button that is always visible.
+- **The opening stays as it was:** the owner asked (2026-10-13) to keep the
+  same opening, the car and the first screen. The intro, the clip, the hero
+  and the five scroll chapters are unchanged from the one-page site; only
+  the hero buttons now go to `book.html`.
+- **The nav** reads Prices · Experience · Events · Gear · Contact (the
+  one-page site's labels, plus Experience) and marks the current page
+  (`aria-current`). Phones get a menu plus a Book button that is always
+  visible.
 - **One drive across the site:** leaving a page saves where the clip was
   (`sessionStorage`, `simnow:drive`), and the next page carries on from
   there, so changing pages doesn't restart the car. Page changes cross-fade
   in browsers that support cross-document view transitions; others just
   load the page.
-- **The intro plays once per visit** (`sessionStorage`, `simnow:intro`).
-  Coming back to the home page from another page opens straight onto the
-  drive.
+- **The intro plays every time the site is opened:** from a link, in a new
+  tab, on a refresh, and the first time a visitor who landed on another page
+  reaches home. Coming back to home from another SimNow page (a click or the
+  back button) after seeing it opens straight onto the drive (`fromOurPages`
+  in `js/home.js`: the navigation type and the referrer, plus
+  `sessionStorage` `simnow:intro`).
 - **Old links still work:** the site used to be one page, so links to its
   sections (`.../simnow/#events`, `#drive`, `#contact`, ...) are sent to the
   page that now holds them (`MOVED` in `js/site.js`).

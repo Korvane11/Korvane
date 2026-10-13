@@ -84,15 +84,21 @@ near-black.
   `<base href="/Korvane/sites/simnow/">`.
 - Six pages since 2026-10-13: the owner asked for separate "tabs" for
   booking and the rest instead of one long scroll. `index.html` (home:
-  intro, short story whose chapters link to the pages, "Where to next?"
+  intro, hero and the five-chapter scroll story, then "Where to next?"
   cards, hours), `book.html` (prices and booking links, first visit, FAQ),
   `experience.html`, `events.html` (quote form), `gear.html` (request form),
   `visit.html` (map, contact, note form). No build step: the nav, menu and
   footer are repeated in each file, so change all six. `js/site.js` runs on
   every page (clip, nav, forms, hours, redirects from the old one-page
-  anchors); `js/home.js` adds the intro and story on home. The intro plays
-  once per visit (sessionStorage) and the clip carries on from page to
-  page. README "Pages" has the details.
+  anchors); `js/home.js` adds the intro and story on home. The clip
+  carries on from page to page. README "Pages" has the details.
+- The owner's words on the split: "keep the same opening and the car and
+  stuff and the same dashboard part when you first open the website". So
+  the intro, clip, hero and the five scroll chapters stay exactly as on the
+  one-page site (a first version had cut the story to four chapters; it
+  was put back). The intro plays on every open (link, new tab, refresh)
+  and is skipped only when coming back to home from another SimNow page
+  after seeing it. Nav labels: Prices, Experience, Events, Gear, Contact.
 - Booking stays a link to simnowusa.com, not embedded (their site allows
   framing): it takes payments, which can't be tested from here, and
   embedding is SimNow's call.

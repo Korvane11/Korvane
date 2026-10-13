@@ -2,10 +2,11 @@
  * in around them as it drives, and the site opens over it. Then the hero, and
  * a short scroll story whose chapters each point to a page.
  *
- * The intro (js/lights.js, WebGL; a fade from black without it) plays on the
- * first visit to the home page in a browsing session. Coming back to it from
- * another page opens straight onto the drive. ?intro forces the intro, ?skip
- * skips it, ?debug exposes window.__simnow for tests.
+ * The intro (js/lights.js, WebGL; a fade from black without it) plays every
+ * time the site is opened: from a link, in a new tab, on a refresh. Coming
+ * back to home from another SimNow page (a click, or the back button) opens
+ * straight onto the drive, once the visitor has seen the intro. ?intro forces the intro, ?skip skips it,
+ * ?debug exposes window.__simnow for tests.
  */
 import { createLights } from './lights.js';
 import { body, video, shade, nav, params, reduced, state, startPlayback, startLenis, resumeDrive } from './site.js';
@@ -30,7 +31,7 @@ const smooth = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 
 /* ---------------------------------------------------------------- chapters */
 // Scroll timeline: hold on each chapter, then cross to the next.
-const HOLDS = [0.8, 1, 1, 1, 1.2];
+const HOLDS = [0.8, 1, 1, 1, 1, 1.2];
 const MOVE = 0.8;
 let segments = [];
 
@@ -119,6 +120,17 @@ function startScroll() {
 function seenIntro() {
   try { return sessionStorage.getItem(SEEN) === '1'; } catch { return false; }
 }
+// True when the visitor is moving around the site rather than opening it.
+function fromOurPages() {
+  const how = performance.getEntriesByType('navigation')[0]?.type;
+  if (how === 'reload') return false;
+  if (how === 'back_forward') return true;
+  try {
+    // the shared address (the repo root) forwards here and is outside this folder
+    const ref = new URL(document.referrer);
+    return ref.origin === location.origin && ref.pathname.startsWith(new URL('./', location.href).pathname);
+  } catch { return false; }   // no referrer: typed, bookmarked or opened from an app
+}
 function markSeen() {
   try { sessionStorage.setItem(SEEN, '1'); } catch { /* private mode */ }
 }
@@ -140,9 +152,9 @@ async function boot() {
 
   if (params.has('skip')) { finishIntro(true); return; }
 
-  // Back on the home page in the same visit: no intro again, the drive just
+  // Back on the home page from another page: no intro again, the drive just
   // carries on from where the last page left it, and the hero rises in.
-  if (seenIntro() && !params.has('intro')) {
+  if (seenIntro() && fromOurPages() && !params.has('intro')) {
     resumeDrive();
     state.wantPlay = true;
     video.play().catch(() => {});
