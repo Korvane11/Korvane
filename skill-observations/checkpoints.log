@@ -57,3 +57,8 @@
 2026-10-13 04:16 [Korvane] session-start scan: files=11 parsed=11 principles=0
 2026-10-13 04:16 loaded redesign-existing-projects — 4 open observations
 2026-10-13 04:44 [Korvane] checkpoint after tasks 40-42: extended 0006 (hit-test pitfalls, mailto capture), wrote 0012 (vacuous overflow check)
+2026-10-13 05:40 [Korvane] workspace: created=none
+2026-10-13 05:40 [Korvane] session-start scan: files=13 parsed=13 principles=0
+2026-10-13 05:40 loaded design-taste-frontend — 3 open observations
+2026-10-13 05:40 loaded redesign-existing-projects — 5 open observations
+2026-10-13 06:02 [Korvane] checkpoint after tasks 43-45: wrote 0014 (redesign audit: asset licences and dead flows)

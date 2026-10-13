@@ -145,6 +145,26 @@ near-black.
   2026-10-12, so simnowusa.com loads (it was blocked before, 403 at the
   proxy).
 
+## RC Cleaning (`sites/rc-cleaning/`)
+
+Residential and commercial cleaning in Tucson, owned by Rosa. Started
+2026-10-13 from their Wix site (rccleaningtucson.wixsite.com/website); the
+owner asked to "keep all their info but just make their website way better
+... similar to how we made simnow a better one but make it unique". Not yet
+approved by RC Cleaning: every page is `noindex` until they agree.
+
+- Pages: Home, Book Online, About, Hours (their nav labels). The opening
+  wipes dusty glass off a Tucson sunset with a squeegee (`js/wipe.js`).
+- Their photos were Wix stock (Wix-only licence) and their online booking
+  never worked, so neither was carried over: public-domain Library of
+  Congress photos (Carol M. Highsmith) and a mailto request form instead.
+- Facts, gaps and questions for them: the site README.
+- Status at the last commit: built and checked in a browser; the
+  behaviour test passed 41 of 52. Still to do: the wordmark link is 39 px
+  tall (needs 44), the hero eyebrow uses opacity (use a colour), and the
+  test itself must wait for the wipe to end and ignore mailto requests.
+  Then rerun, push, and confirm it live.
+
 ## Skills
 
 `.claude/skills/` holds the skills the owner installed for building sites.
