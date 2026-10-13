@@ -7,7 +7,7 @@ const BASE = process.argv[2] || 'http://localhost:8790/';
 const PAGES = ['index.html', 'menu.html', 'story.html', 'visit.html'];
 const PAGES_ONLY = !!process.env.PAGES_ONLY;
 // the cup in each render (handle to far rim, rim to foot), as fractions of the frame, measured on the final frames
-const CUP_L = [0.61, 0.43, 0.78, 0.70], CUP_P = [0.30, 0.19, 0.66, 0.40];
+const CUP_L = [0.58, 0.45, 0.86, 0.71], CUP_P = [0.25, 0.20, 0.84, 0.39];   // from a cup-only mask render, rounded outward
 const results = [];
 const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass ? 'ok  ' : 'FAIL'} ${name}${info ? '  ' + info : ''}`); };
 

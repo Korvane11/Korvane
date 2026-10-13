@@ -78,13 +78,17 @@ three lines that change as you scroll, then the page) and "But I also want
 the dark tones and themes of this website" (a café site by
 @sitebuilt.tiktok: near-black, warm amber light, serif headlines with a
 word or two in gold italic, small gold labels, a floating pill nav). The
-structure and the look were taken from them; the cup, colours, facts and
-words are Eleven Cafē's own, and nothing of theirs (copy, images, logo) was
-reused.
+structure and the look were taken from them; the colours, facts and words
+are Eleven Cafē's own, and nothing of theirs (copy, images, logo) was
+reused. Later the same day the Korvane owner sent a photo of a speckled
+stoneware mug: "Use this mug for the website instead of the one your
+using". The scene's cup is modelled on it (the photo itself is not on the
+site).
 
 1. **The scene** (`render/pour.html`, a WebGL raymarcher rendered offline
-   frame by frame): their logo's cup, white and ribbed with a gold ring
-   handle, on a walnut counter by a tall window, late in the day. Low amber
+   frame by frame): that mug, a wide round bowl of speckled cream
+   stoneware with a thin raw brown rim, a low foot and a loop handle, on a
+   walnut counter by a tall window, late in the day. Low amber
    sun comes through the panes in stripes, the air is hazy with it, and
    everything but the cup is in soft focus. The light comes up from black
    (0.75 s), espresso pours in from above, crema rises, the stream stops
@@ -120,8 +124,9 @@ headline with its buttons (the first two lines are left out).
 ## Design note
 
 1. **The moment:** the light coming up on the cup by the window, the pour,
-   and the three lines over it. It is their logo's cup, in their gold light,
-   and their own line as the headline.
+   and the three lines over it. A handmade stoneware cup (the one the
+   Korvane owner picked), in their gold light, and their own line as the
+   headline.
 2. **What stays quiet:** everything after it. A dark room with warm light
    pooling in it, one accent (their gold), hairlines rather than boxes, and
    nothing else that moves except things fading in as they scroll into view.
@@ -244,9 +249,22 @@ Depth is kept as the nearest value over the passes (an average at the
 cup's edge would belong to neither the cup nor the background, and the soft
 focus would spray the edge into the background).
 
-If the framing changes, re-measure the cup's fractions of the frame
-(`CUP_L`, `CUP_P` at the top of `tests/behave.cjs`): the test checks that
-the headline and buttons stay clear of the cup at 13 screen sizes.
+Shadow rays use the cup's exact distance (`gExact`), never the bounding
+cylinder's: the soft shadow reads a small distance as a near miss, so the
+bound drew a false, saw-toothed penumbra on the counter. The cup's profile
+(`rBase`) has no steps for the same reason: a jump in radius breaks the
+distance estimate and frays the silhouette.
+
+The coffee is filled close to the rim (`LMAX`): the camera is low, and with
+a wide bowl the near rim hides the far wall below about 4.8 cm, so a lower
+level shows an empty-looking cup.
+
+If the framing or the cup changes, re-measure the cup's fractions of the
+frame (`CUP_L`, `CUP_P` at the top of `tests/behave.cjs`): the test checks
+that the headline and buttons stay clear of the cup at 13 screen sizes. To
+measure, render the last frame from a copy of `pour.html` whose `render()`
+returns white where the camera ray hits the cup and black elsewhere (before
+the steam), with `noDof` and `noBloom` set, and take the white pixels' box.
 
 ## Photos and credits
 

@@ -195,9 +195,13 @@ Eleven Cafē: every page is `noindex` until they agree.
   website" (a near-black café site with amber light, serif headlines with a
   gold italic word, small gold labels, a pill nav). Structure and look were
   taken; copy, images and logos of those sites were not.
-  - The scene (`render/pour.html`, offline): their logo's cup on a walnut
-    counter by a tall window in low amber light, haze, soft focus; the light
-    comes up, espresso pours, steam rises; a seamless steam loop follows.
+  - The scene (`render/pour.html`, offline): a speckled cream stoneware cup
+    (wide round bowl, thin raw brown rim, loop handle) on a walnut counter by
+    a tall window in low amber light, haze, soft focus; the light comes up,
+    espresso pours, steam rises; a seamless steam loop follows. The cup is
+    modelled on a photo of a mug the owner sent ("Use this mug for the
+    website instead of the one your using", 2026-10-13); it replaced their
+    logo's ribbed cup. The photo itself is not on the site.
   - Home: the scene is pinned while three lines take turns with the scroll
     (made by hand; every shot pulled to order; the headline "The hole in the
     wall that fills the gaps in your day." with the buttons), then it sinks

@@ -88,3 +88,6 @@
 2026-10-13 21:55 [Korvane] session-start scan: files=20 parsed=20 principles=3
 2026-10-13 22:03 loaded redesign-existing-projects — 1 open observations
 2026-10-13 22:17 [eleven-cafe] checkpoint after tasks 59, 61, 62: observation 0021 written; nothing else pending
+2026-10-13 22:23 loaded task-observer — 2 open observations
+2026-10-13 22:23 [Korvane] workspace: created=none
+2026-10-13 22:23 [task-observer] session-start scan: files=21 parsed=21 principles=3
