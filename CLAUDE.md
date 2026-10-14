@@ -271,8 +271,12 @@ MapQuest). Not yet approved by Callahan Cleaning: every page is `noindex`.
   are Yelp's, the cut-off deep-clean list, Spanish, Kelsey): the site README.
 - Logo: theirs, traced from their 960 px Facebook picture
   (`render/trace_logo.py`); icons are its three sparkles.
-- Checks: `sites/callahan-cleaning/tests/behave.cjs` (serve the site on port
-  8800 first; `PAGES_ONLY=1` leaves out the opening).
+- Checked 2026-10-14 in Chromium, desktop and phone, with the final renders:
+  `sites/callahan-cleaning/tests/behave.cjs`, 72 of 72 (serve the site on
+  port 8800 first; `PAGES_ONLY=1` leaves out the opening, `OPENING=desk|mob`
+  narrows it). Not checked: Safari/iOS, real phones.
+- Live (once Pages deploys `main`) at
+  https://korvane11.github.io/Korvane/sites/callahan-cleaning/.
 
 ## Skills
 

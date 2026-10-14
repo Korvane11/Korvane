@@ -227,3 +227,42 @@ the room's origin.
 - Renders: made for this site, from CC0 Poly Haven assets.
 - Outfit, DM Sans: SIL Open Font License 1.1 (`assets/fonts/OFL-*.txt`).
 - Phosphor icons: MIT (`assets/icons/LICENSE-phosphor.txt`).
+
+## Checked
+
+2026-10-14, in Playwright's Chromium (WebM; real browsers get the MP4),
+desktop 1440 x 900 and phone 390 x 844 (and 375 x 667):
+`tests/behave.cjs`, 72 of 72. It covers:
+
+- The opening, both layouts: the film starts with nothing over it; the logo
+  comes up at 1.5 s and all three sparkles light; the page comes in at 3.5 s;
+  the loop takes over at 4 s with no black frame; the pause button works;
+  coming back to home from another page skips it; `?skip`; a blocked film
+  opens on the still.
+- Every page, both layouts: no sideways scroll; one h1, title, description,
+  canonical, og:image, noindex; every image loads; nothing left hidden; no
+  en or em dashes; tap targets 44 px or more on the phone; header (and call
+  bar) controls answer at their centre; the menu opens over everything with
+  focus on its close button, every link in it answers, Escape closes it; the
+  call bar stays down over the home hero and comes up past it; the hero
+  buttons fit a 375 x 667 screen.
+- The quote form: empty, it asks for a name, a way to reply and a service;
+  filled in, it opens an email to callahan.cleaning74@gmail.com with every
+  answer (read from Playwright's `request` event) and says what happens next.
+- Reduced motion (no opening, no video, the still), no JavaScript (every page
+  readable with its links), every internal link, image and #anchor (200),
+  structured data against the visible phone, email and hours, today's hours
+  in Tucson time.
+
+Also looked at by eye: screenshots of every page at both widths, the
+opening frame by frame at both widths, every render. Reviewed against
+Vercel's Web Interface Guidelines (fetched 2026-10-14): fixed tap
+highlight, touch-action, menu overscroll, placeholders, email spellcheck and
+theme-color; headings stay in sentence case (the house style).
+
+Not checked: Safari and iOS (no WebKit here), real phones, the MP4 files in
+a browser (Playwright's Chromium plays only the WebM; both are encoded from
+the same frames), and the link preview as Facebook or iMessage fetch it.
+
+Page weight: the whole `assets/` folder is 5.6 MB; the home page on a
+laptop loads the landscape opening (1.1 MB MP4) and loop (0.4 MB).
