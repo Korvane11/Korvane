@@ -1,6 +1,8 @@
 /* Home: the opening scene. Whether the pour plays was decided by the inline script in the page
  * head (html.intro): it plays whenever the site is opened, not when coming back here from
  * another page of the site after seeing it, with ?skip, or with reduced motion.
+ * With a data saver on (Save-Data, or prefers-reduced-data) no video loads at all: the
+ * still stays, and the three lines still take turns with the scroll.
  *
  * The light comes up on a dark café counter by a window; espresso pours into the cup, the stream
  * stops, steam rises into the light. The words and the nav come in once the light is up
@@ -18,6 +20,7 @@ const loop = media?.querySelector('.hero__loop');
 const pauseBtn = document.getElementById('steamToggle');
 let userPaused = false;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const saveData = navigator.connection?.saveData === true || matchMedia('(prefers-reduced-data: reduce)').matches;
 const tall = matchMedia('(max-aspect-ratio: 1/1)').matches;
 const SEEN = 'e11:poured';
 const LIT_AT = 650;          // ms after the pour starts playing: the light is up, the words come in
@@ -33,7 +36,7 @@ function done() {
 
 // the steam keeps rising behind the page
 function startLoop() {
-  if (reduced || !loop) return;
+  if (reduced || saveData || !loop) return;
   if (!loop.getAttribute('src')) loop.src = src('loop');   // the pour may have readied it already; setting it again reloads it
   loop.preload = 'auto';
   loop.addEventListener('playing', () => {

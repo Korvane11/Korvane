@@ -216,6 +216,12 @@ strong { font-weight: 600; }
 .link .icon { width: 18px; height: 18px; transition: transform 250ms var(--ease); }
 .link:hover .icon { transform: translateX(3px); }
 .link span { border-bottom: 1px solid currentColor; padding-bottom: 1px; }
+/* the call: the third action, after directions (filled) and the menu (outline) */
+.link--call { color: var(--text); font-weight: 500; }
+.link--call span { border-bottom-color: rgba(244, 236, 224, 0.35); transition: border-color 200ms var(--ease); }
+.link--call:hover span { border-bottom-color: var(--gold); }
+.link--call:hover .icon { transform: none; }
+.link--call .icon { color: var(--gold); }
 /* a small gold label with a rule in front: "— Vietnamese iced coffee" */
 .kicker { display: flex; width: fit-content; align-items: center; gap: 12px; font: 600 0.74rem/1.2 var(--sans); letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
 .kicker::before { content: ""; width: 28px; height: 1px; background: currentColor; opacity: 0.8; }
@@ -225,7 +231,7 @@ strong { font-weight: 600; }
 .tag--quiet { border-color: var(--line); color: var(--muted); }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 
-/* ---------- nav: the wordmark, the pages in a floating pill, the call button ---------- */
+/* ---------- nav: the wordmark, the pages in a floating pill, the directions button ---------- */
 .nav { position: fixed; inset: 0 0 auto; z-index: 50; transition: opacity 700ms var(--ease); }
 .nav::before { content: ""; position: absolute; inset: 0 0 -24px; pointer-events: none; background: linear-gradient(180deg, rgba(13, 11, 9, 0.92), rgba(13, 11, 9, 0)); opacity: 0; transition: opacity 300ms var(--ease); }
 .nav.is-solid::before { opacity: 1; }
@@ -236,7 +242,7 @@ strong { font-weight: 600; }
 .nav__links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: var(--r-pill); text-decoration: none; font-weight: 400; font-size: 0.95rem; color: rgba(244, 236, 224, 0.82); transition: color 200ms var(--ease), background-color 200ms var(--ease); }
 .nav__links a:hover { color: var(--text); background: rgba(255, 236, 210, 0.06); }
 .nav__links a[aria-current="page"] { color: var(--text); background: rgba(255, 236, 210, 0.10); }
-.nav__call { justify-self: end; min-height: 44px; padding: 0 20px; }
+.nav__cta { justify-self: end; min-height: 44px; padding: 0 20px; }
 .nav__toggle { display: none; justify-self: end; width: 48px; height: 48px; border-radius: var(--r-pill); border: 1px solid rgba(255, 236, 210, 0.12); background: rgba(18, 15, 12, 0.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); color: var(--text); cursor: pointer; align-items: center; justify-content: center; }
 .nav__toggle .icon { width: 22px; height: 22px; }
 
@@ -249,6 +255,7 @@ strong { font-weight: 600; }
 .menu nav a { padding: 14px 0; font: 400 2.5rem/1.1 var(--display); font-stretch: 87.5%; text-decoration: none; border-bottom: 1px solid var(--line); }
 .menu nav a[aria-current="page"] { color: var(--gold); font-style: italic; }
 .menu__actions { margin-top: auto; display: grid; gap: 10px; }
+.menu__call { justify-self: center; min-height: 44px; margin-top: 8px; }
 
 /* ---------- home: the opening scene ----------
  * The rendered scene fills the screen and stays put (sticky) while three lines change with
@@ -353,7 +360,8 @@ main { position: relative; isolation: isolate; }
 
 /* hours and the way in */
 .visit { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(36px, 6vw, 96px); align-items: start; }
-.visit__ctas { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; }
+.visit__ctas { margin-top: 30px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.visit__ctas .link { margin-inline: 14px; }
 .visit address { font-style: normal; margin-top: 22px; font-size: 1.15rem; line-height: 1.5; }
 .visit__status { margin-top: 18px; }
 .address--large { font-style: normal; margin-top: 22px; font-size: 1.25rem; line-height: 1.5; }
@@ -398,7 +406,7 @@ main { position: relative; isolation: isolate; }
 .menu-note .photo { aspect-ratio: 1; box-shadow: none; }
 .menu-note h2 { font-size: 2.1rem; }
 .menu-note p { margin-top: 10px; color: var(--muted); max-width: 36rem; }
-.menu-note .btn { margin-top: 20px; }
+.menu-note .btn, .menu-note .link { margin-top: 20px; }
 
 /* the story */
 .chapters { display: grid; gap: clamp(64px, 8vw, 120px); }
@@ -436,9 +444,10 @@ a.line:hover strong { color: var(--gold); }
 
 /* ---------- responsive ---------- */
 @media (max-width: 920px) {
-  .nav__links, .nav__call { display: none; }
+  .nav__links { display: none; }
+  .nav__cta { margin-left: auto; padding: 0 16px; }
   .nav__toggle { display: inline-flex; }
-  .nav__inner { display: flex; justify-content: space-between; height: 72px; }
+  .nav__inner { display: flex; justify-content: space-between; gap: 10px; height: 72px; }
   .split, .quotes, .visit, .visit-grid, .signature, .chapter, .menu-groups { grid-template-columns: 1fr; }
   .split .photo, .signature .photo { max-width: 420px; }
 }
@@ -460,6 +469,7 @@ a.line:hover strong { color: var(--gold); }
   .menu-note { grid-template-columns: 1fr; }
   .menu-note .photo { max-width: 220px; }
   .visit__ctas .btn { flex: 1 1 100%; }
+  .visit__ctas .link { margin: 4px auto 0; }
 }
 /* short phones: the headline, the address and both buttons fit under the cup */
 @media (max-aspect-ratio: 1/1) and (max-height: 720px) {

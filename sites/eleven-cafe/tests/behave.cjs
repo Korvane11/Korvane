@@ -174,6 +174,21 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     await ctx.close();
   }
 
+  /* 4a. a data saver on (Save-Data): no video is fetched, the still shows, the three lines still turn */
+  for (const [v, vp, mob] of [['desk', { width: 1440, height: 900 }, false], ['mob', { width: 390, height: 844 }, true]]) {
+    const ctx = await b.newContext({ viewport: vp, isMobile: mob, hasTouch: mob });
+    await ctx.addInitScript(() => Object.defineProperty(Navigator.prototype, 'connection', { configurable: true, get: () => ({ saveData: true, effectiveType: '4g' }) }));
+    const p = await ctx.newPage(); watch(p, `save-data ${v}`);
+    const videos = [];
+    p.on('request', (q) => { if (/\.(mp4|webm)(\?|$)/.test(q.url())) videos.push(q.url().split('/').pop()); });
+    await p.goto(BASE + 'index.html'); await p.waitForTimeout(3000);
+    const a = await p.evaluate(() => ({ intro: document.documentElement.classList.contains('intro'), still: parseFloat(getComputedStyle(document.querySelector('.hero__media img')).opacity), beat: document.querySelector('.hero').dataset.beat }));
+    await p.evaluate(() => { const h = document.querySelector('.hero'); scrollTo(0, (h.offsetHeight - innerHeight) * 0.9); }); await p.waitForTimeout(1200);
+    const z = await p.evaluate(() => { const b = document.querySelector('.hero__ctas .btn--gold').getBoundingClientRect(); return { beat: document.querySelector('.hero').dataset.beat, cta: b.width > 0 && b.bottom <= innerHeight }; });
+    ok(`save-data ${v}: no video fetched, the still shows, the lines still turn to the headline`, !a.intro && !videos.length && a.still === 1 && a.beat === '0' && z.beat === '2' && z.cta, JSON.stringify({ ...a, videos, end: z }));
+    await p.close(); await ctx.close();
+  }
+
   /* 4. reduced motion and 5. no JavaScript */
   {
     const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
@@ -275,6 +290,16 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
         return { out, overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth };
       });
       ok(`${v} ${path}: every control tappable (44px+), nothing wider than the screen`, !r.out.length && !r.overflow, r.out.join('; ') + (r.overflow ? ' OVERFLOW' : ''));
+      // one main action: the filled buttons all get directions (nav included, at both sizes); the menu is the
+      // outline button and the call a plain link, never a button
+      const cta = await p.evaluate(() => {
+        const dir = (a) => /^https:\/\/www\.google\.com\/maps\/dir\//.test(a.href);
+        const nav = document.querySelector('.nav__cta');
+        return { gold: [...document.querySelectorAll('.btn--gold')].filter((a) => !dir(a)).map((a) => a.textContent.trim()),
+          telBtn: document.querySelectorAll('.btn[href^="tel:"]').length, tel: document.querySelectorAll('a.link[href^="tel:"]').length,
+          nav: !!nav && dir(nav) && getComputedStyle(nav).display !== 'none' && nav.getBoundingClientRect().width > 0 };
+      });
+      ok(`${v} ${path}: one main action (directions filled, call a plain link)`, !cta.gold.length && !cta.telBtn && cta.tel >= 1 && cta.nav, JSON.stringify(cta));
       if (mob) {
         await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(300);
         await p.tap('#navToggle'); await p.waitForTimeout(400);
