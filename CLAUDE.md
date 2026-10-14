@@ -233,8 +233,8 @@ Eleven Cafē: every page is `noindex` until they agree.
   has a frame showing (no black flash). If the framing changes, re-measure
   the cup's fractions (`CUP_L`, `CUP_P` in the test); README "Rendering the
   pour again" lists every knob.
-- Checked 2026-10-13 in Chromium, desktop and phone, with the stoneware
-  mug: `sites/eleven-cafe/tests/behave.cjs`, 71 of 71 (serve the site on port
+- Checked 2026-10-14 in Chromium, desktop and phone, after the realism
+  pass: `sites/eleven-cafe/tests/behave.cjs`, 71 of 71 (serve the site on port
   8790 first; `PAGES_ONLY=1` and `VIEWS=desk|mob` narrow it). README
   "Checked" lists what it covers.
 - Live at https://korvane11.github.io/Korvane/sites/eleven-cafe/.

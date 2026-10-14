@@ -186,8 +186,9 @@ headline with its buttons (the first two lines are left out).
 
 ## Checked
 
-2026-10-13, in Chromium, desktop (1440 x 900) and phone (390 x 844), with
-the stoneware mug rendered: `tests/behave.cjs`, 71 of 71, no page errors.
+2026-10-14, in Chromium, desktop (1440 x 900) and phone (390 x 844), after
+the realism pass (higher camera, new stream, crema, glaze and steam layer):
+`tests/behave.cjs`, 71 of 71, no page errors.
 Serve the site on port 8790, then `NODE_PATH=$(npm root -g) node
 tests/behave.cjs` (or pass the live address). `PAGES_ONLY=1` leaves out the
 opening; `VIEWS=desk` or `VIEWS=mob` times the opening in one layout. A
