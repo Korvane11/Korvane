@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pour My Coffee Co | Coffee shop in Rita Ranch, Tucson</title>
+  <meta name="description" content="Your daily coffee stop in Rita Ranch: espresso, brewed coffee, custom drinks, pastries and sandwiches at 9136 E Valencia Rd, Tucson. Open from 6am.">
+  <!-- not live for Pour My Coffee Co yet: keep it out of search results until they approve it -->
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://korvane11.github.io/Korvane/sites/pour-my-coffee/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Pour My Coffee Co">
+  <meta property="og:title" content="Pour My Coffee Co | Coffee shop in Rita Ranch, Tucson">
+  <meta property="og:description" content="Your daily coffee stop in Rita Ranch: espresso, brewed coffee, custom drinks, pastries and sandwiches at 9136 E Valencia Rd, Tucson. Open from 6am.">
+  <meta property="og:url" content="https://korvane11.github.io/Korvane/sites/pour-my-coffee/">
+  <meta property="og:image" content="https://korvane11.github.io/Korvane/sites/pour-my-coffee/assets/brand/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A latte with a heart in a white cup on a sunlit table, and the Pour My Coffee Co logo.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://korvane11.github.io/Korvane/sites/pour-my-coffee/assets/brand/og.jpg">
+  <meta name="theme-color" content="#f5f9f9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0c1c1e" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="assets/brand/favicon.ico" sizes="48x48">
+  <link rel="icon" href="assets/brand/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <link rel="manifest" href="assets/brand/site.webmanifest">
+  <link rel="preload" href="assets/fonts/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" as="image" href="assets/pour/hero-l.webp" media="(min-aspect-ratio: 1/1)" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/pour/hero-p.webp" media="(max-aspect-ratio: 1/1)" fetchpriority="high">
+  <script>
+    /* the opening: plays when the site is opened (link, new tab, refresh), not when coming back to this page
+       from another page of the site after seeing it, and not with reduced motion or a data saver on (js/home.js) */
+    (function () {
+      var d = document.documentElement;
+      try {
+        var q = location.search, seen = sessionStorage.getItem('pour:poured') === '1', inside = false;
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        var how = nav && nav.type;
+        if (how === 'back_forward') inside = true;
+        else if (how !== 'reload' && document.referrer) {
+          var r = new URL(document.referrer);
+          inside = r.origin === location.origin && r.pathname.indexOf(new URL('./', location.href).pathname) === 0;
+        }
+        var skip = /[?&]skip\b/.test(q) || (seen && inside && !/[?&]intro\b/.test(q));
+        var lite = (navigator.connection && navigator.connection.saveData) || matchMedia('(prefers-reduced-data: reduce)').matches;
+        if (!skip && !lite && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          d.classList.add('intro');
+          setTimeout(function () { d.classList.remove('intro'); }, 9000);   /* never stuck on black */
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CafeOrCoffeeShop",
+  "@id": "https://korvane11.github.io/Korvane/sites/pour-my-coffee/#cafe",
+  "name": "Pour My Coffee Co",
+  "alternateName": [
+    "Pour",
+    "Pour My Coffee"
+  ],
+  "url": "https://korvane11.github.io/Korvane/sites/pour-my-coffee/",
+  "image": "https://korvane11.github.io/Korvane/sites/pour-my-coffee/assets/brand/og.jpg",
+  "logo": "https://korvane11.github.io/Korvane/sites/pour-my-coffee/assets/brand/icon-512.png",
+  "description": "Coffee shop in Rita Ranch, Tucson: espresso, brewed coffee, custom drinks, lemonade, milkshakes, pastries, sandwiches and snacks.",
+  "telephone": "+1-520-849-5359",
+  "email": "PourMyCoffeeCo@gmail.com",
+  "servesCuisine": [
+    "Coffee",
+    "Espresso",
+    "Pastries",
+    "Sandwiches"
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "9136 E Valencia Rd, Ste 160",
+    "addressLocality": "Tucson",
+    "addressRegion": "AZ",
+    "postalCode": "85747",
+    "addressCountry": "US"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 32.1183384,
+    "longitude": -110.7976841
+  },
+  "hasMap": "https://www.google.com/maps/search/?api=1&query=Pour+My+Coffee+Co,+9136+E+Valencia+Rd+Ste+160,+Tucson,+AZ+85747",
+  "hasMenu": "https://korvane11.github.io/Korvane/sites/pour-my-coffee/menu.html",
+  "sameAs": [
+    "https://www.instagram.com/pourmycoffeeco/",
+    "https://www.facebook.com/profile.php?id=100090196694802",
+    "https://x.com/PourMyCoffeeCo"
+  ]
+}
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body data-page="home" class="on-hero">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="nav" id="nav">
+    <div class="container nav__inner">
+      <a class="logo" href="index.html"><img class="logo--light" src="assets/brand/logo-teal.svg" alt="Pour My Coffee Co, home" width="128" height="50"><img class="logo--dark" src="assets/brand/logo-aqua.svg" alt="Pour My Coffee Co, home" width="128" height="50"></a>
+      <nav class="nav__links" aria-label="Main"><a href="menu.html">Menu</a><a href="location.html">Location</a><a href="about.html">About us</a></nav>
+      <a class="btn btn--fill nav__cta" href="https://www.google.com/maps/dir/?api=1&amp;destination=Pour+My+Coffee+Co,+9136+E+Valencia+Rd+Ste+160,+Tucson,+AZ+85747" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Directions</a>
+      <button class="nav__toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg></button>
+    </div>
+  </header>
+  <div class="menu" id="menu" hidden>
+    <button class="menu__close" id="menuClose" type="button" aria-label="Close menu"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button>
+    <nav aria-label="Menu"><a href="index.html" aria-current="page">Home</a><a href="menu.html">Menu</a><a href="location.html">Location</a><a href="about.html">About us</a></nav>
+    <div class="menu__actions">
+      <a class="btn btn--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Pour+My+Coffee+Co,+9136+E+Valencia+Rd+Ste+160,+Tucson,+AZ+85747" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Get directions</a>
+      <a class="btn btn--line" href="tel:+15208495359"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"/></svg>Call 520-849-5359</a>
+    </div>
+  </div>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__media" id="heroMedia">
+        <picture>
+          <source media="(max-aspect-ratio: 1/1)" type="image/webp" srcset="assets/pour/hero-p.webp">
+          <source media="(max-aspect-ratio: 1/1)" srcset="assets/pour/hero-p.jpg">
+          <source type="image/webp" srcset="assets/pour/hero-l.webp">
+          <img src="assets/pour/hero-l.jpg" width="1440" height="810" alt="A latte with a heart in a white cup on its saucer, steam rising, on an oak table in low morning sun." fetchpriority="high">
+        </picture>
+        <video class="hero__intro" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+        <video class="hero__loop" muted playsinline loop preload="none" aria-hidden="true" tabindex="-1"></video>
+      </div>
+      <div class="hero__scrim" aria-hidden="true"></div>
+      <div class="container">
+        <div class="hero__copy">
+          <img class="hero__logo" src="assets/brand/logo-teal.svg" alt="Pour My Coffee Co" width="300" height="116">
+          <h1 id="hero-title">Your daily coffee stop.</h1>
+          <p class="hero__lead">Espresso, custom drinks and fresh food in Rita Ranch. Open from 6am on weekdays, 7am on weekends.</p>
+          <div class="actions">
+            <a class="btn btn--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Pour+My+Coffee+Co,+9136+E+Valencia+Rd+Ste+160,+Tucson,+AZ+85747" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Get directions</a>
+            <a class="btn btn--line" href="menu.html">See the menu</a>
+          </div>
+        </div>
+      </div>
+      <button class="hero__steam" id="steamToggle" type="button" aria-pressed="false" aria-label="Pause the steam" hidden><svg class="icon i-pause" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M200,32H160a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16h40a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm0,176H160V48h40ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Zm0,176H56V48H96Z"/></svg><svg class="icon i-play" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></button>
+    </section>
+
+    <section class="section" aria-labelledby="pour-title">
+      <div class="container pour">
+        <div class="reveal">
+          <h2 id="pour-title">Great coffee. Amazing service.</h2>
+          <p class="lead" style="margin-top:18px">Come in for fresh, quality drinks: espresso, brewed coffee, lemonade and milkshakes, with pastries, sandwiches and snacks.</p>
+          <ul class="rows">
+            <li><b>Espresso and brewed coffee</b><span>Fresh brewed from 6am.</span></li>
+            <li><b>Custom drinks</b><span>Tell us what you like, hot, iced or blended.</span></li>
+            <li><b>Lemonade and milkshakes</b><span>Something cold for a Tucson afternoon.</span></li>
+            <li><b>Pastries, sandwiches and snacks</b><span>Breakfast, lunch or an afternoon snack.</span></li>
+          </ul>
+          <p style="margin-top:22px"><a class="link" href="menu.html">See the menu<svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
+        </div>
+        <figure class="frame reveal" style="margin:0">
+          <picture>
+            <source type="image/webp" srcset="assets/photos/pour-still.webp">
+            <img src="assets/photos/pour-still.jpg" width="960" height="1200" loading="lazy" decoding="async" alt="Milk pouring into an espresso in a white cup, a heart forming in the crema.">
+          </picture>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="where-title">
+      <div class="container">
+        <div class="where reveal">
+          <div class="stack">
+            <h2 id="where-title">Find us in Rita Ranch</h2>
+            <address class="address">9136 E Valencia Rd, Ste 160<br>Tucson, AZ 85747</address>
+            <p>In the Safeway shopping center, on Valencia Road.</p>
+            <div class="actions">
+              <a class="btn btn--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Pour+My+Coffee+Co,+9136+E+Valencia+Rd+Ste+160,+Tucson,+AZ+85747" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Get directions</a>
+              <a class="link" href="tel:+15208495359"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"/></svg>520-849-5359</a>
+            </div>
+          </div>
+          <div>
+          <table class="hours">
+            <caption>Hours</caption>
+            <tr data-day="1"><th scope="row">Monday</th><td>6am to 5pm</td></tr>
+            <tr data-day="2"><th scope="row">Tuesday</th><td>6am to 5pm</td></tr>
+            <tr data-day="3"><th scope="row">Wednesday</th><td>6am to 5pm</td></tr>
+            <tr data-day="4"><th scope="row">Thursday</th><td>6am to 5pm</td></tr>
+            <tr data-day="5"><th scope="row">Friday</th><td>6am to 5pm</td></tr>
+            <tr data-day="6"><th scope="row">Saturday</th><td>7am to 5pm</td></tr>
+            <tr data-day="0"><th scope="row">Sunday</th><td>7am to 5pm</td></tr>
+          </table>
+          <p class="status note" data-status hidden></p>
+          <p class="note">Holiday hours can change: call 520-849-5359 to check.</p>
+          </div>
+          <figure class="frame-wrap" style="margin:0">
+            <div class="frame"><img src="assets/photos/storefront.jpg" width="640" height="480" loading="lazy" decoding="async" alt="The front of Pour My Coffee Co: white stucco under a tile roof, desert trees and agave, the shop's name on the glass door."></div>
+            <figcaption>Our front door, Suite 160.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="coffee-title">
+      <div class="container statement reveal">
+        <h2 class="sr-only" id="coffee-title">Our coffee</h2>
+        <blockquote><p style="margin:0;color:inherit">Our coffee is carefully selected from quality roasters, grown by ethical farms, and always fresh.</p></blockquote>
+        <p>And we chose some of the best fresh ingredients for our food.</p>
+        <a class="link" href="about.html">About us<svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="closing-title">
+      <div class="container">
+        <div class="closing reveal">
+          <img src="assets/brand/mark-teal.svg" width="96" height="96" alt="">
+          <div>
+            <h2 id="closing-title">Stop by today!</h2>
+            <p>9136 E Valencia Rd, Ste 160. Open every day until 5pm.</p>
+          </div>
+          <a class="btn btn--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Pour+My+Coffee+Co,+9136+E+Valencia+Rd+Ste+160,+Tucson,+AZ+85747" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Get directions</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div>
+          <a class="logo" href="index.html"><img class="logo--light" src="assets/brand/logo-teal.svg" alt="Pour My Coffee Co, home" width="150" height="58"><img class="logo--dark" src="assets/brand/logo-aqua.svg" alt="Pour My Coffee Co, home" width="150" height="58"></a>
+          <address>9136 E Valencia Rd, Ste 160<br>Tucson, AZ 85747<br>In Rita Ranch, at the Safeway shopping center</address>
+        </div>
+        <div>
+          <h2>Hours</h2>
+          <p class="note" style="margin:0">Monday to Friday<br>6am to 5pm<br>Saturday and Sunday<br>7am to 5pm</p>
+        </div>
+        <div>
+          <h2>Visit</h2>
+          <ul>
+            <li><a href="menu.html">Menu</a></li>
+            <li><a href="location.html">Location</a></li>
+            <li><a href="about.html">About us</a></li>
+            <li><a href="about.html#team">Join our team</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Contact</h2>
+          <ul>
+            <li><a href="tel:+15208495359">520-849-5359</a></li>
+            <li><a href="mailto:PourMyCoffeeCo@gmail.com">PourMyCoffeeCo@gmail.com</a></li>
+            <li><a href="https://www.instagram.com/pourmycoffeeco/" rel="noopener">Instagram</a></li>
+            <li><a href="https://www.facebook.com/profile.php?id=100090196694802" rel="noopener">Facebook</a></li>
+            <li><a href="https://x.com/PourMyCoffeeCo" rel="noopener">X</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__small">
+        <p>&copy; <span data-year>2026</span> Pour My Coffee Co</p>
+        <p>The cup in the pictures on this site is a 3D render, made for it.</p>
+      </div>
+    </div>
+  </footer>
+  <div class="callbar">
+    <a class="btn btn--fill" href="https://www.google.com/maps/dir/?api=1&amp;destination=Pour+My+Coffee+Co,+9136+E+Valencia+Rd+Ste+160,+Tucson,+AZ+85747" rel="noopener"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>Directions</a>
+    <a class="btn btn--line" href="tel:+15208495359"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"/></svg>Call</a>
+  </div>
+  <script src="js/site.js" type="module"></script>
+</body>
+</html>
