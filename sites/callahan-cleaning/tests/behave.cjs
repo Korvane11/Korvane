@@ -1,6 +1,7 @@
 // Browser checks for the Callahan Cleaning site. Serve sites/callahan-cleaning on port 8800, then:
 //   NODE_PATH=$(npm root -g) node tests/behave.cjs [base URL]
-// PAGES_ONLY=1 leaves out the opening (section 1), for checking the pages before the film is rendered.
+// PAGES_ONLY=1 leaves out the opening (section 1), for checking the pages before the film is rendered;
+// OPENING=desk (or mob) checks the opening in one layout only.
 const { chromium } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:8800/';
 const PAGES = ['index.html', 'services.html', 'about.html', 'book.html'];
@@ -50,7 +51,7 @@ const VIEWS = [['desk', { width: 1440, height: 900 }, false], ['mob', { width: 3
   });
 
   /* 1. the opening */
-  if (!PAGES_ONLY) for (const [v, vp, mob] of VIEWS) {
+  if (!PAGES_ONLY) for (const [v, vp, mob] of VIEWS.filter(([v]) => !process.env.OPENING || process.env.OPENING === v)) {
     const ctx = await b.newContext({ viewport: vp, isMobile: mob, hasTouch: mob });
     const p = await ctx.newPage(); watch(p, `intro ${v}`);
     await trackIntro(p);

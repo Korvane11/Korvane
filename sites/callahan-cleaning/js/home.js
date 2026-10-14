@@ -30,7 +30,7 @@ function out() {
 function finish() {
   out();
   // drop the opening's classes once the page has come in, so nothing waits on them later
-  setTimeout(() => root.classList.remove('intro', 'is-mark', 'is-out'), 1400);
+  setTimeout(() => root.classList.remove('intro', 'is-mark', 'is-out'), 1900);
 }
 
 function startLoop() {

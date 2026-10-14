@@ -4,7 +4,9 @@
 #   loop-{l,p}.{mp4,webm}   frames 97-168 (3 s, seamless): rendered every other frame, the rest interpolated
 #   still-{l,p}.jpg         frame 96: the poster, the fallback and the reduced-motion picture
 # MP4 (H.264) for browsers, WebM (VP9) for Chromium builds without H.264 (Playwright's).
+# A light temporal-only denoise (hqdn3d, spatial 0) calms the shimmer each frame's own denoising leaves on the walls.
 set -e
+TD="hqdn3d=0:0:5:5"
 cd "$(dirname "$0")/.."
 OUT=render/out
 DST=assets/film
@@ -14,15 +16,15 @@ for L in land port; do
   F=$OUT/film-$L
   [ -f $F/0096.png ] || { echo "film-$L not rendered yet"; continue; }
   # the opening
-  ffmpeg -y -loglevel error -framerate 24 -start_number 1 -i $F/%04d.png -frames:v 96 \
+  ffmpeg -y -loglevel error -framerate 24 -start_number 1 -i $F/%04d.png -frames:v 96 -vf $TD \
     -c:v libx264 -preset slow -crf 21 -pix_fmt yuv420p -movflags +faststart -profile:v high $DST/intro-$S.mp4
-  ffmpeg -y -loglevel error -framerate 24 -start_number 1 -i $F/%04d.png -frames:v 96 \
+  ffmpeg -y -loglevel error -framerate 24 -start_number 1 -i $F/%04d.png -frames:v 96 -vf $TD \
     -c:v libvpx-vp9 -crf 33 -b:v 0 -row-mt 1 -pix_fmt yuv420p $DST/intro-$S.webm
   # the loop: 36 rendered frames (97, 99 ... 167) plus 97 again at the end so the interpolation wraps
   T=$(mktemp -d)
   i=0
   for f in $(seq 97 2 167) 97; do cp $F/$(printf %04d $f).png $T/$(printf %03d $i).png; i=$((i+1)); done
-  ffmpeg -y -loglevel error -framerate 12 -i $T/%03d.png -vf "minterpolate=fps=24:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1" $T/interp_%03d.png
+  ffmpeg -y -loglevel error -framerate 12 -i $T/%03d.png -vf "minterpolate=fps=24:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,hqdn3d=0:0:5:5" $T/interp_%03d.png
   # keep 72 frames: 97 ... 168 (the next would be 97 again)
   ffmpeg -y -loglevel error -framerate 24 -i $T/interp_%03d.png -frames:v 72 \
     -c:v libx264 -preset slow -crf 21 -pix_fmt yuv420p -movflags +faststart -profile:v high $DST/loop-$S.mp4
