@@ -239,6 +239,25 @@ Eleven Cafē: every page is `noindex` until they agree.
   "Checked" lists what it covers.
 - Live at https://korvane11.github.io/Korvane/sites/eleven-cafe/.
 
+## Callahan Cleaning (`sites/callahan-cleaning/`)
+
+Residential, commercial, office, move-in/out and Airbnb cleaning in Tucson
+(mobile, no storefront), since 2017, locally owned and LGBTQ+ operated.
+Started 2026-10-14 from their Wix site (callahancleaning74.wixsite.com/website),
+their Facebook (facebook.com/callahancleaning) and their Yelp listing (via
+MapQuest). Not yet approved by Callahan Cleaning: every page is `noindex`.
+
+- The owner's words (2026-10-14): "create a website using all the plugins and
+  skills to the best of your ability, make this professional, realisitic,
+  artistic, and unique to the business, pull info from their socials, google,
+  website, make this cinematic and use only real 3d rendering . use high
+  quality images and videos, make sure everything meets the standard of a
+  premium website". Then: "im going to lose wifi please remember this and
+  complete when i reconnect" (so: finish it unattended, commit as you go).
+- In progress: see the site README for state. The 3D scenes are Blender 5.2
+  (`pip install bpy`) + Cycles, with Poly Haven CC0 models, textures and skies
+  (`render/fetch_assets.py`, cache not committed).
+
 ## Skills
 
 `.claude/skills/` holds the skills the owner installed for building sites.
