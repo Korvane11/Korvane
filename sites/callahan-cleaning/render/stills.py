@@ -54,7 +54,7 @@ def kitchen(S, out, layout):
     S.build_room(M)
     _open_blinds(S, M, angle=-12)
     marble = S.tex_material('marble', 'marble_01', scale=0.55, box=True, bump=0.1,
-                            rough_mul=0.15, rough_add=0.02, coat=0.8, sat=0.4, val=1.08)
+                            rough_mul=0.15, rough_add=0.02, coat=0.8, sat=0.12, val=1.32)
     cab = S.plain_material('cabinet', (0.80, 0.78, 0.73), rough=0.38)
     bronze = M['frame']
     # the island: a base, door fronts with shadow gaps, a thick marble top
@@ -82,7 +82,6 @@ def kitchen(S, out, layout):
     tap = bpy.data.objects.new('tap', cu)
     bpy.context.scene.collection.objects.link(tap)
     tap.data.materials.append(bronze)
-    S.box('sink', (0.5, 0.38, 0.01), (x + 0.55, y - 0.05, h + 0.046), S.plain_material('sink', (0.03, 0.03, 0.03), rough=0.25), bevel=0.02)
     # on the counter: a wooden bowl of lemons, a white jug, a folded linen cloth
     S.load_model('wooden_bowl_01', (x - 0.45, y - 0.1, h + 0.045), rot_z=0.4, scale=1.1)
     for i, (lx, ly, lz, rz) in enumerate([(-0.48, -0.12, 0.03, 0.2), (-0.38, -0.05, 0.035, 1.3), (-0.46, 0.0, 0.07, 2.1)]):
@@ -96,9 +95,9 @@ def kitchen(S, out, layout):
     S.load_model('potted_plant_04', (-2.35, 4.3, 0.0), rot_z=0.6, height=1.15)
     _light(S, strength=10.0, haze=0.008)
     if layout == 'port':
-        S.camera((1.2, 1.15, 1.2), (-0.35, 3.1, 0.92), lens=36, fstop=2.5)
+        S.camera((0.75, 1.75, 1.12), (-0.3, 2.95, 0.93), lens=40, fstop=2.2)
     else:
-        S.camera((1.75, 1.0, 1.22), (-0.45, 3.2, 0.9), lens=32, fstop=2.8)
+        S.camera((1.05, 1.75, 1.13), (-0.42, 3.0, 0.92), lens=38, fstop=2.2)
     _render(S, out, 'kitchen', layout)
 
 
@@ -107,15 +106,15 @@ def moving(S, out, layout):
     M = S.make_mats()
     S.build_room(M)
     _open_blinds(S, M, angle=-18)
-    for i, (bx, by, bz, rz, hgt) in enumerate([(1.6, 4.55, 0.0, 0.05, 0.42), (2.25, 4.5, 0.0, -0.08, 0.42),
-                                                (1.9, 4.55, 0.42, 0.2, 0.40), (2.55, 3.85, 0.0, 0.5, 0.36)]):
+    for i, (bx, by, bz, rz, hgt) in enumerate([(0.55, 4.55, 0.0, 0.05, 0.44), (1.2, 4.5, 0.0, -0.08, 0.44),
+                                                (0.85, 4.52, 0.44, 0.2, 0.40), (1.6, 3.95, 0.0, 0.5, 0.36)]):
         S.load_model('cardboard_box_01', (bx, by, bz), rot_z=rz, height=hgt)
     S.load_model('wicker_basket_02', (-1.9, 4.6, 0.0), rot_z=0.2, height=0.3)
-    _light(S, strength=11.0, haze=0.014)
+    _light(S, strength=11.0, haze=0.008)
     if layout == 'port':
-        S.camera((1.9, 0.4, 0.9), (-0.8, 3.9, 0.7), lens=26, fstop=4)
+        S.camera((2.0, 1.3, 0.85), (-0.2, 4.2, 0.55), lens=30, fstop=3.5)
     else:
-        S.camera((2.6, 0.0, 1.0), (-0.9, 3.9, 0.75), lens=24, fstop=4)
+        S.camera((2.55, 1.2, 0.9), (-0.5, 4.2, 0.55), lens=28, fstop=3.5)
     _render(S, out, 'moving', layout)
 
 
@@ -131,15 +130,16 @@ def rental(S, out, layout):
     S.box('bed_frame', (1.78, 2.12, 0.26), (x, y - 0.05, 0.13), M['oak'], bevel=0.012)
     S.box('headboard', (1.9, 0.07, 0.95), (x, S.Y1 - 0.04, 0.475), M['oak'], bevel=0.012)
     S.cushion('mattress', (1.6, 2.0, 0.24), (x, y - 0.05, 0.38), white, soft=0.05, sag=0.004)
-    S.cushion('duvet', (1.72, 1.45, 0.11), (x, y - 0.35, 0.53), white, soft=0.05, sag=0.02)
-    S.cushion('duvet_fold', (1.72, 0.3, 0.12), (x, y + 0.3, 0.54), white, soft=0.05, sag=0.015)
+    # the duvet drapes over the mattress's sides and foot, with a folded-back top
+    S.cushion('duvet', (1.78, 1.62, 0.36), (x, y - 0.27, 0.36), white, soft=0.09, sag=0.035)
+    S.cushion('duvet_fold', (1.76, 0.34, 0.1), (x, y + 0.38, 0.565), white, soft=0.05, sag=0.02, rot=(math.radians(-4), 0, 0))
     for sx in (-0.4, 0.4):
         S.cushion(f'pillow_{sx}', (0.66, 0.45, 0.17), (x + sx, y + 0.72, 0.6), white, soft=0.08, sag=0.02, rot=(math.radians(-18), 0, 0))
     S.cushion('accent', (0.48, 0.13, 0.32), (x, y + 0.55, 0.66), M['teal'], soft=0.06, sag=0.012, rot=(math.radians(-14), 0, 0))
-    S.cushion('throw', (1.74, 0.42, 0.03), (x, y - 0.82, 0.6), M['clay'], soft=0.012, sag=0.006)
+    S.cushion('throw', (1.84, 0.46, 0.06), (x, y - 0.78, 0.545), M['clay'], soft=0.028, sag=0.016)
     # folded towels at the foot, for the next guests
     for i in range(3):
-        S.cushion(f'towel_{i}', (0.36, 0.26, 0.055), (x + 0.42, y - 0.55, 0.62 + i * 0.055), towel, soft=0.022, sag=0.003, rot=(0, 0, 0.12 - i * 0.04))
+        S.cushion(f'towel_{i}', (0.36, 0.26, 0.055), (x + 0.42, y - 0.5, 0.6 + i * 0.055), towel, soft=0.022, sag=0.003, rot=(0, 0, 0.12 - i * 0.04))
     for sx in (-1, 1):
         S.load_model('side_table_01', (x + sx * 1.22, S.Y1 - 0.35, 0.0), rot_z=0.0, height=0.5)
     S.load_model('ceramic_vase_01', (x - 1.22, S.Y1 - 0.35, 0.5), rot_z=0.3, height=0.34, mat=M['glaze_white'])
@@ -147,9 +147,9 @@ def rental(S, out, layout):
     S.load_model('potted_plant_04', (-2.35, 4.4, 0.0), rot_z=0.6, height=1.15)
     _light(S, strength=10.0, haze=0.008)
     if layout == 'port':
-        S.camera((2.2, 1.0, 1.25), (0.2, 3.9, 0.55), lens=34, fstop=3.5)
+        S.camera((1.85, 1.75, 1.1), (0.45, 3.95, 0.55), lens=36, fstop=3.0)
     else:
-        S.camera((2.45, 0.85, 1.3), (-0.1, 3.9, 0.55), lens=30, fstop=3.5)
+        S.camera((2.15, 1.6, 1.15), (0.25, 3.95, 0.55), lens=34, fstop=3.0)
     _render(S, out, 'rental', layout)
 
 
@@ -173,9 +173,9 @@ def office(S, out, layout):
     S.cushion('rug', (2.6, 1.8, 0.012), (0.8, 3.4, 0.006), M['rug'], soft=0.004, sag=0.0)
     _light(S, strength=10.0, haze=0.01)
     if layout == 'port':
-        S.camera((1.9, 0.6, 1.3), (0.0, 3.8, 0.75), lens=30, fstop=4)
+        S.camera((1.6, 2.0, 1.15), (0.35, 3.75, 0.8), lens=36, fstop=3.0)
     else:
-        S.camera((2.6, 0.5, 1.35), (-0.3, 3.9, 0.75), lens=26, fstop=4)
+        S.camera((1.9, 1.85, 1.18), (0.2, 3.8, 0.78), lens=34, fstop=3.0)
     _render(S, out, 'office', layout)
 
 
