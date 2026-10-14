@@ -1,6 +1,6 @@
 ---
 id: 25
-title: "Waiting on a background render by a PID from pgrep -f returned at once, twice in one session, and a third time (2026-10-14) pgrep -f said a finished render was still running: the pattern also appeared in the tool call's own shell command, so pgrep found that shell; the lesson lived only in a conversation summary and this log"
+title: "Waiting on a background render by a PID from pgrep -f returned at once, twice in one session, a third time (2026-10-14) pgrep -f said a finished render was still running, and a fourth time (2026-10-14, Pour My Coffee Co) pkill -f killed the tool call's own shell instead of only the render: the pattern also appeared in the tool call's own shell command, so pgrep found that shell; the lesson lived only in a conversation summary and this log"
 status: open
 type: open-source
 skill: []
@@ -9,7 +9,7 @@ target_file: ["sites/eleven-cafe/render/render_all.sh"]
 siblings_checked: "reuses the open candidate scroll-film-renders (long offline renders run in the background and waited on); no installed skill covers running or waiting on long jobs; the render script named in target_file, where a PID file would remove the step; checked"
 area: "Starting and waiting on long background jobs (offline renders) from the agent's shell"
 date: 2026-10-13
-session_context: "Eleven Cafē site: full renders of the opening scene (about 70 minutes) started in the background, with a background waiter that reports when they end; 2026-10-14, the phin loop's render (render_phin.cjs), checked after its last frame"
+session_context: "Pour My Coffee Co site, 2026-10-14: stopping a running render to change its shader; Eleven Cafē site: full renders of the opening scene (about 70 minutes) started in the background, with a background waiter that reports when they end; 2026-10-14, the phin loop's render (render_phin.cjs), checked after its last frame"
 parked_until:
 resolved:
 resolution:
@@ -51,3 +51,15 @@ same false positive would keep a waiter looping forever.
 process whose command line contains the pattern, including the one doing
 the searching. Get the identity of a job from the act that started it, not
 from a search afterwards.
+
+**Fourth instance (2026-10-14, Pour My Coffee Co).** To stop a running
+render, one tool call ran `pkill -f render_all.sh; pkill -f
+render_pour.cjs; ...` followed by the shader edit and a test render. The
+tool call's own shell had `render_all.sh` in its command line, so the first
+`pkill` killed that shell (exit 144): the render kept running and the edit
+never happened. Recovered by listing with `pgrep -fa "node .*render_pour"`
+(the listing showed the shell too), then `kill` with the exact PIDs. The
+structural fix above (a PID file written by the job) would have made it
+`kill $(cat "$OUT/render.pid")`; the Pour render scripts were written in
+this session without it, so the barrier still lives only here.
+

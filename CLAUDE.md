@@ -289,6 +289,45 @@ MapQuest). Not yet approved by Callahan Cleaning: every page is `noindex`.
 - Live (once Pages deploys `main`) at
   https://korvane11.github.io/Korvane/sites/callahan-cleaning/.
 
+## Pour My Coffee Co (`sites/pour-my-coffee/`)
+
+Coffee shop in Rita Ranch, Tucson: 9136 E Valencia Rd, Ste 160 (Safeway
+shopping center), 520-849-5359, PourMyCoffeeCo@gmail.com. Their site is Wix
+(pourmycoffeeco.com). Started 2026-10-14. Not yet approved by Pour: every
+page is `noindex`; their Wix site, domain and listings are untouched.
+
+- The owner's words (2026-10-14): they pasted the master blueprint and
+  "https://www.pourmycoffeeco.com/ heres the wbsite i need you to make a
+  better one for". The blueprint's first response is
+  `sites/pour-my-coffee/BLUEPRINT.md`; facts with sources, gaps and
+  questions for Pour, the design note and the opening's beats: the site
+  README.
+- Pages keep their nav labels: Home, Menu, Location, About us (with Join our
+  team). Main action Get directions (they're walk-in; no online ordering:
+  their Menu page says "COMING SOON").
+- Look: deliberately the opposite of Eleven Cafē: bright morning daylight,
+  their aqua `#a1d0d8` with a deep teal `#17575e` for actions, Bricolage
+  Grotesque and Figtree, light and dark modes. Their logo traced from their
+  own PNG (`render/trace_logo.py`).
+- The opening (`render/pour.html`, our own WebGL ray marcher, no stock):
+  low sun through a desert tree onto an oak table, milk poured into an
+  espresso in a white cup leaves a heart, steam rises; the logo and words
+  fade in beside the cup at 1.1 s; a 6 s steam loop follows. Render:
+  `render/render_all.sh` (about 1.5-2.5 h, resumable), stills and share
+  image: `render/stills.cjs`. Don't edit `pour.html` while a render runs:
+  each render process loads it fresh, so the loop would stop matching the
+  intro.
+- Wix stock photos are not carried over; their storefront photo (theirs) is.
+  The footer says the cup is a 3D render.
+- Hours shown Mon-Fri 6-5, Sat-Sun 7-5 (home page, Instagram, Google agree;
+  two old Wix footers disagree): no "Open now" until Pour confirms
+  (`HOURS_CONFIRMED` in `js/site.js`). No menu prices, reviews or ratings
+  until Pour supplies or picks them.
+- Tests: `sites/pour-my-coffee/tests/behave.cjs` (serve on port 8810 first;
+  `PAGES_ONLY=1`, `VIEWS=desk|mob`).
+- Live (once Pages deploys `main`) at
+  https://korvane11.github.io/Korvane/sites/pour-my-coffee/.
+
 ## Skills
 
 `.claude/skills/` holds the skills the owner installed for building sites.
