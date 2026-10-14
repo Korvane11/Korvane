@@ -12,5 +12,5 @@ for L in land port; do
   python3 render/scene.py film $OUT/film-$L --layout $L --frames 97-168:2 --samples 32
 done
 for S in living kitchen moving rental office; do
-  python3 render/scene.py $S $OUT/stills --samples 256
+  python3 render/scene.py $S $OUT/stills --samples 128
 done

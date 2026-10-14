@@ -436,7 +436,7 @@ def setup_render(layout, samples, scale, exposure=0.0, look='AgX - Base Contrast
     cy.volume_max_steps = 256
     sc.render.film_transparent = False
     if layout == 'port':
-        sc.render.resolution_x, sc.render.resolution_y = 720, 1280
+        sc.render.resolution_x, sc.render.resolution_y = 648, 1152
     else:
         sc.render.resolution_x, sc.render.resolution_y = 1280, 720
     sc.render.resolution_percentage = scale
