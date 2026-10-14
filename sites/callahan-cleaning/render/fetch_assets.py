@@ -10,7 +10,7 @@ import json, os, sys, urllib.request
 CACHE = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), 'cache')
 MODELS = ['potted_plant_04', 'ceramic_vase_01', 'ceramic_vase_02', 'ceramic_vase_04', 'modern_arm_chair_01',
           'modern_coffee_table_01', 'side_table_01', 'wooden_bowl_01',
-          'cardboard_box_01', 'wicker_basket_02', 'throw_pillows_01', 'mid_century_lounge_chair']
+          'cardboard_box_01', 'wicker_basket_02', 'throw_pillows_01', 'mid_century_lounge_chair', 'lemon']
 TEXTURES = ['white_stucco', 'terracotta_floor_tiles', 'wood_floor', 'rough_linen', 'white_oak_veneer',
             'waffle_pique_cotton', 'marble_01', 'white_plaster_02']
 HDRIS = ['goegap_road', 'kiara_1_dawn']

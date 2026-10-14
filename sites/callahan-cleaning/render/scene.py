@@ -6,10 +6,10 @@ with wooden blinds. In the opening the blinds tilt open and low morning sun come
 through them in stripes; outside, a mesquite's leaves sway in the light, so the
 stripes move a little (the loop).
 
-    python3 render/scene.py <shot> <out_dir> [--layout land|port] [--frames A-B]
+    python3 render/scene.py <shot> <out_dir> [--layout land|port] [--frames A-B[:step]]
                             [--samples N] [--scale PCT]
 
-Shots: film (the opening and the loop: frames 1-216, see FILM_*), and the stills
+Shots: film (the opening and the loop: frames 1-168, see INTRO_END, LOOP_LEN), and the stills
 living, kitchen, moving, rental, office. Everything is in metres; Z is up.
 Models, textures and skies are Poly Haven's (CC0), fetched by fetch_assets.py.
 """
@@ -195,7 +195,7 @@ def box(name, size, loc, mat=None, bevel=0.0, segs=3, rot=(0, 0, 0)):
     o = bpy.context.active_object
     o.name = name
     o.scale = size
-    bpy.ops.object.transform_apply(scale=True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     if bevel:
         bv = o.modifiers.new('bevel', 'BEVEL')
         bv.width = bevel
@@ -218,7 +218,7 @@ def cushion(name, size, loc, mat, soft=0.06, sag=0.012, rot=(0, 0, 0)):
     o = bpy.context.active_object
     o.name = name
     o.scale = size
-    bpy.ops.object.transform_apply(scale=True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     bv = o.modifiers.new('bevel', 'BEVEL')
     bv.width = soft
     bv.segments = 6
@@ -329,7 +329,7 @@ def build_blinds(mats):
         s = bpy.context.active_object
         s.name = f'slat_{i:02d}'
         s.scale = (0.05, (y1 - y0) - 0.04, 0.0035)
-        bpy.ops.object.transform_apply(scale=True)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         bv = s.modifiers.new('bevel', 'BEVEL')
         bv.width = 0.0015
         bv.segments = 2
@@ -416,7 +416,7 @@ def setup_render(layout, samples, scale, exposure=0.0, look='AgX - Base Contrast
     cy.device = 'CPU'
     cy.samples = samples
     cy.use_adaptive_sampling = True
-    cy.adaptive_threshold = 0.012
+    cy.adaptive_threshold = 0.01
     cy.use_denoising = True
     cy.denoiser = 'OPENIMAGEDENOISE'
     cy.denoising_input_passes = 'RGB_ALBEDO_NORMAL'
@@ -430,7 +430,7 @@ def setup_render(layout, samples, scale, exposure=0.0, look='AgX - Base Contrast
     cy.caustics_reflective = False
     cy.caustics_refractive = False
     cy.blur_glossy = 1.0
-    cy.sample_clamp_indirect = 6.0
+    cy.sample_clamp_indirect = 3.0
     cy.light_sampling_threshold = 0.01
     cy.volume_step_rate = 4.0
     cy.volume_max_steps = 256
@@ -538,7 +538,7 @@ def make_mats():
     M['sofa'] = linen('sofa', (0.80, 0.75, 0.67), scale=4.0)
     M['plinth'] = plain_material('plinth', (0.05, 0.04, 0.035), rough=0.5)
     M['teal'] = linen('teal', (0.035, 0.20, 0.21), scale=5.0)       # Callahan's teal, in linen
-    M['clay'] = linen('clay', (0.62, 0.36, 0.24), scale=5.0)
+    M['clay'] = linen('clay', (0.50, 0.24, 0.13), scale=5.0)
     M['rug'] = linen('rug', (0.82, 0.78, 0.70), scale=1.6)
     M['glaze_teal'] = plain_material('glaze_teal', (0.02, 0.17, 0.18), rough=0.12, coat=0.6)
     M['glaze_white'] = plain_material('glaze_white', (0.86, 0.84, 0.8), rough=0.18, coat=0.5)
@@ -613,8 +613,10 @@ def main():
     setup_render(layout, int(opts['samples']), int(opts['scale']), exposure=float(opts.get('exposure', 0.9)))
     if shot == 'film':
         objs = build_film(layout)
-        a, b = (opts['frames'] or f'1-{INTRO_END + LOOP_LEN}').split('-')
-        for f in range(int(a), int(b) + 1):
+        spec = opts['frames'] or f'1-{INTRO_END + LOOP_LEN}'
+        rng, step = (spec.split(':') + ['1'])[:2]
+        a, b = rng.split('-')
+        for f in range(int(a), int(b) + 1, int(step)):
             dest = os.path.join(out, f'{f:04d}.png')
             if os.path.exists(dest):
                 continue
