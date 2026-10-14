@@ -191,4 +191,29 @@ change `DUR` in `render_pour.cjs` and the frame number in `encode.sh`.
 
 ## Checked
 
-See "Checked" at the end of this file once the tests have run.
+2026-10-14, Chromium (Playwright), desktop 1440x900 and phone 375x812, with
+the final renders: `tests/behave.cjs`, **460 of 460**. It covers, per page
+and view: no sideways scroll (scrollWidth against clientWidth), one h1,
+title and description, `noindex`, canonical and og:url pointing at the page,
+the absolute og:image, icons and manifest load, no em or en dashes, alt text
+and sizes on every image, every internal link and anchor, every external
+link is theirs, every main control at least 44 px and the topmost element at
+its centre, the footer clears the phone call bar, today's hours row on a
+fixed Wednesday and no "Open now" claim, no console errors or missing files;
+the phone menu (focus in, kept, Escape, focus back); both forms (empty, bad
+email, then the mailto URL read from Playwright's request event); the
+structured data against the visible phone and address; no JavaScript
+(nothing left invisible, the hero still); the opening (plays on a fresh
+open, the right file per layout, words and Get directions showing and
+clickable by 2.5 s, the loop takes over, pauses off screen and with its
+button, not replayed when coming back from another page); reduced motion
+(no opening, no video loaded). The checks were seen to fail first: the
+closed phone menu was an invisible layer over every page until
+`.menu[hidden] { display: none; }`.
+
+Also looked at by eye: screenshots of every page in light and dark mode, the
+first screen at 390, 820 and 1280 px wide, and the opening at 2.6 s and 7 s
+on desktop and phone.
+
+Not checked: Safari and iOS (the MP4 path), real phones, screen readers
+other than the accessibility tree.

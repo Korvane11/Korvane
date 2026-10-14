@@ -10,7 +10,7 @@ const { execFileSync } = require('child_process');
 const work = process.argv[2]; fs.mkdirSync(work, { recursive: true });
 const SITE = path.join(__dirname, '..');
 const SHOTS = [
-  { name: 'pour-still', w: 960, h: 1200, t: 2.45, mode: 0, cam: { pos: [-3, 31, 25], tgt: [0.2, 2.8, 0.0], fov: 30, shift: [0.0, 0.04] } },
+  { name: 'pour-still', w: 960, h: 1200, t: 2.45, mode: 0, cam: { pos: [-3, 31, 25], tgt: [0.2, 2.8, 0.0], fov: 32, shift: [0.07, 0.04] } },
   { name: 'heart-still', w: 1200, h: 900, t: 1.5, mode: 1, cam: { pos: [9, 17, 29], tgt: [0.0, 3.2, 0.0], fov: 27, shift: [0.0, 0.02] } },
 ];
 (async () => {
