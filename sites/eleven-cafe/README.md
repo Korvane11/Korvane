@@ -92,9 +92,13 @@ site).
    (proportions measured on the photo), on a walnut counter by a tall
    window, late in the day. Low amber
    sun comes through the panes in stripes, the air is hazy with it, and
-   everything but the cup is in soft focus. The light comes up from black
-   (0.75 s), espresso pours in from above, crema rises, the stream stops
-   (3.05 s), steam rises into the light. `assets/pour/intro-l.*`
+   everything but the cup is in soft focus. The camera looks down at about
+   19 degrees (as the reference's does, more or less), so the coffee is in
+   view as it rises. The light comes up from black (0.75 s); espresso pours
+   in from above, a dark glossy stream with lighter tiger stripes that
+   glows amber at its edges against the sun; it fills the cup, and crema
+   forms around where it lands, turning slowly; the stream thins and
+   breaks (3.05 s), and steam rises into the light. `assets/pour/intro-l.*`
    (1600 x 900) and `intro-p.*` (900 x 1600, phones and tall windows), then
    a 6 s seamless steam loop (`loop-*`) whose first frame is the pour's last.
 2. **The words come in** 0.65 s after the pour starts, with the nav: a gold
@@ -220,8 +224,8 @@ step, and the font check (with the Vietnamese subset blocked).
 ## Rendering the pour again
 
 `bash render/render_all.sh <frames dir>` renders every frame in headless
-Chromium (SwiftShader on 4 cores: about 8.5 s a pour frame at 1600 x 900
-with 4 samples, 5-8 s a steam frame with 2; about an hour for
+Chromium (SwiftShader on 4 cores: about 17 s a pour frame at 1600 x 900
+with 4 samples, less for a steam frame; about 1.7 hours for
 everything), then `bash render/encode.sh <frames dir>` writes
 `assets/pour/` (add `l` or `p` to encode one layout), and
 `node render/make_og.cjs` the link-preview image from the new still.
@@ -236,9 +240,11 @@ What sets the shot, all at the top of the shader's sections:
   the glass `GLASS`, the room's bounce `AMB`, the haze `SIG`. The posts are
   spaced so the cup sits in a band of sun with a dark post behind it; if
   `SUN`, `SP` or the camera moves, check both in a preview.
-- The camera (`main()`), the lens shift that places the cup (`shift`), and
-  the soft focus (`uAper`, `uMaxC` in `renderFrame`, the focus distance is
-  the camera's distance to the cup).
+- The camera: `CAM` in the page script (position, field of view and the
+  lens shift that places the cup, per layout); the focus distance follows
+  it. Before tuning anything else, check from the camera that the coffee
+  rising is in view (a contact sheet of the whole pour). The soft focus:
+  `uAper`, `uMaxC` in `renderFrame`.
 - Post: the glow threshold (`bright`), the exposure (`uExpo * 0.62`) and the
   vignette (`final`).
 
@@ -249,7 +255,16 @@ h)` (mode 0 the pour, 1 the steam loop). Setting `window.noDof` or
 
 Depth is kept as the nearest value over the passes (an average at the
 cup's edge would belong to neither the cup nor the background, and the soft
-focus would spray the edge into the background).
+focus would spray the edge into the background). The soft focus samples
+a small disk the size of each pixel's own blur as well as the whole one
+(with only the wide set, slightly soft edges such as the far rim came out
+spiky).
+
+The steam is a layer of its own (`uSteamPass`): the scene is drawn and
+soft-focused without it, the steam is drawn over the scene's depth into
+`T.steam`, and the post pass lays it over the blurred result. Drawn into
+the scene, the steam gave its pixels the cup's depth, and the background
+seen through it came out sharp.
 
 The cup (`rOut`, `sdSide`, `sdHandle`) follows the owner's photo, measured
 on it with a grid: the rim `RR` (about 10 cm across), the height `H` (0.49

@@ -223,8 +223,12 @@ Eleven Cafē: every page is `noindex` until they agree.
 - Q asked the tucson.com writer not to photograph his face: never show him.
 - Logo: their "ELEVEN cafē" lettering traced from their 720 px Facebook
   profile logo (`render/trace_logo.py`); icons are its first E.
-- The scene renders offline (`render/render_all.sh`, about 1 h on 4
-  cores, then `encode.sh` and `make_og.cjs`). The intro's last frame is the
+- The scene renders offline (`render/render_all.sh`, about 1.7 h on 4
+  cores, then `encode.sh` and `make_og.cjs`). Since 2026-10-14 ("keep
+  refining it ... make sure the coffee pour is really good and the mug
+  looks real") the camera looks down at about 19 degrees so the coffee
+  shows rising, and the stream, crema, glaze and steam were reworked
+  (README "The opening" and "Rendering the pour again"). The intro's last frame is the
   steam loop's first, and the page keeps the pour on screen until the loop
   has a frame showing (no black flash). If the framing changes, re-measure
   the cup's fractions (`CUP_L`, `CUP_P` in the test); README "Rendering the

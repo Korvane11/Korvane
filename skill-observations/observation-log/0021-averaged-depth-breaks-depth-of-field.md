@@ -1,6 +1,6 @@
 ---
 id: 21
-title: "Offline renders with a post-process depth of field: averaging depth over anti-aliasing passes gave edge pixels a depth between the subject and the background, and the blur sprayed the sharp subject's edge into the background; three earlier focus bugs looked alike"
+title: "Offline renders with a post-process depth of field: averaging depth over anti-aliasing passes gave edge pixels a depth between the subject and the background, and the blur sprayed the sharp subject's edge into the background; three earlier focus bugs looked alike, and a fourth (samples too sparse near the centre) made slightly soft edges spiky"
 status: open
 type: open-source
 skill: []
@@ -35,6 +35,15 @@ cup has a halo" too:
 
 Each needed its own diagnosis.
 
+**A fourth, a day later:** after the camera was raised, the cup's far rim
+(about 2.8 px out of focus) showed a spiky, saw-toothed edge against the
+blurred background; with the effect off it was clean. The gather spread
+its samples over the whole maximum circle (`r = sqrt(i / N) * maxCoC`), so
+the nearest sample sat 2.8 px out. A pixel whose own circle was about that
+size got a single sample, rotated at random per pixel, which came out as
+spikes. A second, small set of samples filling a disk the size of the
+pixel's own circle (24 of them) gave a clean edge.
+
 **Suggested improvement:** For the candidate skill, in a section on post
 effects for offline renders:
 
@@ -44,6 +53,9 @@ effects for offline renders:
 - In a gathered depth of field, a sample in front of the centre spreads
   only if its own blur circle is large. Weight every sample by the inverse
   of its circle's area, the centre included.
+- Sample the pixel's own circle densely, not only the widest one: a set
+  of samples spread over the maximum radius leaves slightly soft edges
+  with one random sample each.
 - Debug with three views of the same frame: blur-circle size as grey, depth
   as grey, and the frame with the effect off. Compare the effect-off frame
   first.
