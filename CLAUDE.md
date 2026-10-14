@@ -254,9 +254,25 @@ MapQuest). Not yet approved by Callahan Cleaning: every page is `noindex`.
   quality images and videos, make sure everything meets the standard of a
   premium website". Then: "im going to lose wifi please remember this and
   complete when i reconnect" (so: finish it unattended, commit as you go).
-- In progress: see the site README for state. The 3D scenes are Blender 5.2
-  (`pip install bpy`) + Cycles, with Poly Haven CC0 models, textures and skies
-  (`render/fetch_assets.py`, cache not committed).
+- The opening: a Tucson living room at dawn (plaster, vigas, Saltillo tile),
+  the blinds tilt open and the morning sun comes in in stripes; their logo
+  comes up and its three sparkles light; then the page. Their own line
+  "the fresh start you deserve" is the idea. Every image on the site is a
+  Cycles render of rooms in that one house (no stock, no photos); Blender 5.2
+  via `pip install bpy`, Poly Haven CC0 assets (`render/fetch_assets.py`,
+  cache not committed). Rendering takes about 9 hours on 4 cores
+  (`render/render_all.sh`, resumable, then `encode.sh`, `make_og.cjs`).
+  README "The opening, beat by beat" and "The 3D renders".
+- Pages: Home, Services, About, Book (`book.html`, the quote form: a mailto to
+  callahan.cleaning74@gmail.com; their Wix booking page was empty). Light
+  limewash page, their teal `#0c454c` (measured on their logo), Outfit and
+  DM Sans.
+- Facts and their sources, and the questions for them (which email, hours
+  are Yelp's, the cut-off deep-clean list, Spanish, Kelsey): the site README.
+- Logo: theirs, traced from their 960 px Facebook picture
+  (`render/trace_logo.py`); icons are its three sparkles.
+- Checks: `sites/callahan-cleaning/tests/behave.cjs` (serve the site on port
+  8800 first; `PAGES_ONLY=1` leaves out the opening).
 
 ## Skills
 
