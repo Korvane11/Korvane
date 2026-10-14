@@ -4,8 +4,8 @@
 set -e
 OUT="$1"; HERE="$(cd "$(dirname "$0")" && pwd)"
 export NODE_PATH="$(npm root -g)"
-node "$HERE/render_pour.cjs" "$OUT/intro-l" 0 0 1600 900 24 4
+node "$HERE/render_pour.cjs" "$OUT/intro-l" 0 0 1600 900 24 6
 node "$HERE/render_pour.cjs" "$OUT/loop-l"  0 1 1600 900 24 2
-node "$HERE/render_pour.cjs" "$OUT/intro-p" 1 0 900 1600 24 4
+node "$HERE/render_pour.cjs" "$OUT/intro-p" 1 0 900 1600 24 6
 node "$HERE/render_pour.cjs" "$OUT/loop-p"  1 1 900 1600 24 2
 echo "ALL FRAMES DONE"

@@ -185,10 +185,14 @@ headline with its buttons (the first two lines are left out).
 
 | Page | Purpose | Main action |
 | --- | --- | --- |
-| `index.html` | The pour, their line, the signature drink, why it's called Eleven, what people say, hours and the way in | See the menu |
-| `menu.html` | Every drink their page and their reviewers name, with the reviewers' words; gift cards | Call (prices at the counter) |
-| `story.html` | Why Eleven, the hole in the wall, made by hand, six reviews | (reading) |
-| `visit.html` | Address, how to find the door, hours with open-now, call, email, Facebook | Get directions |
+| `index.html` | The pour, their line, the signature drink (with the rendered phin), why it's called Eleven, what people say, hours and the way in | Get directions |
+| `menu.html` | Every drink their page and their reviewers name, with the reviewers' words; gift cards | Get directions (nav); the call for gift cards |
+| `story.html` | Why Eleven, the hole in the wall, made by hand, six reviews | Get directions (nav) |
+| `visit.html` | Address, how to find the door, hours (today marked; "call ahead" until confirmed), call, email, Facebook | Get directions (Google or Apple Maps) |
+
+One main action everywhere, from the blueprint: **Get directions** is the one filled button (the nav at every
+size, the phone menu, the end of the opening, Find us). See the menu is the outline button. The call is a
+plain link (`.link--call`), never a button. `tests/behave.cjs` checks this on every page.
 
 ## Files
 
@@ -196,16 +200,19 @@ headline with its buttons (the first two lines are left out).
 | --- | --- |
 | `index.html`, `menu.html`, `story.html`, `visit.html` | The pages (the nav, menu and footer are repeated in each: change all four) |
 | `styles.css` | Every style, with the font faces inlined; tokens at the top |
-| `js/site.js` | Every page: nav, menu, open-now status (Tucson time), the year, reveals |
-| `js/home.js` | Home only: the opening and the steam loop |
+| `js/site.js` | Every page: nav, menu, today's hours (Tucson time; the live open-now only once `HOURS_CONFIRMED`), the year, reveals |
+| `js/home.js` | Home only: the opening, the steam loop and the phin loop (none of them with reduced motion or a data saver) |
 | `assets/pour/` | The rendered pour and steam loop (MP4 for browsers, WebM for Playwright's Chromium) and their stills |
+| `assets/phin/` | The rendered phin loop (4 s, 720 x 900) and its still |
 | `assets/brand/wordmark.svg` | Their "ELEVEN cafē" lettering, traced from their Facebook logo by `render/trace_logo.py` |
 | `assets/brand/` | Icons (`render/make_icons.cjs`: the first E of their "ELEVEN"), the link-preview image |
 | `assets/photos/` | Their two Facebook photos (390 px, the size Facebook serves logged out) |
 | `assets/fonts/` | Playfair and Be Vietnam Pro (latin, latin-ext, vietnamese) with their OFL licences |
 | `assets/icons/` | Phosphor icons (MIT), inlined into the pages |
-| `render/` | The pour shader (`pour.html`), the frame renderer (`render_pour.cjs`), `render_all.sh`, `encode.sh`, the logo tracer, the icon maker and the link-preview maker (`make_og.cjs`, `og.html`) |
+| `render/` | The pour shader (`pour.html`), the frame renderer (`render_pour.cjs`), `render_all.sh`, `encode.sh`; the phin scene (`phin.html`, `render_phin.cjs`, `encode_phin.sh`); the logo tracer, the icon maker and the link-preview maker (`make_og.cjs`, `og.html`) |
 | `tests/behave.cjs` | The browser checks (Playwright, Chromium); see Checked |
+| `BLUEPRINT-REVIEW.md` | The review against the owner's master blueprint (facts, assets, interaction map, what was approved) |
+| `SEO.md`, `launch/` | Search and AI visibility: what was checked and found, and `robots.txt`, `sitemap.xml`, `llms.txt` ready for their domain at launch |
 
 ## Checked
 
@@ -231,14 +238,29 @@ stalled wait reports a failed check instead of stopping the run.
 - No video, or one that takes 6 s: the still comes up within 3 s, with the
   words and the nav.
 - Reduced motion and no JavaScript, every page: nothing hidden, no video.
-- Open-now status and today's row at seven moments of the week (Tucson
-  time).
+- Hours at seven moments of the week (Tucson time), on Visit and home: today's row marked; while
+  `HOURS_CONFIRMED` is false, no "Open now" and the call-ahead note; once true, the live status. The test reads
+  the flag, so it checks whichever is set.
+- A data saver on (Save-Data), both layouts: no video is fetched; the still shows; the three lines still turn.
+- Screen readers find the h1 and the hero's directions button while the first line is showing.
+- The phin, both layouts: no video until it's in view; it drips in view; its button pauses and plays it; it stops
+  off screen. Reduced motion and the data saver keep it a still.
+- One main action on every page at both sizes: every filled button gets directions (the nav's too), and the call
+  is a plain link.
 - The Vietnamese and the macron load from the site's own fonts.
 - Every control is 44 px or taller and not covered by anything; nothing is
   wider than the screen; the phone menu opens, takes focus and closes with
   Escape.
-- Share tags, one h1 per page, noindex, structured data, every file and
+- Share tags, one h1 per page, noindex, structured data (no hours until confirmed), every file and
   internal link.
+
+Also checked by hand on 2026-10-14, with scripts in the session (not in the suite):
+- contrast of every piece of text, all at or above 4.5:1 (3:1 for large);
+- every Tab stop shows its focus ring and ends clear of the nav, at both sizes;
+- no sideways scroll at 320 px or at 200% zoom;
+- landmarks, names and alt text.
+
+Vercel's Web Interface Guidelines pass; `theme-color` now matches the page background.
 
 Each check written for a bug was first seen failing on the code before
 the fix: the black frame at the hand-over, the still left hidden after a
@@ -248,9 +270,8 @@ step, and the font check (with the Vietnamese subset blocked).
 ## Rendering the pour again
 
 `bash render/render_all.sh <frames dir>` renders every frame in headless
-Chromium (SwiftShader on 4 cores: about 17 s a pour frame at 1600 x 900
-with 4 samples, less for a steam frame; about 1.7 hours for
-everything), then `bash render/encode.sh <frames dir>` writes
+Chromium (SwiftShader on 4 cores: about 25 s a pour frame at 1600 x 900
+with 6 samples, less for a steam frame; about 2 hours for everything), then `bash render/encode.sh <frames dir>` writes
 `assets/pour/` (add `l` or `p` to encode one layout), and
 `node render/make_og.cjs` the link-preview image from the new still.
 
@@ -271,6 +292,11 @@ What sets the shot, all at the top of the shader's sections:
   `uAper`, `uMaxC` in `renderFrame`.
 - Post: the glow threshold (`bright`), the exposure (`uExpo * 0.62`) and the
   vignette (`final`).
+- Motion blur and the push-in (in the page script): each of a frame's samples is drawn at its own moment inside
+  half a frame (`SHUTTER`, a film camera's 180 degrees), so the stream and the drops streak as they would on
+  film. During the pour the camera starts 6% further back (`PUSH`) and eases in to `CAM` by the last frame, so
+  the hand-over to the steam loop and the page's layout are unchanged. The stream's ends are round (a capsule),
+  not cut flat.
 
 Preview a frame without the whole run: load `render/pour.html` in the same
 headless Chromium and call `window.renderFrame(t, layout, passes, mode, w,
@@ -319,6 +345,39 @@ that the headline and buttons stay clear of the cup at 13 screen sizes. To
 measure, render the last frame from a copy of `pour.html` whose `render()`
 returns white where the camera ray hits the cup and black elsewhere (before
 the steam), with `noDof` and `noBloom` set, and take the white pixels' box.
+
+## The phin (cà phê sữa đá)
+
+The blueprint asked for a second moment that only Eleven has: their drink. In the cà phê sữa đá section on
+home, a steel phin sits on a glass of condensed milk under a layer of coffee, in the same counter and window
+light as the opening. Under the filter a bead swells, lets go, falls, and rings the surface.
+
+- **When it plays:** only while it's on screen (an IntersectionObserver), and never with reduced motion or a data
+  saver: the still (`assets/phin/phin.*`) stands instead. Its button pauses it, as the steam's does.
+- **Their real photo of the phins** stays on Menu and Our story.
+- **Rendering:** `render/phin.html` renders it; it copies the room, the light, the haze and the lens from
+  `pour.html`, so change both if those change.
+  - `node render/render_phin.cjs <frames dir> 720 900 24 5` renders it, about 30 s a frame and 50 minutes in
+    all.
+  - Then `bash render/encode_phin.sh <frames dir> [still frame]` writes `assets/phin/`.
+  - The renderer copies `phin.html` into the frames folder first and renders from that copy. An edit, or git,
+    can't change the scene halfway through, and the copy records what made the frames.
+- **The loop:** three holes drip on cycles of 1, 4/3 and 2 s, which all divide the loop's 4 s, so the clip loops
+  without a seam (`DR` in the shader).
+  - The holes are near the floor's edge on the camera's side. From the camera's height, the filter's foot hides
+    the middle of its own floor.
+  - A falling drop is drawn as the streak it makes in its slice of the shutter, and the slices overlap.
+  - The rings on the surface are summed over the current and the previous drop of each hole.
+- **The glass** is a thin wall the rays step through. Its own light (reflections, the sun's glint, the bright
+  line where the wall is seen edge-on) goes to a second layer that is laid over after the soft focus, so the
+  window seen through the glass stays soft.
+  - The liquid's shadow on the counter is worked out exactly: the milk stops the sun; the coffee lets a little
+    amber through where the path is short.
+- **The coffee** is black in the middle and amber at its thin edge against the light.
+  - The milk is ivory-gold, a little deeper at the bottom.
+  - The haze is half the opening's: this is a close-up.
+- **Preview:** load a copy of `phin.html` in the same headless Chromium and call `window.renderFrame(t, passes,
+  w, h)`. `window.noGlass`, `noDof` and `noBloom` turn those off for comparing.
 
 ## Photos and credits
 

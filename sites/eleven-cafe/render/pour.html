@@ -123,9 +123,9 @@ float sdStream(vec3 p, float t, float L) {
   r *= 1.0 + 0.25 * smoothstep(T_STOP - 0.35, T_STOP, t) * sin(y * 9.0 - t * 70.0);   // beads as it breaks
   r *= mix(1.0, 1.25, smoothstep(L + 0.6, L, y));                                       // flares where it lands
   vec2 c = HIT + vec2(0.035 * sin(y * 0.9 + t * 7.0), 0.03 * cos(y * 0.7 + t * 5.0));
-  float d = length(p.xz - c) - r;
-  float cap = max(bottom - y, y - top);
-  return max(d, cap);
+  // a capsule along the column: the falling head and the breaking tail come out round, not cut flat
+  float lo = bottom + r, hi = max(top - r, lo);
+  return length(vec3(p.x - c.x, y - clamp(y, lo, hi), p.z - c.y)) - r;
 }
 // the last two drips
 float sdDrips(vec3 p, float t, float L) {
@@ -670,6 +670,17 @@ const CAM = [   // about 19 degrees down onto the counter: high enough to watch 
   { pos: [10, 22, 54], fov: 37, shift: [0.0, -0.21] },     // portrait: the cup high, the words below it
 ];
 const cam = (layout) => (window.camOverride && window.camOverride[layout]) || CAM[layout];
+// the pour: the camera starts a little further back and settles on CAM by the last frame (the loop's frame), easing in
+// and out, so the hand-over and the page's layout are unchanged
+const T_END = 103 / 24, PUSH = 0.06;
+function camPos(layout, t, mode) {
+  const c = cam(layout).pos, tg = [0, 3, 0];
+  if (mode !== 0) return c;
+  const x = Math.min(1, Math.max(0, t / T_END)), k = 1 + PUSH * (1 - x * x * (3 - 2 * x));
+  return c.map((v, i) => tg[i] + (v - tg[i]) * k);
+}
+// motion blur: each pass samples its own moment inside the frame's shutter (half a frame, as a film camera's 180 degrees)
+const SHUTTER = 0.5 / 24;
 // depthFrom given: the steam pass, drawn over that scene's depth (alpha), adding up its colour and its cover
 function accumulate(into, t, layout, passes, mode, depthFrom) {
   target(into);
@@ -679,11 +690,11 @@ function accumulate(into, t, layout, passes, mode, depthFrom) {
   gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.FUNC_ADD, steamPass ? gl.FUNC_ADD : gl.MIN);
   gl.useProgram(prog);
   gl.uniform2f(gl.getUniformLocation(prog, 'uRes'), W, Hh);
-  gl.uniform1f(gl.getUniformLocation(prog, 'uT'), t);
+
   gl.uniform1i(gl.getUniformLocation(prog, 'uMode'), mode);
   gl.uniform1i(gl.getUniformLocation(prog, 'uLayout'), layout);
   const c = cam(layout);
-  gl.uniform3f(gl.getUniformLocation(prog, 'uCam'), ...c.pos);
+  gl.uniform3f(gl.getUniformLocation(prog, 'uCam'), ...camPos(layout, t, mode));
   gl.uniform1f(gl.getUniformLocation(prog, 'uFov'), c.fov);
   gl.uniform2f(gl.getUniformLocation(prog, 'uShift'), ...c.shift);
   gl.uniform1i(gl.getUniformLocation(prog, 'uSteamPass'), steamPass ? 1 : 0);
@@ -691,6 +702,7 @@ function accumulate(into, t, layout, passes, mode, depthFrom) {
   for (let i = 0; i < passes; i++) {
     gl.uniform2f(gl.getUniformLocation(prog, 'uJit'), JIT[i % 9][0], JIT[i % 9][1]);
     gl.uniform1f(gl.getUniformLocation(prog, 'uSeed'), (i * 0.618034) % 1);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uT'), mode === 2 ? t : t + ((i + 0.5) / passes - 0.5) * SHUTTER);
     draw(prog);
   }
   gl.disable(gl.BLEND);
@@ -714,7 +726,7 @@ window.renderFrame = (t, layout, passes, mode, w, h, basePasses) => {
   else { accumulate(T.acc, t, layout, passes, mode); src = T.acc; srcN = passes; }
   accumulate(T.steam, t, layout, passes, mode, src);   // the steam on its own layer
   // depth of field
-  const cp = cam(layout).pos, focus = Math.hypot(cp[0], cp[1] - 3, cp[2]);   // the camera's distance to the cup
+  const cp = camPos(layout, t, mode), focus = Math.hypot(cp[0], cp[1] - 3, cp[2]);   // the camera's distance to the cup
   target(T.dof); gl.useProgram(dofP); bindTex(dofP, 'uTex', 0, src); bindTex(dofP, 'uSteam', 2, T.steam);
   gl.uniform1f(gl.getUniformLocation(dofP, 'uN'), srcN);
   gl.uniform1f(gl.getUniformLocation(dofP, 'uSN'), passes);

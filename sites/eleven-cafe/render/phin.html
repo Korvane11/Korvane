@@ -1,0 +1,702 @@
+<!doctype html>
+<!-- Eleven Cafē: the cà phê sữa đá moment, rendered offline frame by frame (see render_phin.cjs).
+     A steel phin on a plain glass, coffee dripping onto condensed milk, on the same walnut counter in the same low amber
+     window light as the opening (the room, the light, the haze and the lens below are copied from pour.html). The drops
+     swell under the filter, fall and ring the surface; every cycle divides LOOP, so the clip loops without a seam.
+     window.renderFrame(t, passes, w, h) -> PNG data URL, t in [0, LOOP). -->
+<meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script id="fs" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+uniform vec2 uRes;
+uniform float uT;        // seconds into the loop
+uniform vec2 uJit;
+uniform float uSeed;     // per pass: jitters the haze, the soft shadows and the steel's roughness
+uniform vec3 uCam;       // the camera and what it looks at (cm), its vertical field of view (degrees), the lens shift
+uniform vec3 uTarget;
+uniform float uFov;
+uniform vec2 uShift;
+uniform float uSlice;    // the part of the shutter one pass covers (s): a falling drop is drawn as its streak in it
+layout(location = 0) out vec4 outC;   // what lies behind the glass, or isn't behind it: linear rgb, alpha = depth (cm)
+layout(location = 1) out vec4 outG;   // the glass's own light: laid over after the soft focus
+
+// ------------------------------------------------------------------ noise
+float hash1(float n) { return fract(sin(n * 127.1) * 43758.5453); }
+float hash3(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float vnoise(vec3 x) {
+  vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(hash3(i), hash3(i + vec3(1, 0, 0)), f.x), mix(hash3(i + vec3(0, 1, 0)), hash3(i + vec3(1, 1, 0)), f.x), f.y),
+             mix(mix(hash3(i + vec3(0, 0, 1)), hash3(i + vec3(1, 0, 1)), f.x), mix(hash3(i + vec3(0, 1, 1)), hash3(i + vec3(1, 1, 1)), f.x), f.y), f.z);
+}
+float fbm(vec3 p) { float a = 0.5, s = 0.0; for (int i = 0; i < 5; i++) { s += a * vnoise(p); p = p * 2.03 + 17.1; a *= 0.5; } return s; }
+float fbm3(vec3 p) { float a = 0.5, s = 0.0; for (int i = 0; i < 3; i++) { s += a * vnoise(p); p = p * 2.03 + 17.1; a *= 0.5; } return s; }
+float ign(vec2 px) { return fract(52.9829189 * fract(dot(px, vec2(0.06711056, 0.00583715)))); }   // interleaved gradient noise
+
+// ------------------------------------------------------------------ the drink (cm; the glass stands at the origin)
+// a plain straight tumbler with a heavy base; condensed milk in the bottom, the coffee dripping onto it from a steel
+// phin that sits on the rim. Everything that moves repeats every LOOP seconds.
+const float LOOP = 4.0, G = 981.0, PI = 3.14159265;
+const float HG = 9.0, WG = 0.20, BOT = 0.75;            // the glass: height, wall, solid base
+float rG(float y) { return 3.05 + 0.04 * y; }            // outside radius: a slight taper, wider at the rim
+float rI(float y) { return rG(y) - WG; }
+const float M_TOP = 2.20, LV = 4.50;                     // the milk's top, the coffee's surface
+const float PL = 4.70;                                   // the phin's plate, on the rim
+const float RC = 3.45, CH = 5.10;                        // its chamber: radius, height
+const float COLR = 2.95, COLH = 1.00;                    // the filter's foot, about 1 cm down into the glass; its floor under it
+const float YF = HG - COLH;                              // the drips leave the floor here
+const float Y0 = HG + 0.14, Y1 = Y0 + CH;                // the chamber's bottom and top
+const float RL = 3.70;                                   // the lid
+
+float smax(float a, float b, float k) { float h = clamp(0.5 + 0.5 * (a - b) / k, 0.0, 1.0); return mix(b, a, h) + k * h * (1.0 - h); }
+float smin(float a, float b, float k) { return -smax(-a, -b, k); }
+float sdCyl(vec3 p, float r, float y0, float y1) {
+  vec2 d = vec2(length(p.xz) - r, abs(p.y - 0.5 * (y0 + y1)) - 0.5 * (y1 - y0));
+  return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
+}
+
+float sdEll(vec3 p, vec3 r) { float k0 = length(p / r), k1 = length(p / (r * r)); return k0 * (k0 - 1.0) / max(k1, 1e-5); }
+
+float sdGlass(vec3 p) {
+  float r = length(p.xz);
+  float outer = smax((r - rG(p.y)) * 0.9992, max(-p.y, p.y - HG), 0.06);
+  float cav = smax(r - rI(p.y), BOT - p.y, 0.35);        // open at the top; the inside's bottom corner rounded
+  return smax(outer, -cav, 0.05);                         // the rim comes out round
+}
+
+float sdPhin(vec3 p) {
+  float plate = sdCyl(p, PL - 0.06, HG + 0.06, HG + 0.08) - 0.06;                       // 1.4 mm, its edge rolled
+  float chamber = sdCyl(p, RC - 0.03, Y0, Y1) - 0.03;
+  chamber = min(chamber, length(vec2(length(p.xz) - RC, p.y - Y1 + 0.02)) - 0.075);      // the rolled top edge
+  float collar = sdCyl(p, COLR - 0.03, YF + 0.03, HG + 0.05) - 0.03;
+  float lid = sdCyl(p, RL - 0.04, Y1 + 0.06, Y1 + 0.12) - 0.04;
+  float knob = sdEll(p - vec3(0.0, Y1 + 0.16, 0.0), vec3(0.62, 0.42, 0.62));   // a small round knob
+  float d = min(plate, collar);
+  d = smin(d, chamber, 0.05);
+  d = min(d, smin(lid, knob, 0.18));
+  return d;
+}
+
+// the drips: three holes in the filter floor, each on its own cycle (all divide LOOP). A bead swells under the hole,
+// lets go, falls (drawn as the streak it makes in one pass's slice of the shutter) and rings the surface.
+// the floor is holes all over; these three are near its edge on the camera's side, where the beads show (from the
+// camera's height the foot's own wall hides the middle of the floor)
+const vec4 DR[3] = vec4[3](vec4(1.14, 2.06, 1.0, 0.10), vec4(2.06, 0.98, 1.3333333, 0.55), vec4(0.35, 2.36, 2.0, 1.40));   // x, z, period, phase
+const float RB0 = 0.07, RB1 = 0.205;
+float uDetach(float P) { return P - 0.17; }
+float yDetach() { return YF - RB1 * 0.95; }
+float tFall() { return sqrt(2.0 * (yDetach() - LV) / G); }
+float sdCapsuleY(vec3 p, float ya, float yb, float r) { p.y -= clamp(p.y, min(ya, yb), max(ya, yb)); return length(p) - r; }
+float sdDrips(vec3 p, float t) {
+  float d = 1e3;
+  for (int i = 0; i < 3; i++) {
+    vec3 q = p - vec3(DR[i].x, 0.0, DR[i].y);
+    if (dot(q.xz, q.xz) > 0.36) continue;
+    float P = DR[i].z, u = mod(t - DR[i].w, P), ud = uDetach(P);
+    // the bead under the hole (after a drop lets go, the next one starts small)
+    float r = u < ud ? mix(RB0, RB1, pow(u / ud, 0.85)) : RB0;
+    float bead = sdEll(q - vec3(0.0, YF - 0.82 * r, 0.0), vec3(r, 1.14 * r, r));
+    d = min(d, smin(bead, YF - q.y, 0.06));   // grown out of the floor (the slab this adds above YF is cut below)
+    // the falling drop
+    float tau = u - ud;
+    if (tau >= 0.0 && tau < tFall()) {
+      float ya = yDetach() - 0.5 * G * tau * tau, tb = max(tau - 1.6 * uSlice, 0.0), yb = yDetach() - 0.5 * G * tb * tb;   // the slices overlap: one smooth streak
+      d = min(d, sdCapsuleY(q, max(ya, LV), yb, 0.17));
+    }
+  }
+  return max(d, p.y - YF - 0.02);      // nothing above the floor
+}
+// the surface: rings from each drop's landing, and a small bump where it lands
+float ripple(vec2 xz, float t) {
+  float h = 0.0;
+  for (int i = 0; i < 3; i++) {
+    float P = DR[i].z, land = uDetach(P) + tFall();
+    float rho = length(xz - DR[i].xy);
+    for (int k = 0; k < 2; k++) {
+      float tau = mod(t - DR[i].w, P) - land + float(k) * P;
+      if (tau <= 0.0 || tau > 1.6) continue;
+      float front = 7.5 * tau, w = 0.22 + 0.45 * tau;
+      h += 0.032 * exp(-2.4 * tau) * exp(-pow((rho - front) / w, 2.0)) * cos(16.0 * (rho - front)) * smoothstep(1.6, 1.1, tau);
+      h += 0.11 * exp(-24.0 * tau) * exp(-rho * rho / 0.05);
+    }
+  }
+  return h;
+}
+float meniscus(float r) { return 0.06 * exp(-(rI(LV) - r) / 0.09); }
+float sdLiquid(vec3 p, float t) {
+  float r = length(p.xz);
+  float side = r - rI(p.y) + 0.004;
+  float top = p.y - LV;
+  if (abs(top) < 0.45) top -= ripple(p.xz, t) + meniscus(r);
+  return max(max(side, BOT + 0.03 - p.y), top * 0.8);
+}
+
+bool gNoGlass = false;   // shadow, occlusion and reflection rays: the glass lets the light through
+bool gNoLiquid = false;  // the light on the liquid itself: it doesn't shadow itself (see shade)
+vec2 map(vec3 p, float t) {
+  float b = max(length(p.xz) - 5.0, max(-p.y - 0.1, p.y - Y1 - 1.2));
+  if (b > 0.4) return vec2(b, 0.0);
+  vec2 r = vec2(1e3, 0.0);
+  if (!gNoGlass) r = vec2(sdGlass(p), 1.0);
+  float s = sdPhin(p); if (s < r.x) r = vec2(s, 2.0);
+  if (!gNoLiquid) { float l = sdLiquid(p, t); if (l < r.x) r = vec2(l, 3.0); }
+  if (length(p.xz) < 2.9 && p.y > LV - 0.4 && p.y < YF + 0.2) { float d = sdDrips(p, t) * 0.9; if (d < r.x) r = vec2(d, 4.0); }
+  return r;
+}
+vec3 normalAt(vec3 p, float t) {
+  vec2 e = vec2(0.0012, 0.0);
+  return normalize(vec3(map(p + e.xyy, t).x - map(p - e.xyy, t).x, map(p + e.yxy, t).x - map(p - e.yxy, t).x, map(p + e.yyx, t).x - map(p - e.yyx, t).x));
+}
+vec2 march(vec3 ro, vec3 rd, float t, float tmax) {
+  vec3 bmin = vec3(-5.2, -0.2, -5.2), bmax = vec3(5.2, Y1 + 1.4, 5.2);
+  vec3 inv = 1.0 / rd, t0 = (bmin - ro) * inv, t1 = (bmax - ro) * inv;
+  vec3 tn = min(t0, t1), tf = max(t0, t1);
+  float a = max(max(tn.x, tn.y), max(tn.z, 0.0)), b = min(min(tf.x, tf.y), min(tf.z, tmax));
+  if (a >= b) return vec2(-1.0, 0.0);
+  float d = a;
+  for (int i = 0; i < 220; i++) {
+    vec2 h = map(ro + rd * d, t);
+    if (h.x < 0.0006 * d) return vec2(d, h.y);
+    d += h.x;
+    if (d > b) break;
+  }
+  return vec2(-1.0, 0.0);
+}
+// soft shadow from the steel, the drips and (unless told not to) the liquid; the glass lets the sun through
+float softShadow(vec3 ro, vec3 rd, float t, float k, float jit) {
+  vec3 bmin = vec3(-5.2, -0.2, -5.2), bmax = vec3(5.2, Y1 + 1.4, 5.2);
+  vec3 inv = 1.0 / rd, t0 = (bmin - ro) * inv, t1 = (bmax - ro) * inv;
+  vec3 tn = min(t0, t1), tf = max(t0, t1);
+  float a = max(max(tn.x, tn.y), max(tn.z, 0.0)), b = min(min(tf.x, tf.y), tf.z);
+  if (a >= b) return 1.0;
+  bool g = gNoGlass; gNoGlass = true;
+  float res = 1.0, d = max(a, 0.02) + 0.02 * jit, ph = 1e10;
+  for (int i = 0; i < 90; i++) {
+    float h = map(ro + rd * d, t).x;
+    float y = h * h / (2.0 * ph), e = sqrt(max(h * h - y * y, 0.0));
+    res = min(res, k * e / max(d - y, 1e-4));
+    ph = h;
+    d += clamp(h, 0.015, 0.5) * (0.75 + 0.5 * fract(jit + float(i) * 0.618));
+    if (res < 0.002 || d > b) break;
+  }
+  gNoGlass = g;
+  return clamp(res, 0.0, 1.0);
+}
+float ao(vec3 p, vec3 n, float t) {
+  float o = 0.0, s = 1.0;
+  for (int i = 1; i <= 5; i++) { float h = 0.05 * float(i) * float(i); o += (h - map(p + n * h, t).x) * s; s *= 0.6; }
+  return clamp(1.0 - 1.6 * o, 0.0, 1.0);
+}
+
+// ------------------------------------------------------------------ the room: window wall, counter, walls
+const float XW = -26.0;          // the window wall's glass plane (the counter runs along it)
+const float PD = 2.5;            // the posts' depth, into the room
+const float SP = 40.7, PW = 17.0; // post spacing and width, along z: the cup in a beam, a post behind it
+const float Z0 = -3.6;            // post phase: the cup sits in a band of sun
+const float HEAD = 230.0;        // top of the glass; the counter is the sill
+const float XR = 170.0, YC = 290.0, ZF = -420.0;   // right wall, ceiling, far wall
+const vec3 SUN = normalize(vec3(-0.86, 0.34, -0.12));   // toward the sun: low, from the window's side
+const vec3 SUNC = vec3(1.0, 0.63, 0.32) * 4.2;          // low, amber, golden
+const vec3 GLASS = vec3(1.0, 0.46, 0.15) * 0.46;          // late light outside: a dim amber sky
+const vec3 AMB = vec3(0.020, 0.013, 0.008);              // a dark room              // the room's warm bounce
+
+float postMask(float z, float soft) {
+  float u = mod(z - Z0, SP) - 0.5 * SP;
+  return smoothstep(0.5 * PW + soft, 0.5 * PW - soft, abs(u));
+}
+// how much sun reaches p through the window (0..1), soft-edged by distance
+float sunVis(vec3 p, float jit) {
+  if (p.x <= XW) return 1.0;
+  float s = (XW - p.x) / SUN.x;
+  vec3 q = p + SUN * s;
+  float soft = 0.35 + 0.014 * s;
+  q.z += (jit - 0.5) * soft * 0.8;
+  float win = smoothstep(-soft, soft, q.y) * smoothstep(HEAD + soft, HEAD - soft, q.y);
+  return win * (1.0 - postMask(q.z, soft));
+}
+vec3 woodAlb(vec2 xz) {
+  float pw = 10.5;
+  float u = (xz.x - XW) / pw, k = floor(u), f = fract(u);
+  float hk = hash1(k + 3.0);
+  float z = xz.y + hk * 400.0;
+  float grain = fbm3(vec3((xz.x - XW) * 0.55 + k * 7.0, z * 0.035, k * 1.7));
+  float fine = vnoise(vec3((xz.x - XW) * 3.2 + k * 3.0, z * 0.25, 4.0));
+  vec3 a = mix(vec3(0.26, 0.120, 0.050), vec3(0.40, 0.200, 0.090), hk);
+  vec3 c = a * (0.72 + 0.50 * grain) * (0.92 + 0.12 * fine);
+  float seam = smoothstep(0.0, 0.025, f) * smoothstep(1.0, 0.975, f);
+  float e = fract(z / 160.0);
+  seam *= smoothstep(0.0, 0.004, e) * smoothstep(1.0, 0.996, e);
+  return c * mix(0.30, 1.0, seam);
+}
+// what a ray from o in direction d sees of the room (no cup): returns linear colour, writes the distance
+vec3 room(vec3 o, vec3 d, float jit, out float dist, bool full);
+vec3 windowSeen(vec3 o, vec3 d, out float dist) {
+  // the posts' inner face, then the glass behind; a post's side if the ray crosses one in between
+  float ti = (XW + PD - o.x) / d.x, tg = (XW - o.x) / d.x;
+  vec3 pi = o + d * ti, pg = o + d * tg;
+  dist = ti;
+  if (pi.y > HEAD) return vec3(0.050, 0.034, 0.024);                 // the wall above the window
+  if (postMask(pi.z, 0.15) > 0.5) return vec3(0.030, 0.012, 0.005);  // a post, facing the room: in shadow
+  // a post's side, if the ray meets one between the posts' face and the glass
+  float hw = 0.5 * PW / SP, ui = (pi.z - Z0) / SP - 0.5, ug = (pg.z - Z0) / SP - 0.5, sg = sign(ug - ui);
+  float kb = sg > 0.0 ? floor(ui) + 1.0 : ceil(ui) - 1.0;
+  float ub = kb - sg * hw;
+  if ((ub - ui) * sg < abs(ug - ui)) {
+    dist = mix(ti, tg, (ub - ui) / (ug - ui));
+    return vec3(0.050, 0.020, 0.008) * (1.0 + 0.6 * smoothstep(0.0, 1.0, (ub - ui) / (ug - ui)));   // warmer toward the glass
+  }
+  dist = tg;
+  if (pg.y > HEAD) return vec3(0.050, 0.034, 0.024);
+  // outside: a bright morning, a soft hint of trees (out of focus anyway)
+  float grad = 0.85 + 0.25 * smoothstep(0.0, HEAD, pg.y);
+  float trees = fbm3(vec3(pg.z * 0.012, pg.y * 0.016, 3.0));
+  return GLASS * grad * mix(vec3(1.0), vec3(0.80, 0.72, 0.52), smoothstep(0.45, 0.75, trees) * smoothstep(HEAD, 40.0, pg.y) * 0.55);
+}
+vec3 room(vec3 o, vec3 d, float jit, out float dist, bool full) {
+  float best = 1e5; vec3 c = vec3(0);
+  // counter (the floor of this little world), at y = 0, between the window and the right wall
+  if (d.y < 0.0) {
+    float tc = -o.y / d.y;
+    vec3 p = o + d * tc;
+    if (p.x > XW && tc < best) {
+      best = tc;
+      vec3 alb = woodAlb(p.xz);
+      float sv = sunVis(p, jit);
+      c = alb * (SUNC * sv * SUN.y + AMB * 1.3 + GLASS * 0.010 * smoothstep(60.0, 0.0, p.x - XW));
+      if (full) {   // the varnish: a soft, warm reflection of the window
+        float g = (fbm3(vec3(p.xz * 0.12, 7.0)) - 0.5) * 0.05;
+        vec3 n = normalize(vec3(g, 1.0, g * 0.7));
+        vec3 r = reflect(d, n);
+        float F = 0.035 + 0.6 * pow(1.0 - max(dot(-d, n), 0.0), 5.0);
+        float td; vec3 rc = r.x < 0.0 ? windowSeen(p, r, td) : vec3(0.06, 0.04, 0.028);
+        c += rc * F * 0.20;
+      }
+    }
+  }
+  // the window wall
+  if (d.x < 0.0) {
+    float tw = (XW + PD - o.x) / d.x;
+    if (tw > 0.0 && tw < best) {
+      vec3 p = o + d * tw;
+      if (p.y > 0.0 && p.y < YC) { float td; vec3 wc = windowSeen(o, d, td); best = td; c = wc; }
+    }
+  }
+  // right wall, ceiling, far wall: plaster, with the sun's bands where they reach
+  float tr = d.x > 0.0 ? (XR - o.x) / d.x : 1e5;
+  float tcl = d.y > 0.0 ? (YC - o.y) / d.y : 1e5;
+  float tf = d.z < 0.0 ? (ZF - o.z) / d.z : 1e5;
+  float tb = d.z > 0.0 ? (260.0 - o.z) / d.z : 1e5;
+  float tw2 = min(min(tr, tcl), min(tf, tb));
+  if (tw2 < best) {
+    best = tw2;
+    vec3 p = o + d * tw2;
+    vec3 n = tw2 == tr ? vec3(-1, 0, 0) : tw2 == tcl ? vec3(0, -1, 0) : tw2 == tf ? vec3(0, 0, 1) : vec3(0, 0, -1);
+    vec3 alb = vec3(0.26, 0.20, 0.15);
+    float sv = sunVis(p, jit);
+    c = alb * (SUNC * sv * max(dot(n, SUN), 0.0) * 0.8 + AMB * 1.1);
+  }
+  dist = best;
+  return c;
+}
+// the environment the glass and the steel reflect, seen from the middle of the drink
+vec3 env(vec3 d) { float dd; return room(vec3(0.0, 7.0, 0.0), d, 0.5, dd, false); }
+
+float ggx(vec3 n, vec3 v, vec3 l, float rough) {
+  vec3 h = normalize(v + l); float a = rough * rough, a2 = a * a;
+  float nh = max(dot(n, h), 0.0), nl = max(dot(n, l), 0.0), nv = max(dot(n, v), 0.001);
+  float dd = nh * nh * (a2 - 1.0) + 1.0; float D = a2 / (PI * dd * dd);
+  float k = (rough + 1.0) * (rough + 1.0) / 8.0; float Gs = (nl / (nl * (1.0 - k) + k)) * (nv / (nv * (1.0 - k) + k));
+  return D * Gs / (4.0 * nv + 0.001);
+}
+vec3 fres(vec3 f0, float c) { return f0 + (1.0 - f0) * pow(1.0 - c, 5.0); }
+// soft light on a surface from the room: the window to the left, the sunlit counter below, the room above
+vec3 ambient(vec3 n) {
+  vec3 wdir = normalize(vec3(-1.0, 0.35, -0.25));
+  vec3 fdir = normalize(vec3(0.35, 0.25, 0.90));
+  return GLASS * 0.05 * pow(max(dot(n, wdir) * 0.5 + 0.5, 0.0), 2.0)
+       + vec3(0.60, 0.58, 0.55) * 0.20 * pow(max(dot(n, fdir) * 0.5 + 0.5, 0.0), 2.0)   // the room in front: keeps the white white
+       + vec3(0.30, 0.17, 0.08) * 0.28 * max(-n.y * 0.5 + 0.5, 0.0)
+       + AMB * (0.6 + 0.4 * n.y);
+}
+
+// ------------------------------------------------------------------ the haze: the sun's beams in the air
+const float SIG = 0.00028;        // scattering per cm
+vec3 haze(vec3 ro, vec3 rd, float tEnd, float jit) {
+  float tE = min(tEnd, 900.0);
+  float mu = dot(rd, SUN), g = 0.50;
+  float ph = (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * mu, 1.5);   // Henyey-Greenstein, x 4 pi
+  float acc = 0.0, dt = tE / 28.0;
+  for (int i = 0; i < 28; i++) acc += sunVis(ro + rd * ((float(i) + jit) * dt), jit);
+  return (SUNC * ph * 0.33 * acc * dt + AMB * 1.5 * tE) * SIG;
+}
+
+// ------------------------------------------------------------------ the light through and on the drink
+// the sun reaching a point, through what stands between: the steel and the drips (soft shadow), the liquid column
+// (worked out exactly: the milk stops it, the coffee lets a little amber through where the path is short), the glass
+vec3 sunThrough(vec3 p, vec3 sd, float t, float jit, bool liquidToo) {
+  float s = softShadow(p, sd, t, 8.0, jit);
+  vec3 T = vec3(s);
+  if (liquidToo) {
+    // the ray against the liquid's cylinder (radius at the coffee's middle; the taper is small)
+    float R = rI(0.5 * (BOT + LV));
+    vec2 o = p.xz, d = sd.xz;
+    float a = dot(d, d), b = dot(o, d), c = dot(o, o) - R * R, disc = b * b - a * c;
+    if (disc > 0.0 && a > 1e-6) {
+      float q = sqrt(disc), t0 = max((-b - q) / a, 0.0), t1 = (-b + q) / a;
+      if (t1 > 0.0) {
+        float y0 = p.y + sd.y * t0, y1 = p.y + sd.y * t1;
+        float milk = max(0.0, min(y1, M_TOP) - max(y0, BOT)) / max(y1 - y0, 1e-4);
+        float cof = max(0.0, min(y1, LV) - max(y0, M_TOP)) / max(y1 - y0, 1e-4);
+        float len = (t1 - t0) * length(sd);
+        T *= mix(vec3(1.0), vec3(0.0), smoothstep(0.0, 0.05, milk));
+        T *= mix(vec3(1.0), exp(-len * vec3(0.9, 2.1, 4.2)), smoothstep(0.0, 0.05, cof));
+      }
+    }
+  }
+  return T * 0.94;   // and the glass's two walls
+}
+
+// brushed steel: fine lines down the chamber, around the plate and the lid
+vec3 brushed(vec3 p, vec3 n) {
+  float a = atan(p.z, p.x);
+  vec3 tang = normalize(vec3(-p.z, 0.0, p.x) + 1e-5);
+  if (abs(n.y) < 0.6) {                                   // the sides: vertical lines, so the light streaks up and down
+    float g = vnoise(vec3(a * 420.0, p.y * 0.25, 1.0)) - 0.5;
+    return normalize(n + tang * g * 0.028);
+  }
+  float g = vnoise(vec3(length(p.xz) * 160.0, a * 1.2, 4.0)) - 0.5;   // the tops: round and round
+  return normalize(n + normalize(vec3(p.x, 0.0, p.z) + 1e-5) * g * 0.025);
+}
+
+// glass: what it adds itself (reflections, the sun's glint), and how much of what's behind comes through
+vec3 glassLight(vec3 p, vec3 rd, vec3 n, float jit, out vec3 trans) {
+  vec3 v = -rd;
+  float c = abs(dot(n, v));
+  vec3 F = fres(vec3(0.04), c);
+  vec3 add = F * env(reflect(rd, n)) * 0.75;
+  add += vec3(0.55, 0.42, 0.30) * 0.05 * smoothstep(0.40, 0.08, c);   // the wall seen edge-on: a thin bright line
+  add += SUNC * sunVis(p, jit) * ggx(n, v, SUN, 0.035) * 0.9;
+  float path = WG / max(c, 0.10);
+  trans = (1.0 - F) * exp(-path * vec3(0.20, 0.07, 0.13));   // a faint green-grey where the wall is seen edge-on
+  return add;
+}
+
+// what the coffee's surface mirrors: going up inside the glass, the phin's dark underside if the ray reaches the rim's
+// height still inside, otherwise the room through the glass wall
+vec3 surfRefl(vec3 p, vec3 r) {
+  if (r.y <= 0.0) return vec3(0.0);
+  float R = rI(0.5 * (LV + HG));
+  vec2 o = p.xz, d = r.xz;
+  float a = dot(d, d), b = dot(o, d), c = dot(o, o) - R * R;
+  float tw = a > 1e-6 ? (-b + sqrt(max(b * b - a * c, 0.0))) / a : 1e5;   // where it meets the wall
+  float tr = (HG - COLH - p.y) / r.y;                                   // where it meets the filter's floor
+  return tw < tr ? env(r) * 0.85 : vec3(0.012, 0.010, 0.008);
+}
+vec3 shade(vec3 p, vec3 rd, float m, float t, float jit) {
+  vec3 n = normalAt(p, t), v = -rd;
+  float sv = sunVis(p, jit);
+  vec3 c;
+  if (m < 2.5) {                                          // the phin: brushed stainless steel
+    vec3 nb = n;
+    float occ = ao(p, n, t);
+    vec3 sun = SUNC * sv * (sv > 0.002 ? sunThrough(p + n * 0.01, SUN, t, jit, false) : vec3(0.0));
+    vec3 f0 = vec3(0.56, 0.555, 0.54);
+    vec3 F = fres(f0, max(dot(nb, v), 0.0));
+    vec3 e = vec3(0.0);                                   // a little rough: three reflections a pass, white-noise jittered
+    for (int k = 0; k < 3; k++) {
+      vec3 h3 = vec3(hash3(vec3(gl_FragCoord.xy, uSeed * 37.0 + float(k) * 11.0)), hash3(vec3(gl_FragCoord.yx + 7.0, uSeed * 53.0 + float(k) * 5.0)), hash3(vec3(gl_FragCoord.xy + 13.0, uSeed * 71.0 + float(k) * 3.0)));
+      e += env(reflect(rd, normalize(nb + (h3 - 0.5) * 0.10))) / 3.0;
+    }
+    e = mix(vec3(dot(e, vec3(0.30, 0.55, 0.15))), e, 0.55);   // steel greys the room's warmth a little
+    c = F * e * occ * 0.95;
+    c += sun * F * ggx(nb, v, SUN, 0.22) * 0.9;
+    c += f0 * 0.05 * ambient(n) * occ;                    // a dull base so the shadow side isn't black
+  } else if (m < 3.5) {                                   // the drink, seen through the glass or from above
+    float r = length(p.xz);
+    bool top = p.y > LV - 0.25 && r < rI(LV) - 0.02 && n.y > 0.35;
+    if (top) {                                            // the coffee's surface: dark and glossy, the rings catching the light
+      vec2 e = vec2(0.004, 0.0);
+      float h0 = ripple(p.xz, t) + meniscus(r);
+      vec3 sn = normalize(vec3(-(ripple(p.xz + e.xy, t) + meniscus(length(p.xz + e.xy)) - h0) / e.x, 1.0,
+                               -(ripple(p.xz + e.yx, t) + meniscus(length(p.xz + e.yx)) - h0) / e.x));
+      vec3 F = fres(vec3(0.025), max(dot(sn, v), 0.0));
+      vec3 sun = SUNC * sv * sunThrough(p + vec3(0, 0.02, 0), SUN, t, jit, false);
+      vec3 body = vec3(0.020, 0.008, 0.003);
+      c = body * (ambient(sn) * 0.8 + sun * 0.08);
+      c += F * surfRefl(p, reflect(rd, sn));
+      c += sun * ggx(sn, v, SUN, 0.03) * 0.9;
+      c += vec3(0.30, 0.12, 0.03) * sun * 0.03 * smoothstep(rI(LV) - 0.35, rI(LV), r);   // light in the thin edge
+    } else {                                              // the side, through the wall: milk below, coffee above
+      vec3 radial = normalize(vec3(p.x, 0.0, p.z));
+      float w = fbm3(vec3(p.xz * 1.4 + 3.0, p.y * 3.2 - t * 0.05));
+      float mixY = M_TOP + 0.10 + 0.55 * w * w;           // the coffee settles onto the milk in soft wisps
+      float k = smoothstep(M_TOP - 0.08, mixY, p.y);
+      float caramel = (1.0 - abs(2.0 * k - 1.0));
+      gNoLiquid = true;
+      vec3 sun = SUNC * sv * (sv > 0.002 ? sunThrough(p + radial * 0.05, SUN, t, jit, false) : vec3(0.0));
+      gNoLiquid = false;
+      vec3 milk = vec3(0.74, 0.56, 0.31) * mix(0.82, 1.0, smoothstep(BOT, M_TOP, p.y));   // condensed milk: thick, ivory-gold, deeper below
+      float wrap = max((dot(radial, SUN) + 0.45) / 1.45, 0.0);
+      vec3 cm = milk * (sun * wrap * 0.9 + ambient(radial) * 0.75);
+      cm += milk * vec3(1.0, 0.75, 0.45) * sun * 0.10 * pow(max(dot(rd, SUN), 0.0), 2.0);   // light through it, toward the sun
+      vec3 body = vec3(0.022, 0.009, 0.003);
+      float edge = 1.0 - abs(dot(radial, v));
+      float back = pow(max(dot(rd, SUN), 0.0), 2.0);
+      vec3 cc = body * (ambient(radial) + sun * 0.06) + vec3(0.95, 0.40, 0.09) * sun * (0.03 + 1.1 * back) * pow(edge, 2.8) * 0.75;   // light through its thin edge; strong coffee, black in the middle
+      c = mix(cm, cc, k) + vec3(0.42, 0.20, 0.07) * caramel * (ambient(radial) * 0.8 + sun * wrap * 0.25) * 0.6;
+    }
+  } else {                                                // a drop: dark coffee, its edges lit amber, a glint
+    float cv = max(dot(n, v), 0.0), edge = 1.0 - cv;
+    vec3 F = fres(vec3(0.03), cv);
+    vec3 sun = SUNC * sv * (sv > 0.002 ? softShadow(p + n * 0.01, SUN, t, 8.0, jit) : 0.0);   // under the plate: mostly in its shadow
+    float back = pow(0.5 + 0.5 * dot(rd, SUN), 3.0);
+    c = vec3(0.03, 0.012, 0.004) * (ambient(n) * 2.0 + sun * 0.1) + vec3(0.95, 0.42, 0.10) * sun * (0.1 + 1.4 * back) * edge * edge * 0.25;
+    c += F * env(reflect(rd, n)) * 1.4;
+    c += sun * ggx(n, v, SUN, 0.04) * 0.8;
+    c += vec3(0.60, 0.56, 0.50) * 0.35 * ggx(n, v, normalize(vec3(0.35, 0.25, 0.90)), 0.12);   // the room in front, in the bead
+  }
+  return c;
+}
+
+// ------------------------------------------------------------------ the counter by the glass: its shadow (amber where the
+// sun comes through the coffee's thin edge), the contact, the drink in the varnish
+vec3 counterNear(vec3 p, vec3 rd, vec3 c, float t, float jit) {
+  if (rd.y >= 0.0 || abs(p.y) > 0.01) return c;
+  float near = length(p.xz), nearK = smoothstep(34.0, 24.0, near);
+  if (nearK <= 0.0) return c;
+  float sv = sunVis(p, jit);
+  vec3 alb = woodAlb(p.xz);
+  if (sv > 0.002) {
+    vec3 sd = normalize(SUN + (vec3(fract(jit * 5.1), fract(jit * 2.3), fract(jit * 7.7)) - 0.5) * 0.035);   // the window light is a little soft
+    c -= alb * SUNC * sv * SUN.y * (1.0 - sunThrough(p + vec3(0, 0.01, 0), sd, t, jit, true)) * nearK;
+  }
+  float occ = mix(1.0, ao(p, vec3(0, 1, 0), t), smoothstep(7.0, 3.3, near));
+  c *= mix(1.0, occ, nearK);
+  vec3 rr = reflect(rd, vec3(0, 1, 0));
+  gNoGlass = true;
+  vec2 h2 = march(p + vec3(0, 0.02, 0), rr, t, 30.0);
+  if (h2.x > 0.0) {
+    float F = 0.035 + 0.6 * pow(1.0 - max(-rd.y, 0.0), 5.0);
+    c += min(shade(p + rr * h2.x, rr, h2.y, t, jit), vec3(1.2)) * exp(-h2.x * 0.18) * F * 0.35 * nearK;
+  }
+  gNoGlass = false;
+  return c;
+}
+
+// ------------------------------------------------------------------ one camera ray
+// what lies behind the glass (or isn't behind any) goes to outC with its own depth, so the soft focus blurs the window
+// seen through the glass; the glass's own light (its reflections and glints) goes to outG, laid over after the blur
+void render(vec3 ro, vec3 rd, float t, float jit, out vec4 behind, out vec3 glassAdd) {
+  vec3 thr = vec3(1.0), o = ro, c = vec3(0.0);
+  float travelled = 0.0, dist = -1.0;
+  glassAdd = vec3(0.0);
+  for (int layer = 0; layer < 6; layer++) {
+    float rDist; vec3 bg = room(o, rd, jit, rDist, true);
+    vec2 h = march(o, rd, t, rDist);
+    if (h.x < 0.0) { c = counterNear(o + rd * rDist, rd, bg, t, jit); dist = travelled + rDist; break; }
+    vec3 p = o + rd * h.x;
+    if (h.y < 1.5) {                       // the glass: its light to its own layer, then through the wall
+      vec3 tr, n = normalAt(p, t);
+      glassAdd += thr * glassLight(p, rd, n, jit, tr);
+      thr *= tr;
+      float s = 0.0; bool inside = false;
+      for (int i = 0; i < 80; i++) {
+        float g = sdGlass(p + rd * s);
+        if (g < 0.0) inside = true; else if (inside && g > 0.0015) break;
+        s += max(abs(g), 0.003) + 0.002;
+      }
+      if (!inside) s = 0.05;                // a ray only grazing the glass: past it
+      o = p + rd * (s + 0.004); travelled += h.x + s + 0.004;
+      continue;
+    }
+    c = shade(p, rd, h.y, t, jit);
+    dist = travelled + h.x;
+    break;
+  }
+  if (dist < 0.0) { float rDist; c = room(o, rd, jit, rDist, true); dist = travelled + rDist; }   // out of layers: the room
+  float T = exp(-SIG * 1.25 * min(dist, 900.0));
+  behind = vec4(thr * c * T + haze(ro, rd, dist, jit) * 0.5, dist);   // half the opening's haze: a close-up, clearer
+  glassAdd *= exp(-SIG * 1.25 * 45.0);
+}
+
+void main() {
+  vec2 frag = gl_FragCoord.xy + uJit;
+  float aspect = uRes.x / uRes.y;
+  vec2 s = (frag - 0.5 * uRes) / uRes.y;
+  float jit = fract(ign(gl_FragCoord.xy) + uSeed);
+  vec3 ro = uCam;
+  vec3 fw = normalize(uTarget - ro), rt = normalize(cross(fw, vec3(0, 1, 0))), up = cross(rt, fw);
+  vec2 q = s + vec2(uShift.x * aspect, uShift.y);
+  float f = 0.5 / tan(radians(uFov) * 0.5);
+  vec3 rd = normalize(rt * q.x + up * q.y + fw * f);
+  vec4 behind; vec3 ga;
+  render(ro, rd, uT, jit, behind, ga);
+  outC = behind;
+  outG = vec4(ga, 0.0);
+}
+</script>
+<script id="post" type="x-shader/x-fragment">#version 300 es
+// depth of field (gathered), from the averaged linear image with depth in alpha
+precision highp float;
+uniform sampler2D uTex; uniform float uN; uniform float uFocus; uniform float uAper; uniform float uMaxC; uniform int uDebug;
+uniform sampler2D uSteam; uniform float uSN;   // the steam layer (colour and cover, summed over uSN passes), laid over the result
+out vec4 o;
+float coc(float d) { return min(uAper * abs(1.0 - uFocus / max(d, 1.0)), uMaxC); }
+void main() {
+  ivec2 P = ivec2(gl_FragCoord.xy), S = textureSize(uTex, 0);
+  vec4 c0 = texelFetch(uTex, P, 0); c0.rgb /= uN;     // alpha: the nearest depth, not a sum
+  float r0 = coc(c0.a);
+  if (uDebug == 1) { o = vec4(vec3(r0 / max(uAper, 1.0)) * 0.6, 1.0); return; }
+  if (uDebug == 2) { o = vec4(vec3(c0.a / 200.0) * 0.6, 1.0); return; }
+  float w0 = 1.0 / max(r0 * r0, 1.0);
+  vec3 acc = c0.rgb * w0; float wsum = w0;
+  const int N = 128, NI = 24;
+  float rot = 6.2831853 * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  // two sets of samples: the first NI fill a small disk the size of this pixel's own circle (the wide set's nearest
+  // sample is 2.8 px out, so a slightly soft edge got one random sample and came out spiky), the rest the whole disk
+  float Ri = clamp(r0 * 1.15, 1.0, uMaxC);
+  for (int i = 1; i < N + NI; i++) {
+    float r = i < NI ? sqrt(float(i) / float(NI)) * Ri : sqrt(float(i - NI + 1) / float(N)) * uMaxC;
+    float a = float(i) * 2.39996323 + rot;
+    vec2 off = vec2(cos(a), sin(a)) * r;
+    ivec2 Q = clamp(P + ivec2(round(off)), ivec2(0), S - 1);
+    vec4 cs = texelFetch(uTex, Q, 0); cs.rgb /= uN;
+    float rs = coc(cs.a);
+    if (cs.a > c0.a) rs = min(rs, r0);              // what lies behind can't spread over what is in front
+    else if (rs < 1.5) continue;                    // and what is sharp in front doesn't spread at all
+    float w = smoothstep(r - 1.0, r + 1.0, rs) / max(rs * rs, 1.0);   // the sample's circle reaches this pixel
+    acc += cs.rgb * w; wsum += w;
+  }
+  vec3 col = acc / wsum;
+  // the in-focus centre keeps its own value where its circle is small
+  col = mix(c0.rgb, col, smoothstep(0.6, 2.0, r0));
+  vec4 sm = texelFetch(uSteam, P, 0) / uSN;
+  o = vec4(col * (1.0 - sm.a) + sm.rgb, 1.0);
+}
+</script>
+<script id="bright" type="x-shader/x-fragment">#version 300 es
+precision highp float; uniform sampler2D uTex; uniform vec2 uTexel; out vec4 o; in vec2 vUv;
+void main() {
+  vec3 s = vec3(0);
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) s += texture(uTex, vUv + vec2(i, j) * uTexel).rgb;
+  s /= 9.0;
+  vec3 e = max(s - vec3(1.6), 0.0);
+  o = vec4(e / (1.0 + e), 1.0);   // what glows, with a soft ceiling so big bright panes don't flood the room
+
+}
+</script>
+<script id="blur" type="x-shader/x-fragment">#version 300 es
+precision highp float; uniform sampler2D uTex; uniform vec2 uDir; out vec4 o; in vec2 vUv;
+void main() {
+  vec3 s = vec3(0); float w = 0.0;
+  for (int i = -24; i <= 24; i++) { float k = exp(-float(i * i) / 180.0); s += texture(uTex, vUv + uDir * float(i)).rgb * k; w += k; }
+  o = vec4(s / w, 1.0);
+}
+</script>
+<script id="final" type="x-shader/x-fragment">#version 300 es
+precision highp float; uniform sampler2D uImg; uniform sampler2D uBloom; uniform float uExpo; uniform float uSeed; uniform float uBloomK; out vec4 o; in vec2 vUv;
+vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+void main() {
+  vec3 c = texelFetch(uImg, ivec2(gl_FragCoord.xy), 0).rgb + texture(uBloom, vUv).rgb * vec3(1.0, 0.80, 0.58) * 0.30 * uBloomK;
+  c *= uExpo * 0.62;
+  c = aces(c);
+  c = pow(c, vec3(1.0 / 2.2));
+  vec2 s = vUv - 0.5;
+  c *= 1.0 - 0.45 * pow(length(s * vec2(1.0, 0.85)) * 1.25, 2.2);
+  float n = fract(sin(dot(gl_FragCoord.xy + uSeed * 91.7, vec2(12.9898, 78.233))) * 43758.5453);
+  c += (n - 0.5) * 0.010;
+  o = vec4(c, 1.0);
+}
+</script>
+<script>
+const cv = document.getElementById('c');
+const gl = cv.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false });
+gl.getExtension('EXT_color_buffer_float');
+const vs = `#version 300 es
+in vec2 a; out vec2 vUv; void main(){ vUv = a * 0.5 + 0.5; gl_Position = vec4(a, 0, 1); }`;
+function sh(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+function program(id) {
+  const p = gl.createProgram();
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, document.getElementById(id).textContent.trim()));
+  gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(id + ': ' + gl.getProgramInfoLog(p));
+  return p;
+}
+const prog = program('fs'), dofP = program('post'), brightP = program('bright'), blurP = program('blur'), finalP = program('final');
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+function tex(w, h, fmt, filter) {
+  const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texImage2D(gl.TEXTURE_2D, 0, fmt, w, h, 0, gl.RGBA, gl.FLOAT, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return t;
+}
+function fbo(w, h, ...ts) {
+  const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+  ts.forEach((t, i) => gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t, 0));
+  gl.drawBuffers(ts.map((_, i) => gl.COLOR_ATTACHMENT0 + i));
+  return { f, w, h, t: ts[0] };
+}
+let T = null, W = 0, Hh = 0;
+function setup(w, h) {
+  if (w === W && h === Hh) return;
+  W = w; Hh = h; cv.width = w; cv.height = h;
+  const bw = Math.ceil(w / 4), bh = Math.ceil(h / 4);
+  const scene = tex(w, h, gl.RGBA32F, gl.NEAREST), glass = tex(w, h, gl.RGBA32F, gl.NEAREST);
+  T = { both: fbo(w, h, scene, glass), scene: { t: scene }, glass: { t: glass },
+        dof: fbo(w, h, tex(w, h, gl.RGBA16F, gl.LINEAR)), b1: fbo(bw, bh, tex(bw, bh, gl.RGBA16F, gl.LINEAR)), b2: fbo(bw, bh, tex(bw, bh, gl.RGBA16F, gl.LINEAR)) };
+}
+function draw(p) { const loc = gl.getAttribLocation(p, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+function target(x) { gl.bindFramebuffer(gl.FRAMEBUFFER, x ? x.f : null); gl.viewport(0, 0, x ? x.w : W, x ? x.h : Hh); }
+function bindTex(p, name, unit, x) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, x.t); gl.uniform1i(gl.getUniformLocation(p, name), unit); }
+const JIT = [[0.125, 0.375], [-0.375, 0.125], [0.375, -0.125], [-0.125, -0.375], [0.0, 0.0], [0.25, 0.25], [-0.25, -0.25], [0.25, -0.25], [-0.25, 0.25]];
+// the camera (cm, relative to the glass's foot): a three-quarter view with the window behind on the left, so the light
+// comes through the glass and the coffee's edge; a little above the rim, to see the phin's plate and the lid
+const CAM = { pos: [29, 17, 33], target: [0, 7.2, 0], fov: 27, shift: [0.0, 0.0] };
+const cam = () => window.camOverride || CAM;
+const SHUTTER = 0.5 / 24;   // motion blur: each pass its own moment in half a frame
+window.renderFrame = (t, passes, w, h) => {
+  setup(w, h);
+  const c = cam();
+  target(T.both);
+  gl.clearBufferfv(gl.COLOR, 0, [0, 0, 0, 1e9]);       // colour adds up over the passes, depth keeps the nearest
+  gl.clearBufferfv(gl.COLOR, 1, [0, 0, 0, 0]);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.blendEquationSeparate(gl.FUNC_ADD, gl.MIN);
+  gl.useProgram(prog);
+  const U = (n) => gl.getUniformLocation(prog, n);
+  gl.uniform2f(U('uRes'), W, Hh);
+  gl.uniform3f(U('uCam'), ...c.pos); gl.uniform3f(U('uTarget'), ...c.target);
+  gl.uniform1f(U('uFov'), c.fov); gl.uniform2f(U('uShift'), ...c.shift);
+  gl.uniform1f(U('uSlice'), SHUTTER / passes);
+  for (let i = 0; i < passes; i++) {
+    gl.uniform2f(U('uJit'), JIT[i % 9][0], JIT[i % 9][1]);
+    gl.uniform1f(U('uSeed'), (i * 0.618034) % 1);
+    gl.uniform1f(U('uT'), t + ((i + 0.5) / passes - 0.5) * SHUTTER);
+    draw(prog);
+  }
+  gl.disable(gl.BLEND);
+  // depth of field, focused on the glass; the glass's own light laid over after it
+  const focus = Math.hypot(c.pos[0] - c.target[0], c.pos[1] - c.target[1], c.pos[2] - c.target[2]);
+  target(T.dof); gl.useProgram(dofP); bindTex(dofP, 'uTex', 0, T.scene); bindTex(dofP, 'uSteam', 2, T.glass);
+  gl.uniform1f(gl.getUniformLocation(dofP, 'uN'), passes);
+  gl.uniform1f(gl.getUniformLocation(dofP, 'uSN'), window.noGlass ? 1e12 : passes);
+  gl.uniform1f(gl.getUniformLocation(dofP, 'uFocus'), focus);
+  gl.uniform1f(gl.getUniformLocation(dofP, 'uAper'), 0.022 * W);
+  gl.uniform1f(gl.getUniformLocation(dofP, 'uMaxC'), window.noDof ? 0 : 0.022 * W);
+  gl.uniform1i(gl.getUniformLocation(dofP, 'uDebug'), window.dbg || 0);
+  draw(dofP);
+  target(T.b1); gl.useProgram(brightP); bindTex(brightP, 'uTex', 0, T.dof); gl.uniform2f(gl.getUniformLocation(brightP, 'uTexel'), 1 / W, 1 / Hh); draw(brightP);
+  for (let k = 0; k < 2; k++) {
+    target(T.b2); gl.useProgram(blurP); bindTex(blurP, 'uTex', 0, T.b1); gl.uniform2f(gl.getUniformLocation(blurP, 'uDir'), 1 / T.b1.w, 0); draw(blurP);
+    target(T.b1); gl.useProgram(blurP); bindTex(blurP, 'uTex', 0, T.b2); gl.uniform2f(gl.getUniformLocation(blurP, 'uDir'), 0, 1 / T.b1.h); draw(blurP);
+  }
+  target(null); gl.useProgram(finalP); bindTex(finalP, 'uImg', 0, T.dof); bindTex(finalP, 'uBloom', 1, T.b1);
+  gl.uniform1f(gl.getUniformLocation(finalP, 'uExpo'), window.expo || 1.0);
+  gl.uniform1f(gl.getUniformLocation(finalP, 'uSeed'), (t * 24) % 97);
+  gl.uniform1f(gl.getUniformLocation(finalP, 'uBloomK'), window.noBloom ? 0 : 1);
+  draw(finalP);
+  gl.finish();
+  return cv.toDataURL('image/png');
+};
+window.ready = true;
+</script>

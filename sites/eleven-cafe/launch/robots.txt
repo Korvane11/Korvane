@@ -1,0 +1,7 @@
+# Eleven Cafē, for the site's own domain at launch (copy to the domain's root, replace YOUR-DOMAIN).
+# Every crawler may read the site, search engines and AI assistants alike: it is a café's public page.
+# Eleven Cafē can choose to block AI crawlers instead (see ../SEO.md); robots.txt is a request, not a wall.
+User-agent: *
+Allow: /
+
+Sitemap: https://YOUR-DOMAIN/sitemap.xml

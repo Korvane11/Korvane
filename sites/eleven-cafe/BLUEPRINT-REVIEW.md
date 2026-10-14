@@ -189,3 +189,33 @@ Reply with:
   - or keep the render.
 
 Then I build, test (71 checks plus new ones) and push.
+
+## 12. What was done (2026-10-14)
+
+You answered: "no dont use higgfiled just useeverything from the blueprint i sent". So no Higgsfield credits were
+used, and the pour stays our own render. Done:
+
+- **(a), every change you were asked to approve:**
+  - Get directions is the one filled button: the nav at every size, the phone menu, the end of the opening, Find
+    us. See the menu is the outline button, the call a plain link.
+  - No live "Open now": the hours show as Google lists them, today's row marked, "Call ahead to check before you
+    go". The structured data carries no hours until Q confirms them (one switch, README "Gaps").
+  - Data saver: with Save-Data or reduced data on, no video loads anywhere. The still and the three lines remain.
+  - The phin moment: a rendered 4 s loop in the cà phê sữa đá section. It plays only while on screen, has a
+    pause button, and shows a still with reduced motion or a data saver. Their real phin photo stays on Menu and
+    Our story.
+- **(b), the pour, our render made better:**
+  - motion blur (each sample at its own moment in half a frame), so the stream streaks as on film;
+  - a slow 6% push-in that ends exactly where the page expects;
+  - round ends on the stream;
+  - 6 samples a frame instead of 4.
+- **QA:**
+  - **Accessibility:** contrast, alt text, names, headings, focus at every Tab stop, reflow at 320 px and 200%.
+    It found one real problem, now fixed: the headline and its buttons were hidden from screen readers until
+    you scrolled.
+  - **Search and AI visibility:** `SEO.md`, with the launch files in `launch/`.
+  - **Vercel's interface guidelines:** one fix, the browser bar colour now matches the page.
+  - The tests cover every one of these (README "Checked").
+
+Still open, all for Eleven Cafē (Gate 1): still open at all? the hours, prices, the name story, photo originals.
+The site stays a `noindex` preview until they agree.

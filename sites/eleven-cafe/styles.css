@@ -291,8 +291,10 @@ strong { font-weight: 600; }
   .js .hero { height: 330vh; }
   .js .hero__stage { position: sticky; top: 0; }
   .js .beat:not(:last-child) { display: block; }
-  .js .beat { opacity: 0; transform: translateY(26px); visibility: hidden; transition: opacity 700ms var(--ease), transform 700ms var(--ease), visibility 0s linear 700ms; }
-  .js .hero[data-beat="0"] .beat:nth-child(1), .js .hero[data-beat="1"] .beat:nth-child(2), .js .hero[data-beat="2"] .beat:nth-child(3) { opacity: 1; transform: none; visibility: visible; transition-delay: 120ms, 120ms, 0s; }
+  /* the lines waiting their turn are see-through and can't be clicked, but stay readable to screen readers (the h1 and
+     its buttons are in the last one); tabbing to its buttons brings it up (js/home.js) */
+  .js .beat { opacity: 0; transform: translateY(26px); pointer-events: none; transition: opacity 700ms var(--ease), transform 700ms var(--ease); }
+  .js .hero[data-beat="0"] .beat:nth-child(1), .js .hero[data-beat="1"] .beat:nth-child(2), .js .hero[data-beat="2"] .beat:nth-child(3) { opacity: 1; transform: none; pointer-events: auto; transition-delay: 120ms, 120ms; }
   .js .hero__cue { display: flex; position: absolute; z-index: 2; left: 50%; bottom: 22px; transform: translateX(-50%); flex-direction: column; align-items: center; gap: 10px; font: 600 0.68rem/1 var(--sans); letter-spacing: 0.24em; text-transform: uppercase; color: rgba(244, 236, 224, 0.6); transition: opacity 500ms var(--ease); }
   .hero__cue::after { content: ""; width: 1px; height: 34px; background: linear-gradient(rgba(244, 236, 224, 0.7), rgba(244, 236, 224, 0)); animation: cue 2.4s var(--ease) infinite; transform-origin: top; }
   .hero:not([data-beat="0"]) .hero__cue { opacity: 0; }
@@ -332,6 +334,12 @@ main { position: relative; isolation: isolate; }
 .photo { border-radius: var(--r-photo); overflow: hidden; background: var(--surface); box-shadow: 0 40px 90px -40px rgba(226, 153, 42, 0.32), 0 0 0 1px rgba(255, 236, 210, 0.06); }
 .photo img { width: 100%; height: 100%; object-fit: cover; }
 .split .photo { aspect-ratio: 1; max-width: 460px; }
+/* the phin on home: a rendered loop over its still, dripping while it's in view (js/home.js) */
+.photo--phin { position: relative; }
+.split .photo--phin { aspect-ratio: 4 / 5; max-width: 420px; }
+.photo--phin video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 600ms var(--ease); }
+.photo--phin video.is-on { opacity: 1; }
+.photo--phin .phin__pause { top: auto; bottom: 14px; right: 14px; }
 .split__copy .kicker { margin-bottom: 18px; }
 .split__copy > p { margin-top: 20px; max-width: 32rem; color: var(--muted); font-size: 1.08rem; }
 .split__copy .quote { margin-top: 30px; }

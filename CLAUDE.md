@@ -238,6 +238,17 @@ Eleven Cafē: every page is `noindex` until they agree.
   8790 first; `PAGES_ONLY=1` and `VIEWS=desk|mob` narrow it). README
   "Checked" lists what it covers.
 - Live at https://korvane11.github.io/Korvane/sites/eleven-cafe/.
+- The master blueprint (2026-10-14): the owner sent a "MASTER_BLUEPRINT" from an email and asked to "use this for
+  the coffe website make it better and the cofee pur bette too". Then: "no dont use higgfiled just
+  useeverything from the blueprint". So no Higgsfield, our own renderer only. The review against it is
+  `sites/eleven-cafe/BLUEPRINT-REVIEW.md`. Applied:
+  - Get directions is the one filled button everywhere, the menu is the outline button, the call is a plain link;
+  - no live "Open now" until Q confirms the hours (`HOURS_CONFIRMED` in `js/site.js`; README "Gaps");
+  - no video with a data saver on;
+  - the phin drip render in the cà phê sữa đá section (README "The phin");
+  - motion blur and a slow push-in on the pour;
+  - the accessibility, local SEO and guidelines checks: `SEO.md`, plus `launch/` with robots.txt, sitemap.xml
+    and llms.txt for their domain.
 
 ## Callahan Cleaning (`sites/callahan-cleaning/`)
 

@@ -185,7 +185,46 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     const a = await p.evaluate(() => ({ intro: document.documentElement.classList.contains('intro'), still: parseFloat(getComputedStyle(document.querySelector('.hero__media img')).opacity), beat: document.querySelector('.hero').dataset.beat }));
     await p.evaluate(() => { const h = document.querySelector('.hero'); scrollTo(0, (h.offsetHeight - innerHeight) * 0.9); }); await p.waitForTimeout(1200);
     const z = await p.evaluate(() => { const b = document.querySelector('.hero__ctas .btn--gold').getBoundingClientRect(); return { beat: document.querySelector('.hero').dataset.beat, cta: b.width > 0 && b.bottom <= innerHeight }; });
+    await p.evaluate(() => document.getElementById('phin').scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(1500);
     ok(`save-data ${v}: no video fetched, the still shows, the lines still turn to the headline`, !a.intro && !videos.length && a.still === 1 && a.beat === '0' && z.beat === '2' && z.cta, JSON.stringify({ ...a, videos, end: z }));
+    await p.close(); await ctx.close();
+  }
+
+  /* 4c. screen readers find the headline and its buttons from the start, while the first line is showing */
+  {
+    const p = await (await b.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+    await p.goto(BASE + 'index.html?skip'); await p.waitForTimeout(1200);
+    const snap = await p.accessibility.snapshot({ interestingOnly: true });
+    const found = { h1: false, dir: 0 };
+    (function walk(n) { if (!n) return; if (n.role === 'heading' && n.level === 1) found.h1 = true; if (n.role === 'link' && /directions/i.test(n.name)) found.dir++; (n.children || []).forEach(walk); })(snap);
+    const beat = await p.evaluate(() => document.querySelector('.hero').dataset.beat);
+    ok('screen readers find the h1 and the hero\'s directions button on the first line', beat === '0' && found.h1 && found.dir >= 3, JSON.stringify({ beat, ...found }));
+    await p.context().close();
+  }
+
+  /* 4b. the phin: still until it's on screen, then it drips; its button pauses it; off screen it stops */
+  for (const [v, vp, mob] of [['desk', { width: 1440, height: 900 }, false], ['mob', { width: 390, height: 844 }, true]]) {
+    const ctx = await b.newContext({ viewport: vp, isMobile: mob, hasTouch: mob });
+    const p = await ctx.newPage(); watch(p, `phin ${v}`);
+    await p.goto(BASE + 'index.html?skip'); await p.waitForTimeout(1200);
+    // playing: not paused, and its time moved over 400 ms (one reading can land on the loop's restart, at 0)
+    const st = async () => {
+      const t1 = await p.evaluate(() => document.querySelector('#phin video').currentTime);
+      await p.waitForTimeout(400);
+      return p.evaluate((t1) => { const x = document.querySelector('#phin video'), bt = document.getElementById('phinToggle'); return { src: !!x.getAttribute('src'), playing: !x.paused && x.currentTime !== t1, on: x.classList.contains('is-on'), btn: !bt.hidden, pressed: bt.getAttribute('aria-pressed') }; }, t1);
+    };
+    const before = await st();
+    await p.evaluate(() => document.getElementById('phin').scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(2500);
+    const inView = await st();
+    await p.click('#phinToggle'); await p.waitForTimeout(300);
+    const paused = await st();
+    await p.click('#phinToggle'); await p.waitForTimeout(600);
+    const again = await st();
+    await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(800);
+    const away = await st();
+    ok(`phin ${v}: still until in view, drips in view, pauses and plays from its button, stops off screen`,
+      !before.src && inView.playing && inView.on && inView.btn && !paused.playing && paused.pressed === 'true' && again.playing && again.pressed === 'false' && !away.playing,
+      JSON.stringify({ before, inView, paused, again, away }));
     await p.close(); await ctx.close();
   }
 
@@ -278,10 +317,11 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
       await p.waitForTimeout(1000);
       const r = await p.evaluate(() => {
         const out = [];
-        document.querySelectorAll('.nav a, #navToggle, main .btn, main .link, .line, #steamToggle:not([hidden])').forEach((el) => {
+        document.querySelectorAll('.nav a, #navToggle, main .btn, main .link, .line, #steamToggle:not([hidden]), #phinToggle:not([hidden])').forEach((el) => {
           if (!el.closest('.nav')) el.scrollIntoView({ block: 'center', behavior: 'instant' });
           const s = getComputedStyle(el); const r = el.getBoundingClientRect();
           if (!r.width || s.display === 'none' || s.visibility === 'hidden') return;
+          const beat = el.closest('.beat'); if (beat && parseFloat(getComputedStyle(beat).opacity) < 0.5) return;   // a line waiting its turn
           const cx = r.x + r.width / 2, cy = r.y + r.height / 2;
           const pts = el.classList.contains('link') ? [cy - 21, cy + 21] : [cy];
           pts.forEach((y) => { const h = document.elementFromPoint(cx, y); if (!el.contains(h)) out.push(`${(el.textContent.trim() || el.getAttribute('aria-label')).slice(0, 24)} under ${h?.className?.baseVal ?? h?.className ?? h}`); });
@@ -341,7 +381,8 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
       }
     }
     for (const f of ['assets/brand/og.jpg', 'assets/brand/favicon.ico', 'assets/brand/apple-touch-icon.png', 'assets/brand/icon-192.png', 'assets/brand/icon-512.png', 'assets/brand/site.webmanifest', 'assets/brand/wordmark.svg',
-      'assets/pour/intro-l.mp4', 'assets/pour/intro-l.webm', 'assets/pour/loop-l.mp4', 'assets/pour/loop-l.webm', 'assets/pour/intro-p.mp4', 'assets/pour/intro-p.webm', 'assets/pour/loop-p.mp4', 'assets/pour/loop-p.webm']) {
+      'assets/pour/intro-l.mp4', 'assets/pour/intro-l.webm', 'assets/pour/loop-l.mp4', 'assets/pour/loop-l.webm', 'assets/pour/intro-p.mp4', 'assets/pour/intro-p.webm', 'assets/pour/loop-p.mp4', 'assets/pour/loop-p.webm',
+      'assets/phin/phin.mp4', 'assets/phin/phin.webm', 'assets/phin/phin.jpg', 'assets/phin/phin.webp']) {
       const r = await ctx.request.get(BASE + f);
       ok(`${f} served`, r.status() === 200, String(r.status()));
     }

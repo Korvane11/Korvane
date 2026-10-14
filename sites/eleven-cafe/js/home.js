@@ -101,7 +101,33 @@ function watchScroll() {
   });
 }
 
+// the phin (the cà phê sữa đá section): its loop drips while it's on screen, never with reduced motion or a data saver;
+// a pause button, as for the steam. Every drip cycle divides the loop's 4 s, so it loops without a seam.
+function phinLoop() {
+  const box = document.getElementById('phin');
+  const v = box?.querySelector('video'), btn = document.getElementById('phinToggle');
+  if (!v || reduced || saveData) return;
+  const ext = v.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';
+  let inView = false, paused = false;
+  const sync = () => {
+    if (inView && !paused && !document.hidden) {
+      if (!v.getAttribute('src')) v.src = `assets/phin/phin.${ext}`;
+      v.play().catch(() => {});
+    } else if (!v.paused) v.pause();
+  };
+  v.addEventListener('playing', () => { v.classList.add('is-on'); if (btn) btn.hidden = false; }, { once: true });
+  new IntersectionObserver(([e]) => { inView = e.isIntersecting; sync(); }, { rootMargin: '160px 0px' }).observe(box);
+  document.addEventListener('visibilitychange', sync);
+  btn?.addEventListener('click', () => {
+    paused = !paused;
+    btn.setAttribute('aria-pressed', String(paused));
+    btn.setAttribute('aria-label', paused ? 'Play the drip' : 'Pause the drip');
+    sync();
+  });
+}
+
 if (hero) watchScroll();
+phinLoop();
 if (!media || !intro || !loop) done();
 else if (root.classList.contains('intro')) runIntro();
 else { done(); startLoop(); }
