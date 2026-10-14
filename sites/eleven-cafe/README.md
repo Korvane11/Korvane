@@ -217,8 +217,8 @@ plain link (`.link--call`), never a button. `tests/behave.cjs` checks this on ev
 ## Checked
 
 2026-10-14, in Chromium, desktop (1440 x 900) and phone (390 x 844), after
-the realism pass (higher camera, new stream, crema, glaze and steam layer):
-`tests/behave.cjs`, 71 of 71, no page errors.
+the blueprint changes (one main action, honest hours, the data saver, the
+phin, the accessibility fix): `tests/behave.cjs`, 88 of 88, no page errors.
 Serve the site on port 8790, then `NODE_PATH=$(npm root -g) node
 tests/behave.cjs` (or pass the live address). `PAGES_ONLY=1` leaves out the
 opening; `VIEWS=desk` or `VIEWS=mob` times the opening in one layout. A
