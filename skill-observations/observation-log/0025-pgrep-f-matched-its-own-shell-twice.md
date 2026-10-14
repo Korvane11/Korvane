@@ -1,6 +1,6 @@
 ---
 id: 25
-title: "Waiting on a background render by a PID from pgrep -f returned at once, twice in one session: the pattern also appeared in the tool call's own shell command, so pgrep found that shell, which exited; the lesson lived only in a conversation summary"
+title: "Waiting on a background render by a PID from pgrep -f returned at once, twice in one session, and a third time (2026-10-14) pgrep -f said a finished render was still running: the pattern also appeared in the tool call's own shell command, so pgrep found that shell; the lesson lived only in a conversation summary and this log"
 status: open
 type: open-source
 skill: []
@@ -9,7 +9,7 @@ target_file: ["sites/eleven-cafe/render/render_all.sh"]
 siblings_checked: "reuses the open candidate scroll-film-renders (long offline renders run in the background and waited on); no installed skill covers running or waiting on long jobs; the render script named in target_file, where a PID file would remove the step; checked"
 area: "Starting and waiting on long background jobs (offline renders) from the agent's shell"
 date: 2026-10-13
-session_context: "Eleven Cafē site: full renders of the opening scene (about 70 minutes) started in the background, with a background waiter that reports when they end"
+session_context: "Eleven Cafē site: full renders of the opening scene (about 70 minutes) started in the background, with a background waiter that reports when they end; 2026-10-14, the phin loop's render (render_phin.cjs), checked after its last frame"
 parked_until:
 resolved:
 resolution:
@@ -25,6 +25,14 @@ pgrep's first match was the shell, not the render. The waiter
 shell exited. The same thing happened earlier in the session, and its fix
 (use `kill -0` on the real PID) was written only into the conversation
 summary, so it was not in front of the next attempt.
+
+**Again, 2026-10-14 (the other direction):** after the phin loop's last frame
+was written, `pgrep -f "render_phin.cjs" >/dev/null && echo "still running"`
+printed "still running": the tool call's own shell held the pattern in its
+command line. The render had exited. It did no harm, because the frames were
+counted directly (96 of 96). Waiting on a file the job writes last, or on a log
+line ("ALL FRAMES DONE"), was right both times it was used this session. The
+same false positive would keep a waiter looping forever.
 
 **Suggested improvement:**
 
