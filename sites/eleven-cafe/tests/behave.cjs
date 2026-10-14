@@ -3,6 +3,9 @@
 // PAGES_ONLY=1 leaves out the opening (sections 1-3), for checking the pages before the pour is rendered;
 // VIEWS=desk (or mob) times the opening in one layout only.
 const { chromium } = require('playwright');
+const fs = require('fs');
+// the hours are live ("Open now") only once Eleven Cafē confirms them: js/site.js, HOURS_CONFIRMED
+const HOURS_LIVE = /const HOURS_CONFIRMED = true/.test(fs.readFileSync(require('path').join(__dirname, '../js/site.js'), 'utf8'));
 const BASE = process.argv[2] || 'http://localhost:8790/';
 const PAGES = ['index.html', 'menu.html', 'story.html', 'visit.html'];
 const PAGES_ONLY = !!process.env.PAGES_ONLY;
@@ -196,8 +199,12 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     await nj.close();
   }
 
-  /* 6. open now, in Tucson time, at fixed moments of the week */
+  /* 6. hours, in Tucson time, at fixed moments of the week. Until Eleven Cafē confirms
+   * the hours (HOURS_CONFIRMED in js/site.js), the status stays the static line and the
+   * "call ahead" note shows; once confirmed, it says whether they are open. */
   {
+    const live = HOURS_LIVE;
+    const STATIC = 'Monday to Friday, 7am to 2pm';
     const cases = [
       ['2026-10-13T17:00:00Z', 'Open now, until 2pm', 2],      // Tuesday 10am in Tucson
       ['2026-10-13T13:00:00Z', 'Opens today at 7am', 2],       // Tuesday 6am
@@ -209,15 +216,26 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
     ];
     const ctx = await b.newContext();
     const bad = [];
-    for (const [iso, want, dow] of cases) {
-      const p = await ctx.newPage();
-      await p.clock.setFixedTime(new Date(iso));
-      await p.goto(BASE + 'visit.html');
-      const r = await p.evaluate(() => ({ s: document.querySelector('[data-status]').textContent, today: document.querySelector('.hours .is-today')?.dataset.day }));
-      if (r.s !== want || +r.today !== dow) bad.push(`${iso}: "${r.s}" today=${r.today}, wanted "${want}" ${dow}`);
-      await p.close();
+    for (const [iso, liveText, dow] of cases) {
+      const want = live ? liveText : STATIC;
+      for (const page of ['visit.html', 'index.html?skip']) {
+        const p = await ctx.newPage();
+        await p.clock.setFixedTime(new Date(iso));
+        await p.goto(BASE + page);
+        const r = await p.evaluate(() => ({
+          s: document.querySelector('[data-status]').textContent,
+          today: document.querySelector('.hours .is-today')?.dataset.day,
+          open: !!document.querySelector('.status.is-open'),
+          dot: getComputedStyle(document.querySelector('.status__dot')).display !== 'none',
+          note: !!document.querySelector('[data-hours-note]'),
+        }));
+        const fine = r.s === want && +r.today === dow && (live ? r.dot && !r.note : !r.open && !r.dot && r.note);
+        if (!fine) bad.push(`${page} ${iso}: ${JSON.stringify(r)}, wanted "${want}" ${dow}`);
+        await p.close();
+      }
     }
-    ok('open-now status and today\'s row, seven moments of the week', !bad.length, bad.join('; '));
+    ok(live ? 'open-now status and today\'s row, seven moments of the week'
+      : 'hours unconfirmed: no open-now claim, today\'s row marked, call-ahead note, seven moments of the week', !bad.length, bad.join('; '));
     await ctx.close();
   }
 
@@ -291,8 +309,10 @@ const ok = (name, pass, info = '') => { results.push(pass); console.log(`${pass 
       titles.add(m.title);
       ok(`${path}: share tags, one h1, noindex for now`, good, `"${m.title}" desc ${m.desc.length}`);
       if (path === 'index.html') {
+        const live = HOURS_LIVE; // hours go into the structured data only once confirmed
         const ld = m.ld; const h = ld?.openingHoursSpecification?.[0];
-        ok('structured data matches the facts on the page', ld && ld['@type'] === 'CafeOrCoffeeShop' && ld.telephone === '+1-520-624-8852' && ld.address.streetAddress === '33 N Stone Ave, Suite 150' && ld.address.postalCode === '85701' && h.opens === '07:00' && h.closes === '14:00' && h.dayOfWeek.length === 5, ld?.name);
+        const hoursOk = live ? h && h.opens === '07:00' && h.closes === '14:00' && h.dayOfWeek.length === 5 : !ld?.openingHoursSpecification;
+        ok('structured data matches the facts on the page', ld && ld['@type'] === 'CafeOrCoffeeShop' && ld.telephone === '+1-520-624-8852' && ld.address.streetAddress === '33 N Stone Ave, Suite 150' && ld.address.postalCode === '85701' && hoursOk, ld?.name);
       }
     }
     for (const f of ['assets/brand/og.jpg', 'assets/brand/favicon.ico', 'assets/brand/apple-touch-icon.png', 'assets/brand/icon-192.png', 'assets/brand/icon-512.png', 'assets/brand/site.webmanifest', 'assets/brand/wordmark.svg',

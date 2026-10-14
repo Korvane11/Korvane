@@ -1,4 +1,4 @@
-/* Eleven Cafē, every page: the nav and menu, the open-now status (Tucson time),
+/* Eleven Cafē, every page: the nav and menu, today's hours (Tucson time),
  * the year and things fading in as they scroll into view. The home page also
  * runs the pour (js/home.js).
  */
@@ -7,6 +7,11 @@ const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 
 /* ---------------------------------------------------------------- hours */
 // Monday to Friday, 7am to 2pm, in Tucson's time (Arizona keeps standard time all year).
+// These are the hours Google lists; Eleven Cafē hasn't confirmed them yet. Until they
+// do, the page shows the table with today's row marked and a "call ahead" note, but
+// never says "Open now". Once they confirm: set this to true and put the hours back in
+// index.html's structured data (README, "Hours").
+const HOURS_CONFIRMED = false;
 const TZ = 'America/Phoenix', OPEN = 7, CLOSE = 14;
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -25,10 +30,14 @@ function nextOpening() {
   return 'Monday';
 }
 $$('[data-day]').forEach((el) => el.classList.toggle('is-today', +el.dataset.day === day));
-$$('[data-status]').forEach((el) => {
-  el.textContent = openNow ? 'Open now, until 2pm' : `Opens ${nextOpening()} at 7am`;
-  el.closest('.status')?.classList.toggle('is-open', openNow);
-});
+if (HOURS_CONFIRMED) {
+  $$('[data-status]').forEach((el) => {
+    el.textContent = openNow ? 'Open now, until 2pm' : `Opens ${nextOpening()} at 7am`;
+    el.closest('.status')?.classList.add('is-live');
+    el.closest('.status')?.classList.toggle('is-open', openNow);
+  });
+  $$('[data-hours-note]').forEach((el) => el.remove());
+}
 $$('[data-year]').forEach((el) => { el.textContent = new Date().getFullYear(); });
 
 /* ---------------------------------------------------------------- nav */

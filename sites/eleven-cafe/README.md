@@ -56,7 +56,30 @@ peeve"). Nothing on this site shows him.
 - **Still open?** Their last Facebook post is August 2020, but the newest
   review is February 2022, the cover photo is from about 2025 and Google
   lists weekday hours. Confirm before showing them the site.
-- **Hours:** confirm Monday to Friday 7am to 2pm, closed weekends.
+- **Hours:** confirm Monday to Friday 7am to 2pm, closed weekends. Until
+  they do, the site shows them as Google lists them, with "Call ahead to
+  check before you go" under the table. Today's row is marked, but nothing
+  says "Open now" and the structured data carries no hours. Once Q confirms
+  them:
+  1. set `HOURS_CONFIRMED = true` in `js/site.js`. The status line then
+     says "Open now, until 2pm" or "Opens … at 7am", the dot comes back and
+     the note goes;
+  2. put the hours back in `index.html`'s structured data, after `address`:
+     ```json
+     "openingHoursSpecification": [{ "@type": "OpeningHoursSpecification",
+       "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+       "opens": "07:00", "closes": "14:00" }],
+     ```
+     The test reads the flag and checks for it.
+  If the hours themselves change, they appear in these places:
+  - `OPEN` and `CLOSE` in `js/site.js`;
+  - both hours tables (`index.html`, `visit.html`);
+  - the home page's last scroll line and its status line;
+  - Visit's lead, status line and descriptions;
+  - the footer of all four pages.
+
+  There is no build step, so there is no single place to keep the facts in.
+  `grep -n 7am *.html` finds every copy.
 - **Menu and prices:** no menu is published anywhere. The Menu page lists
   only drinks their page and their reviewers name, with no prices
   ("prices at the counter"). Ask for the full menu, prices and sizes.
