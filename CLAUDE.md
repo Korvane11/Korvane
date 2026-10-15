@@ -309,14 +309,17 @@ page is `noindex`; their Wix site, domain and listings are untouched.
   their aqua `#a1d0d8` with a deep teal `#17575e` for actions, Bricolage
   Grotesque and Figtree, light and dark modes. Their logo traced from their
   own PNG (`render/trace_logo.py`).
-- The opening (`render/pour.html`, our own WebGL ray marcher, no stock):
-  low sun through a desert tree onto an oak table, milk poured into an
-  espresso in a white cup leaves a heart, steam rises; the logo and words
-  fade in beside the cup at 1.1 s; a 6 s steam loop follows. Render:
-  `render/render_all.sh` (about 1.5-2.5 h, resumable), stills and share
-  image: `render/stills.cjs`. Don't edit `pour.html` while a render runs:
-  each render process loads it fresh, so the loop would stop matching the
-  intro.
+- The opening since 2026-10-15 (see below): a Blender Cycles render
+  (`render/blender/`): low morning sun and leaf shadows on an oak table, a
+  white porcelain cup and saucer; thick glossy caramel coffee pours in and
+  swirls as it fills, the stream breaks, steam rises; the logo and words fade
+  in beside the cup at 1.1 s; a 2 s steam loop follows. One 1200 px square
+  render, cropped for both layouts (`encode.sh`). About 70 s a frame on 4
+  cores; `render_all.sh` is resumable and writes `render.pid` and `done`. The
+  container is reclaimed when the session is idle and that kills a render:
+  keep a waiter running (observation 0032). Stills and share image:
+  `render/blender/stills.py`. The first opening (the WebGL latte heart,
+  `render/pour.html`) is in git history before this change.
 - 2026-10-15, the owner: "I need you to change the coffee mug and coffee to
   make it look more realistic aswell as the coffee pour is there any plugins
   or skills I can have you add that will make it better?" The plugin catalog

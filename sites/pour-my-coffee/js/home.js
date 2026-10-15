@@ -2,10 +2,11 @@
  * (html.intro): it plays whenever the site is opened, not when coming back here from another
  * page of the site after seeing it, with ?skip, with reduced motion or with a data saver on.
  *
- * Six in the morning: the light comes up on the table, milk pours into the espresso and leaves a
- * heart, steam rises. The words and the nav come in once the light is up (html.is-lit), beside the
- * cup, never over it. Then the steam loops (its first frame is the pour's last). If the video
- * can't start within 2.5 s the page opens on the still.
+ * Morning: the light comes up on the table, thick caramel coffee pours into the empty cup and
+ * swirls as it fills, the stream breaks, steam rises (the Blender render, render/blender/). The
+ * words and the nav come in once the light is up (html.is-lit), beside the cup, never over it.
+ * Then the steam loops (its first frame is the pour's last). If the video can't start within
+ * 2.5 s the page opens on the still.
  */
 const root = document.documentElement;
 const hero = document.querySelector('.hero');

@@ -147,18 +147,48 @@ top-down heart, their aqua, a sans) so the two never look alike.
 
 ## The opening, beat by beat
 
-| Beat | Time | What happens | Made by |
+Since 2026-10-15 the opening is a Blender (Cycles) render: the owner asked
+for the cup, the coffee and the pour to look more realistic, and sent a
+reference clip for the pour ("Use the pour from this video but just into
+the cup"; an AI-generated TikTok by @satisfyloopusa, used only as a look
+reference, not on the site). The first version (the WebGL latte heart,
+`render/pour.html`) is in git history and still renders.
+
+| Beat | Time | What happens | Made by (`render/blender/scene.py`) |
 | --- | --- | --- | --- |
-| 1 | 0-0.9 s | black, then the light comes up warm on the oak table and the cup of espresso | exposure ramp and a warm-to-day sun (`pour.html`, `final` shader and `sunCol`) |
-| 2 | 0.7-1.5 s | the milk's stream falls in; the crema lightens around it | `sdStream`, `surfaceColor` |
-| 3 | 1.55-2.7 s | the white comes up and grows | `blobC`, `blobRad` |
-| 4 | 2.7-3.15 s | the stream lifts and pulls through: a heart | `pullK`, `pullZ`, the displacement in `surfaceColor` |
-| 5 | 3.15-5 s | the stream breaks, ripples settle, steam rises into the sun | `steam`, `surfNormal` |
+| 1 | 0-0.9 s | black, then the light comes up warm on the oak table, the leaf shadows and the empty white cup | `T_LIGHT`, the exposure ramp and the sun's colour in `state()` |
+| 2 | 0.55-0.85 s | a thick rope of caramel coffee falls in from above | `stream_mesh()`, `T_HEAD`, `T_LAND` |
+| 3 | 0.85-3.9 s | the cup fills; tan and dark swirls spiral round where it lands, a soft mound of coffee under the stream | `level()`, `surface_mesh()`, the `coffee` material (`cx`, `cy`, `rot`, `twist`) |
+| 4 | 3.9-4.35 s | the stream thins and breaks; its tail falls away | `T_THIN`, `T_STOP` |
+| 5 | 4.35-6 s | rings settle, the swirl slows to a stop, steam rises | `settle`, `swirl_rot()`, the `steam` material |
 | 6 | 1.1 s on | the nav, the logo, the headline and the buttons fade in beside the cup | `LIT_AT` in `js/home.js`, `.js.intro` in `styles.css` |
-| 7 | after 5 s | the steam loops (6 s, seamless; the loop's first frame is the intro's last) while the hero is on screen | `startLoop()` |
+| 7 | after 6 s | the steam loops (2 s, seamless: two rising noise fields cross-faded; the loop's first frame is the intro's last) while the hero is on screen | `startLoop()`; `offA`, `offB`, `fade` |
 
 No loader, no skip button. If the video can't start in 2.5 s, the page
 opens on the still. Data saver or reduced motion: the still, no video.
+
+## The opening in Blender
+
+```bash
+python3 -I render/blender/fetch_assets.py        # Poly Haven CC0: white_oak_veneer, kiara_interior (cache not committed)
+bash render/blender/render_all.sh /path/to/frames   # 1200 px squares; resumable; about 70 s a frame on 4 cores
+bash render/blender/encode.sh /path/to/frames /path/to/frames/encoded   # crops both layouts, then copy into assets/pour
+NODE_PATH=$(npm root -g) python3 render/blender/stills.py /path/to/out   # the two drink stills and the share image
+```
+
+- One square render serves both layouts: the cup sits in the bottom-right
+  square, so the landscape video is the bottom 9/16 of each frame (cup on
+  the right, words on the left) and the portrait video the right 9/16
+  (cup low, words above).
+- The cup and saucer are lathed from profiles (`cup_profile`,
+  `saucer_profile`), the handle is a bevelled curve; white glaze is a
+  coated, slightly translucent Principled BSDF.
+- The light: a sun from the left through a leaf screen 0.7 m away (only
+  shadows see it), a thin "window" area light behind the cup for the
+  highlight streaks on the coffee, and the `kiara_interior` sky.
+- In a cloud session the container is reclaimed when idle and kills the
+  render: keep a waiter running, and keep a render inside what one waiter
+  covers (observation 0032).
 
 ## Rendering the opening
 
