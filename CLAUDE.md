@@ -325,6 +325,12 @@ page is `noindex`; their Wix site, domain and listings are untouched.
   (their account: free plan, 10 credits on 2026-10-15; quote before spending),
   shown side by side; and "I'll send a photo" of Pour's actual cups: model the
   cup on that photo, compared side by side with it, before any long render.
+  Then they sent a reference clip instead of a cup photo: "Use the pour from
+  this video but just into the cup" (an AI-generated TikTok by @satisfyloopusa:
+  thick glossy caramel coffee with tan and dark swirls pouring down marble
+  steps; a look reference only, not on the site). Higgsfield: Grok Video Lite
+  quoted 5 credits a clip, Seedance 35; the owner chose "Skip Higgsfield".
+  So: Blender only (`render/blender/`, README "The opening in Blender").
 - Wix stock photos are not carried over; their storefront photo (theirs) is.
   The footer says the cup is a 3D render.
 - Hours shown Mon-Fri 6-5, Sat-Sun 7-5 (home page, Instagram, Google agree;
