@@ -27,7 +27,7 @@ def save(im, name):
 
 
 a = still(2.9)                       # the stream in, the swirl spiralling round it
-save(a.crop((240, 0, 1200, 1200)), 'pour-still')           # 960x1200, the cup right of centre
+save(a.crop((480, 250, 1200, 1150)).resize((960, 1200), Image.LANCZOS), 'pour-still')   # 4:5, tight on the cup and stream
 b = still(6.5)                       # full, still, steam (loop time 0.5 s)
 save(b.crop((0, 300, 1200, 1200)), 'cup-still')            # 1200x900
 subprocess.run(['node', os.path.join(HERE, 'make_og.cjs')], check=True)

@@ -221,6 +221,13 @@ change `DUR` in `render_pour.cjs` and the frame number in `encode.sh`.
 
 ## Checked
 
+2026-10-15, after the Blender opening went in: `tests/behave.cjs`, **460 of
+460** (one tap-size check first failed by a fraction of a pixel on "Open in
+Google Maps"; `.link` is now 48 px tall). By eye: the opening at 2.6 s and
+8 s on desktop and phone, every rendered frame on contact sheets, the two
+drink stills and the share image.
+
+
 2026-10-14, Chromium (Playwright), desktop 1440x900 and phone 375x812, with
 the final renders: `tests/behave.cjs`, **460 of 460**. It covers, per page
 and view: no sideways scroll (scrollWidth against clientWidth), one h1,
