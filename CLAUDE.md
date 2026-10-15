@@ -317,6 +317,14 @@ page is `noindex`; their Wix site, domain and listings are untouched.
   image: `render/stills.cjs`. Don't edit `pour.html` while a render runs:
   each render process loads it fresh, so the loop would stop matching the
   intro.
+- 2026-10-15, the owner: "I need you to change the coffee mug and coffee to
+  make it look more realistic aswell as the coffee pour is there any plugins
+  or skills I can have you add that will make it better?" The plugin catalog
+  had nothing for 3D or video. Asked, they chose "Both, then I pick": a
+  Blender Cycles render (bpy 5.2, as Callahan) and a Higgsfield AI video
+  (their account: free plan, 10 credits on 2026-10-15; quote before spending),
+  shown side by side; and "I'll send a photo" of Pour's actual cups: model the
+  cup on that photo, compared side by side with it, before any long render.
 - Wix stock photos are not carried over; their storefront photo (theirs) is.
   The footer says the cup is a 3D render.
 - Hours shown Mon-Fri 6-5, Sat-Sun 7-5 (home page, Instagram, Google agree;
