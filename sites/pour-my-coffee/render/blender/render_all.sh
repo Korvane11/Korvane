@@ -1,5 +1,5 @@
 #!/bin/bash
-# Renders the Blender opening (the intro, 144 frames, then the steam loop, 96 frames) as 1200 px squares,
+# Renders the Blender opening (the intro, 144 frames, then the steam loop, 48 frames) as 1200 px squares,
 # then encodes both layouts. Resumable: frames on disk are skipped. About 5-6 h on 4 cores.
 # Writes its PID to <frames dir>/render.pid and touches <frames dir>/done at the end: wait on those, never on a
 # process search (a pgrep -f pattern also matches the shell that runs it).

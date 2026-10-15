@@ -26,7 +26,7 @@ CACHE = os.path.join(HERE, 'cache')
 # ---------------------------------------------------------------- timing (seconds, 24 fps)
 FPS = 24
 INTRO = 6.0             # frames 0..143; the loop's frame 0 is the intro's frame 144
-LOOP = 4.0              # frames 0..95
+LOOP = 2.0              # frames 0..47 (was 4 s; halved 2026-10-15 so the render fits before the idle container is reclaimed)
 T_LIGHT = 0.9           # the light comes up
 T_HEAD = 0.55           # the stream's head leaves the top of the frame
 T_LAND = 0.85           # it reaches the bottom of the cup
@@ -736,7 +736,8 @@ def state(o, t_intro, tau):
     # the steam's box follows the level
     # (it starts just under the surface; the coffee hides what is below)
     # the leaves sway, periodic over the loop
-    sw = 0.012 * math.sin(2 * math.pi * tau / LOOP) + 0.005 * math.sin(4 * math.pi * tau / LOOP + 1.1)
+    per = 4.0 if tau < 0 else LOOP     # the intro's frames were rendered with a 4 s sway; both agree at tau = 0
+    sw = 0.012 * math.sin(2 * math.pi * tau / per) + 0.005 * math.sin(4 * math.pi * tau / per + 1.1)
     set_value(o['gobo'].active_material, 'sway', sw)
     # the light comes up, warm first
     if t_intro is not None:
