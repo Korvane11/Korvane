@@ -1,7 +1,7 @@
 ---
 id: 18
 title: "A page-opening tracker installed with Playwright's addInitScript threw on every page (document.documentElement is null that early) and its 'intro finished' timestamp fired on an unrelated class change before the intro had started"
-status: open
+status: actioned
 type: open-source
 skill: [webapp-testing, playwright-cli]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Recipes for timing a site's opening animation from a test (init scripts, 
 date: 2026-10-13
 session_context: "Eleven Cafē site: browser checks that time the espresso-pour opening (when html.intro is set, when is-opening is added, when intro is removed)"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-19
+resolution: "Staged as a patch to prompts/site-blueprint.md at skill-updates/2026-10-19/_target-files/prompts/site-blueprint.md.patch ('Test scripts' line: wait for <html>, end only after start, page errors fail the run) (weekly review 2026-10-19). webapp-testing and playwright-cli not edited: maintained upstream; owner's standing route is the blueprint."
 reference: "sites/eleven-cafe/tests/behave.cjs, trackIntro"
 commands_verified: "run: PAGES_ONLY=1 node tests/behave.cjs with the first tracker: 4 page errors 'Cannot read properties of null (reading classList)', one per reduced-motion page that installed it; after waiting for <html> with a MutationObserver on document, no page errors. The early 'done' was found by reading the code (the head script adds the js class before the intro class, and the observer counted any attribute change without intro as done); the timing run that would show it waits for the render"
 ---

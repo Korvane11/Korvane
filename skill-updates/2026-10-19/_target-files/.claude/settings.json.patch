@@ -1,0 +1,11 @@
+--- a/.claude/settings.json
++++ b/.claude/settings.json
+@@ -16,7 +16,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "echo 'Session start (new or resumed): before any other tool call, invoke the task-observer skill and run its Session Start Protocol, as CLAUDE.md (Task observer) says.'",
++            "command": "echo 'Session start (new or resumed): make the first tool call one batch holding ls /home/user/Korvane/skill-observations, the task-observer Skill invocation and its skill-load.sh lookup; then run its Session Start Protocol, as CLAUDE.md (Task observer) says.'",
+             "timeout": 10
+           }
+         ]

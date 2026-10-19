@@ -1,7 +1,7 @@
 ---
 id: 31
 title: "A phone menu toggled with the hidden attribute had display: flex in its class rule, which beats the browser's [hidden] style: the closed menu was an invisible full-screen layer over every page, on desktop too, eating every click; only a click test found it, the screenshots looked perfect"
-status: open
+status: actioned
 type: open-source
 skill: []
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Building: components shown and hidden with the hidden attribute"
 date: 2026-10-14
 session_context: "Pour My Coffee Co site, first build: the phone menu (.menu { display: flex; opacity: 0 } with the hidden attribute when closed)"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-19
+resolution: "Staged as a patch to prompts/site-blueprint.md at skill-updates/2026-10-19/_target-files/prompts/site-blueprint.md.patch (Build: [hidden] with a class that sets display; Checks: click under a closed overlay) and principle 4 (weekly review 2026-10-19)."
 reference: "sites/pour-my-coffee/styles.css (.menu[hidden] { display: none; }); sites/pour-my-coffee/tests/behave.cjs (the form tests' page.click and the controls' elementFromPoint check)"
 commands_verified: "run: tests/behave.cjs before the fix: page.click on the Location form's submit button timed out, Playwright's log said '<div id=\"menu\" hidden class=\"menu\"> intercepts pointer events'. run: the same after adding .menu[hidden] { display: none; }: the click went through and 432 of 444 checks passed (the rest were unrelated)"
 ---

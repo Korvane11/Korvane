@@ -1,7 +1,7 @@
 ---
 id: 17
 title: "A business whose only site is a Facebook page: logged out, a desktop browser is sent to the log-in wall, but a phone user agent gets the page (intro, address, phone, email, reviews, recent posts and a 720 px logo in og:image); hours, menu and full-size photos stay behind the log-in. The blueprint's 'read their site directly' step has no route for this"
-status: open
+status: actioned
 type: open-source
 skill: [redesign-existing-projects]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Reading the current site when it is a social page: what is reachable logg
 date: 2026-10-13
 session_context: "New client site for a downtown Tucson espresso bar whose only web presence is a Facebook page shared as a /share/ link"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-19
+resolution: "Staged as a patch to prompts/site-blueprint.md at skill-updates/2026-10-19/_target-files/prompts/site-blueprint.md.patch (Facts: social-page-only sites, with provenance 'seen October 2026') (weekly review 2026-10-19). redesign-existing-projects not edited: maintained upstream, and the owner's standing route (review 2026-10-13, Decision 5) puts lessons for others' skills in the blueprint."
 reference: "sites/eleven-cafe/README.md, 'Facts and where each one came from'"
 commands_verified: "run: Playwright Chromium, desktop viewport, default user agent: the share link redirected to facebook.com/login. run: same link with an iPhone Safari user agent at 390x844: the page rendered (name, intro line, category and price range, 'Open now', address, phone, email, 11 reviews, posts to 2020) and its og:image meta held the profile logo at 720x720. run: /about, /about_contact_and_basic_info and /photos redirected to the log-in page; /reviews rendered with every review's text and date. run: tapping 'Open now' or 'Details' did not reveal the hours logged out."
 ---

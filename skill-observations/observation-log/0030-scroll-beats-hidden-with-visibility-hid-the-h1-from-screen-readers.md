@@ -1,7 +1,7 @@
 ---
 id: 30
 title: "A pinned hero whose lines take turns with the scroll hid the waiting lines with visibility: hidden (the same thing GSAP's autoAlpha does at 0), which also took them out of the accessibility tree: the page's h1 and its two call-to-action links were invisible to screen readers until the visitor scrolled; an accessibility tree snapshot found it, the visual checks never could"
-status: open
+status: actioned
 type: open-source
 skill: [gsap-core, gsap-scrolltrigger, scroll-reveal-libraries]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Scroll-driven text that is hidden until its turn: how it is hidden"
 date: 2026-10-14
 session_context: "Eleven Cafē site, blueprint QA: the accessibility review of the home page's pinned hero (three lines over the rendered scene, the last one the h1 with the buttons)"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-19
+resolution: "Staged as a patch to prompts/site-blueprint.md at skill-updates/2026-10-19/_target-files/prompts/site-blueprint.md.patch (Build: waiting content hidden with opacity and pointer-events, never visibility/autoAlpha; Checks: accessibility snapshot at load) and principle 4 in cross-cutting-principles.md (weekly review 2026-10-19). gsap-core, gsap-scrolltrigger (GreenSock) and scroll-reveal-libraries (freshtechbro) not edited: maintained upstream; owner's standing route is the blueprint. Family registered in skill-families.md."
 reference: "sites/eleven-cafe/styles.css (the .js .beat rules: opacity and pointer-events now, no visibility); sites/eleven-cafe/tests/behave.cjs section 4c"
 commands_verified: "run: Playwright accessibility snapshot of the home page at load with the old CSS: the first heading was the h2 'Cà phê sữa đá', no h1. run: computed style of the three beats at load: visible / hidden / hidden. run: the same snapshot with opacity and pointer-events instead of visibility: the h1 first, the directions link present; a Tab walk at 1440 and 390 px: every stop shown and clear of the nav"
 ---

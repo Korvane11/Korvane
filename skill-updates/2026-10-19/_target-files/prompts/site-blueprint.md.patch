@@ -1,0 +1,73 @@
+--- a/prompts/site-blueprint.md
++++ b/prompts/site-blueprint.md
+@@ -43,6 +43,12 @@
+   before asking the owner to change anything, and treat what they return
+   as a draft to confirm, never as fact. A site built as a web app needs
+   rendering in a browser; a plain fetch returns an empty shell.
++- If their only site is a social page, vary the visit before calling it
++  unreadable. A Facebook page that sends a desktop browser to the log-in
++  wall rendered logged out with a phone user agent (seen October 2026):
++  the main page and /reviews, with the logo at full size in og:image.
++  Hours, menus and full-size photos stayed behind the log-in: ask the
++  owner, and check any third-party listing against what the page shows.
+ - Carry over everything their current site offers that works and is
+   theirs to move (booking, contact routes, FAQ, legal pages), and say
+   plainly what is left out and why. Check where each photo, video and font
+@@ -66,7 +72,10 @@
+   unchanged or changed. "Make it better" is not a request to change them.
+ - When the brief names a specific real thing (a car, a product, a
+   building), check the asset against their reference before any long
+-  build, and ask them for the exact asset first.
++  build, and ask them for the exact asset first. Save every reference
++  they send into the site folder at once. Judge likeness side by side
++  with the reference itself, never against a description of it; after a
++  context compaction or in a new session, get the image back first.
+ - Their logo is theirs. Present it better first (size, sharpness, a small
+   version for the menu); redesigning it is their call.
+ - Credit any third-party footage or images in the footer, and record the
+@@ -85,7 +94,27 @@
+ - An intro starts on the first frame the browser can play (call play() at
+   once, start on the first `playing` event), falls back to a still after
+   2 to 3 s, and has no loader, label or skip button unless the brief asks
+-  for one.
++  for one. When one video hands over to another, keep the outgoing one
++  showing until the incoming one has a frame on screen
++  (`requestVideoFrameCallback` once it plays); `playing` is not on screen.
++- Before detail work on an opening, make a contact sheet of the whole
++  sequence (a frame every quarter second) and check that the action reads
++  from the camera, with the angle compared against the reference.
++- Content waiting its turn on screen (a heading, a line of copy, a call to
++  action in a pinned or scroll-revealed sequence) is hidden with opacity
++  and `pointer-events: none`, never `visibility: hidden` or GSAP's
++  `autoAlpha: 0`: those take it away from screen readers. Keep them for UI
++  that is truly gone, like a closed menu.
++- An element shown and hidden with the `hidden` attribute whose class sets
++  `display` needs `[hidden] { display: none }` for that class, or the
++  closed layer stays on top and takes every click.
++- Offline renders: time a test frame first and size the job to finish
++  inside one background waiter's time limit, because the cloud container
++  is reclaimed when the session goes idle and that kills the render. Make
++  it resumable, give the owner a finish time only for what a live waiter
++  covers, and have the render script write its own PID file and a done
++  marker. Waiters read those, never `pgrep -f` or `pkill -f`, which also
++  match the shell running the search.
+ - Basics that get checked, not just added: a title and description per
+   page, an absolute og:image with og:url and a canonical link, a square
+   favicon, LocalBusiness structured data that matches the visible facts.
+@@ -97,6 +126,16 @@
+   phone overflow measured against `document.documentElement.clientWidth`,
+   not `innerWidth`; email forms checked by reading the mailto address they
+   open. A check counts once you have seen it fail on a broken case.
++- Check through the channel a failure lives in. An accessibility snapshot
++  at load must show the h1 and the main action; a closed overlay is
++  checked by clicking what lies under it; a video hand-over by a frame
++  callback registered on the incoming video's `playing` event (a preloaded,
++  paused video already reports a frame).
++- Test scripts: an init script waits for `<html>` before reading it, an
++  end is recorded only after its start was seen, and page errors fail the
++  run. Before full-page screenshots of a page with scroll reveals, scroll
++  through with `behavior: 'instant'`; when a screenshot shows missing
++  content, check that `scrollY` moved before calling it a site bug.
+ 
+ Honesty in reports
+ - Say "done" only for what you opened and checked in a browser this

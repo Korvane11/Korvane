@@ -1,7 +1,7 @@
 ---
 id: 25
 title: "Waiting on a background render by a PID from pgrep -f returned at once, twice in one session, a third time (2026-10-14) pgrep -f said a finished render was still running, and a fourth time (2026-10-14, Pour My Coffee Co) pkill -f killed the tool call's own shell instead of only the render: the pattern also appeared in the tool call's own shell command, so pgrep found that shell; the lesson lived only in a conversation summary and this log"
-status: open
+status: actioned
 type: open-source
 skill: []
 proposes_skill: [scroll-film-renders]
@@ -11,8 +11,8 @@ area: "Starting and waiting on long background jobs (offline renders) from the a
 date: 2026-10-13
 session_context: "Pour My Coffee Co site, 2026-10-14: stopping a running render to change its shader; Eleven Cafē site: full renders of the opening scene (about 70 minutes) started in the background, with a background waiter that reports when they end; 2026-10-14, the phin loop's render (render_phin.cjs), checked after its last frame"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-19
+resolution: "Structural fix staged as patches: skill-updates/2026-10-19/_target-files/sites/eleven-cafe/render/render_all.sh.patch and skill-updates/2026-10-19/_target-files/sites/callahan-cleaning/render/render_all.sh.patch (each writes render.pid and done; Pour's render/blender/render_all.sh already did), plus the blueprint's Offline renders line (PID file and done marker, never pgrep -f/pkill -f) in skill-updates/2026-10-19/_target-files/prompts/site-blueprint.md.patch (weekly review 2026-10-19). The scroll-film-renders candidate, if built, takes the rule from the blueprint. Pour's older render/render_all.sh (the replaced WebGL opening) left as is."
 reference: "the session's render logs lived in the scratchpad; the lesson from the first time is in this session's compaction summary only"
 commands_verified: "run: `nohup bash render_all.sh DIR &` then `pgrep -f \"bash render_all.sh\" | head -1` in the same tool call printed 13937; the waiter `while kill -0 13937` returned within minutes while `ps` showed the render as PID 13944 (parent 13940), still on frame 3 of 103. run: `$!` right after the background start (the first render this session) gave the right PID"
 ---

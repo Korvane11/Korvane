@@ -1,0 +1,33 @@
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -386,9 +386,15 @@
+ off if it gets in the way of explaining things to the owner),
+ claude-code-setup (its skill is also in `.claude/skills/` as
+ `claude-automation-recommender`) and claude-security (Anthropic's scanner).
+-Account plugins load when a session starts, not mid-session. Copying a
+-plugin's skills into a running session was refused by the auto-mode
+-classifier (untrusted code), so don't retry that; use a new session.
++Account plugins load when a session starts, not mid-session. Cloning an
++outside repository or copying its skills or plugin files into a running
++session is refused by the auto-mode classifier (untrusted code
++integration, instruction poisoning), and that covers every outside source,
++not only plugins: don't attempt it. Instead tell the owner what each repo
++is and whether it's worth adding, and that skills go into their account
++through claude.ai's Skills settings (plugins through the plugin catalog);
++they load in a new session. A repo with no licence is never copied into
++this public repo.
+ OmniRoute, also in that video, was not installed (Working rules: no API
+ proxies).
+ 
+@@ -415,7 +421,10 @@
+ Before the first tool call of any session — and before writing or
+ proposing a plan, not merely before executing one — invoke the
+ task-observer skill AND execute its Session Start Protocol (storage
+-check, frontmatter scan, review trigger). Loading the skill and running
++check, frontmatter scan, review trigger). The first tool call is one
++batch holding all three: `ls /home/user/Korvane/skill-observations`, the
++task-observer Skill invocation and its `skill-load.sh` lookup (below).
++Loading the skill and running
+ the protocol are separate steps; a session that loads the file and stops
+ has activated nothing. Any turn that will involve a tool call counts; do
+ not classify the session as "too simple" from its opening message.

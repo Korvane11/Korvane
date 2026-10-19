@@ -1,7 +1,7 @@
 ---
 id: 20
 title: "Full-page review screenshots showed most sections empty: the script scrolled with scrollTo(0, y) on a page with scroll-behavior: smooth, so each step was cancelled by the next and the scroll-in fades never fired; it looked like a site bug"
-status: open
+status: actioned
 type: open-source
 skill: [webapp-testing, playwright-cli]
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Review screenshots of pages with reveal-on-scroll and smooth scrolling"
 date: 2026-10-13
 session_context: "Eleven Cafē site: full-page screenshots of the four pages for the visual review before pushing"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-19
+resolution: "Staged as a patch to prompts/site-blueprint.md at skill-updates/2026-10-19/_target-files/prompts/site-blueprint.md.patch ('Test scripts' line: scroll with behavior 'instant', check scrollY before calling it a site bug) and principle 4 in cross-cutting-principles.md (weekly review 2026-10-19). webapp-testing and playwright-cli not edited: maintained upstream; owner's standing route is the blueprint."
 reference: "sites/eleven-cafe/styles.css line 146 (html scroll-behavior: smooth); the review screenshot script lived in the session scratchpad"
 commands_verified: "run: full-page screenshots after scrollTo(0, y) every 60 ms: index.html showed the hero and the first section, then three empty bands; menu.html showed an empty band where the menu groups are. run: the same pages after scrollTo({ top: y, behavior: 'instant' }) every 120 ms: every section shown. The behaviour checks (which scroll each control into view with behavior 'instant', and run reduced motion with scroll-behavior auto) passed on both runs"
 ---

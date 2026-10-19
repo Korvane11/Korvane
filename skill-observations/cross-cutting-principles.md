@@ -30,3 +30,11 @@ any skill creation or regeneration.
 **Propagation:** opportunistic
 **Status:** active
 **From:** observations #2, #4, #14
+
+### 4. Check through the channel the failure lives in
+**Added:** 2026-10-19
+**Applies to:** all skills with checks, tests, audits or likeness comparisons
+**Requirement:** Pick the check by where the failure would show, not by what is easy to look at. Screenshots cannot see what is invisible to the eye: an element missing from the accessibility tree needs an accessibility snapshot, an invisible layer that takes clicks needs a click through it, a frame that flashes for one paint needs a measurement at the moment of the swap, and a likeness needs the reference itself beside the result, not a description of it. When a picture shows a defect, first rule out the way it was taken (scroll, timing, viewport), then change the product.
+**Propagation:** opportunistic
+**Status:** active
+**From:** observations #8, #19, #20, #24, #30, #31

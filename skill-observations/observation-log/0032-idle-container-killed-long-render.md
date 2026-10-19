@@ -1,7 +1,7 @@
 ---
 id: 32
 title: "A 5-hour offline render started with nohup in a cloud session died twice when the session went idle and the container was reclaimed: once after a 2-hour background waiter hit its time limit, once between two user turns; each time the owner was told an ETA the render could not meet"
-status: open
+status: actioned
 type: open-source
 skill: []
 proposes_skill: [scroll-film-renders]
@@ -11,8 +11,8 @@ area: "Running multi-hour background jobs in a cloud container that is reclaimed
 date: 2026-10-15
 session_context: "Pour My Coffee Co site: the Blender (Cycles, CPU) opening, 240 frames at about 70 s a frame, started with nohup and waited on by a background until-loop (2 h maximum)"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-19
+resolution: "Staged as a patch to prompts/site-blueprint.md at skill-updates/2026-10-19/_target-files/prompts/site-blueprint.md.patch (Build: Offline renders: time a test frame, fit one waiter's limit, resumable, finish times only for what a live waiter covers) (weekly review 2026-10-19). The render skill part was conditional ('if it is built'); the scroll-film-renders decision carries it."
 reference: "sites/pour-my-coffee/render/blender/render_all.sh (resumable; writes render.pid and a done file)"
 commands_verified: "run: after the waiter was stopped at its 2 h limit and the turn ended, the next turn found render.pid not alive and 110 of 240 frames; restarted, it was found dead again after the next idle gap at 114 frames. run: the frames already written survived in /tmp both times, and the resumable script skipped them"
 ---

@@ -115,3 +115,7 @@
 2026-10-14 20:39 checkpoint: 0025 extended (fourth instance, pkill -f)
 2026-10-14 22:19 [Korvane] session-start scan: files=21 parsed=21 principles=3
 2026-10-15 19:55 [Korvane] session-start scan: files=21 parsed=21 principles=3
+2026-10-19 14:58 loaded task-observer — 2 open observations
+2026-10-19 14:58 [Korvane] workspace: created=none
+2026-10-19 14:58 [Korvane] session-start scan: files=22 parsed=22 principles=3
+2026-10-19 15:04 [observation-log] session-start scan: files=23 parsed=23 principles=4

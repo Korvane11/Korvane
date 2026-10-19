@@ -1,0 +1,18 @@
+--- a/sites/eleven-cafe/render/render_all.sh
++++ b/sites/eleven-cafe/render/render_all.sh
+@@ -1,11 +1,15 @@
+ #!/bin/bash
+ # Renders every frame of the intro and the steam loop, landscape and portrait, then encodes them.
+ # bash render_all.sh <frames dir>   (about 1.5-2 h on 4 CPU cores with SwiftShader)
++# Writes its PID to <frames dir>/render.pid and touches <frames dir>/done at the end: wait on those, never on
++# pgrep -f / pkill -f (they also match the shell that runs the search).
+ set -e
+ OUT="$1"; HERE="$(cd "$(dirname "$0")" && pwd)"
++mkdir -p "$OUT"; echo $$ > "$OUT/render.pid"; rm -f "$OUT/done"
+ export NODE_PATH="$(npm root -g)"
+ node "$HERE/render_pour.cjs" "$OUT/intro-l" 0 0 1600 900 24 6
+ node "$HERE/render_pour.cjs" "$OUT/loop-l"  0 1 1600 900 24 2
+ node "$HERE/render_pour.cjs" "$OUT/intro-p" 1 0 900 1600 24 6
+ node "$HERE/render_pour.cjs" "$OUT/loop-p"  1 1 900 1600 24 2
++touch "$OUT/done"
+ echo "ALL FRAMES DONE"

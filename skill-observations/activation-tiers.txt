@@ -1,4 +1,5 @@
-# Activation tiers found by the 2026-10-13 review
-instruction-file: present (CLAUDE.md, "## Task observer" block: invoke the skill and run the Session Start Protocol before the first tool call)
-session-start-hook: present with the task-observer reminder (.claude/settings.json, second SessionStart group, installed 2026-10-13); the first group installs playwright-cli
-scheduled-task: weekly-skill-review (trig_01Nrqdrz79K6pVGtYYZgdtFD), Mondays 7:57 AM Arizona time, fires into session_016ffmjZpF4rUjxsqpdBpY7b; workspace reach verified 2026-10-13. Prompt names the skill, autonomous mode, the workspace, the offline policy, probe first and the started marker; it restates no review step (read: 9 lines)
+# Activation tiers found by the 2026-10-19 review (baseline: 2026-10-13)
+instruction-file: present (CLAUDE.md, "## Task observer" block: invoke the skill and run the Session Start Protocol before the first tool call). Names the load, not the probe in the same batch: patch staged (#33)
+session-start-hook: present with the task-observer reminder (.claude/settings.json, second SessionStart group); the first group installs playwright-cli. Pre-skill tier names only the load, not the probe: flagged; patch staged (#33)
+scheduled-task: weekly-skill-review (trig_01Nrqdrz79K6pVGtYYZgdtFD), fired 2026-10-19 14:58 UTC into session_016ffmjZpF4rUjxsqpdBpY7b and reached the workspace. Prompt's first line verbatim: "Weekly skill review for the Korvane repository. This run is autonomous: nobody is watching, so don't wait for replies." Probe first (step 1), started marker second (step 2), then invoke (step 3), offline and sandbox-denial notes present; step 4 (commit and push skill-observations/ and skill-updates/) is this project's CLAUDE.md rule, not a review step. restates: none (read: 9 lines)
+skill-load lines: checkpoints.log has "loaded task-observer" for 2026-10-13 06:36 and for this run, each from a skill-load.sh call in the Skill invocation's batch

@@ -1,7 +1,7 @@
 ---
 id: 28
 title: "Asked to 'just add' four GitHub repos as plugins, the agent tried to clone them and then copy a third-party skill set into ~/.claude/skills, though CLAUDE.md already recorded that the auto-mode classifier refuses copying outside skills into a running session; both attempts were refused (untrusted code integration, instruction poisoning)"
-status: open
+status: actioned
 type: open-source
 skill: []
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Requests to install third-party plugins or skills from GitHub into the ac
 date: 2026-10-14
 session_context: "Korvane: the owner sent four GitHub links (a Higgsfield ML framework, an unofficial Higgsfield web app, the Higgsfield CLI, a set of Seedance prompt skills) and asked for all of them in 'my claude and this chat'"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-10-19
+resolution: "Staged as a patch to CLAUDE.md at skill-updates/2026-10-19/_target-files/CLAUDE.md.patch (Plugins: every outside repo, skill or plugin source; what to tell the owner instead; no unlicensed repos copied) (weekly review 2026-10-19)."
 reference: "CLAUDE.md, Plugins section: 'Copying a plugin's skills into a running session was refused by the auto-mode classifier (untrusted code), so don't retry that; use a new session.'"
 commands_verified: "run: shallow git clone of the four repos into /home/user/<owner>/<repo>: refused, Untrusted Code Integration. run: after the owner said 'just add them', one clone of the skills repo: allowed. run: copying its 15 SKILL.md files into ~/.claude/skills/<name>/: refused, Instruction Poisoning"
 ---

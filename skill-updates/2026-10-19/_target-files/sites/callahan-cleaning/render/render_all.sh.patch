@@ -1,0 +1,20 @@
+--- a/sites/callahan-cleaning/render/render_all.sh
++++ b/sites/callahan-cleaning/render/render_all.sh
+@@ -2,9 +2,12 @@
+ # Render every 3D frame and still for the site (Blender 5.2 via `pip install bpy`, Cycles on the CPU).
+ # Frames land in render/out/ (not committed); encode.sh turns them into the site's videos and images.
+ # Resumable: frames already on disk are skipped. About 8 hours on 4 cores.
++# Writes its PID to render/out/render.pid and touches render/out/done at the end: wait on those, never on
++# pgrep -f / pkill -f (they also match the shell that runs the search).
+ set -e
+ cd "$(dirname "$0")/.."
+ OUT=render/out
++mkdir -p "$OUT"; echo $$ > "$OUT/render.pid"; rm -f "$OUT/done"
+ python3 render/fetch_assets.py
+ for L in land port; do
+   # the opening: every frame; the loop: every other frame (encode.sh interpolates the rest)
+@@ -14,3 +17,4 @@
+ for S in living kitchen moving rental office; do
+   python3 render/scene.py $S $OUT/stills --samples 128
+ done
++touch "$OUT/done"
