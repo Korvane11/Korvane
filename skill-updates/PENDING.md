@@ -33,6 +33,12 @@ otherwise apply the changed lines by hand.
 
 No skill bundles this round.
 
+Reconciled 2026-10-26 (weekly review): none of the five is installed, and
+every live file still has the size and sha256 recorded above, so each patch
+applies as is ("apply the patch — copy is safe"). This is their second
+review uninstalled: escalated as a decision (install, or discard and re-open
+#17, #18, #20, #25, #28, #30, #31, #32, #33).
+
 ## Earlier
 
 Installed 2026-10-13 (owner: "yes install"), each checked identical to its
