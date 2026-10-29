@@ -26,6 +26,10 @@ and gets committed.
 lessons; the owner asked for one after seeing a creator's "master
 blueprint" reel, which was not copied.
 
+`prompts/cold-call-script.md` is the phone pitch for selling a finished
+site ($500), from the owner's draft (2026-10-29). Their tonality video
+(youtu.be/KQ6c9vceu7A) couldn't be watched: YouTube is blocked here.
+
 ## SimNow (`sites/simnow/`)
 
 Sim racing lounge, 3790 Silverton Rd NE, Suite C, Salem, OR 97305.
