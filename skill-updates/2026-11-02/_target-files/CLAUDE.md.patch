@@ -1,6 +1,17 @@
 --- a/CLAUDE.md
 +++ b/CLAUDE.md
-@@ -386,9 +386,15 @@
+@@ -10,6 +10,10 @@
+ ## Working rules
+ 
+ - Commit and push to `main`. The owner chose `main` over feature branches.
++  A fresh cloud clone can start on a detached HEAD: run `git status -sb`
++  before the first commit, and if it shows no branch, `git checkout -B main`.
++  A clean exit from `git push` is not proof: before reporting work as
++  pushed, check that `git log origin/main -1` names the new commit.
+ - Never ask the owner to paste API keys or tokens into the chat. Keys go in
+   the environment's settings.
+ - Sites for real businesses (SimNow) use their name and branding: never
+@@ -390,9 +394,15 @@
  off if it gets in the way of explaining things to the owner),
  claude-code-setup (its skill is also in `.claude/skills/` as
  `claude-automation-recommender`) and claude-security (Anthropic's scanner).
@@ -19,7 +30,7 @@
  OmniRoute, also in that video, was not installed (Working rules: no API
  proxies).
  
-@@ -415,7 +421,10 @@
+@@ -419,7 +429,10 @@
  Before the first tool call of any session — and before writing or
  proposing a plan, not merely before executing one — invoke the
  task-observer skill AND execute its Session Start Protocol (storage

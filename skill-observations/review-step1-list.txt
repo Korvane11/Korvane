@@ -12,3 +12,4 @@
 0026-translucent-layer-given-one-depth-sharpened-background.md
 0027-low-camera-hid-the-pour-it-was-showing.md
 0029-render-read-its-scene-from-a-working-tree-git-rewrote.md
+0034-push-from-detached-head-reported-as-pushed.md

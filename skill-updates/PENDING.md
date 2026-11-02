@@ -1,5 +1,16 @@
 # Staged updates awaiting install
 
+## 2026-11-02 (weekly review, scheduled run in session_016ffmjZpF4rUjxsqpdBpY7b)
+
+- `2026-11-02/_target-files/CLAUDE.md.patch` (+17 -4; live 28075 bytes,
+  sha256 081a67c32302a01754b901b75e46245f2283379cfe37fab4e01d583521ff0a8f).
+  #34 Working rules: check for a detached HEAD before the first commit,
+  and confirm `origin/main` names the new commit before saying it's
+  pushed. It also carries the 2026-10-19 CLAUDE.md changes (#28 Plugins,
+  #33 Task observer), rebuilt on the current file because CLAUDE.md moved
+  on 2026-10-29. It replaces `2026-10-19/_target-files/CLAUDE.md.patch`,
+  which has been removed (it is in git history).
+
 ## 2026-10-19 (weekly review, scheduled run in session_016ffmjZpF4rUjxsqpdBpY7b)
 
 State files staged as patches under `2026-10-19/_target-files/`. Each live
@@ -16,8 +27,8 @@ otherwise apply the changed lines by hand.
   that sets `display`; #25, #32 Build: offline renders (fit one waiter,
   resumable, PID file and done marker); #18, #19, #20, #30, #31 Checks:
   the channel a failure lives in, test-script rules.
-- `CLAUDE.md.patch` (+13 -4; live 27862 bytes, sha256
-  51bc985fffba1618c6c162812c4226d91b5dca7f209c7a2609deac4f79466990).
+- ~~`CLAUDE.md.patch`~~ superseded on 2026-11-02 by
+  `2026-11-02/_target-files/CLAUDE.md.patch` (live moved; removed).
   #28 Plugins: no cloning or copying from any outside source, what to tell
   the owner instead; #33 Task observer: the first tool call is one batch
   (probe, Skill invocation, lookup).
@@ -54,3 +65,7 @@ staged copy after the copy:
 
 The staged copies under `2026-10-13/` stay as the installed baseline
 (keep-two rule).
+
+Reconciled 2026-11-02: the 2026-10-19 blueprint, settings.json and two
+render-script patches are still uninstalled; their live files still match
+the recorded hashes, so each applies as is. Third review uninstalled.

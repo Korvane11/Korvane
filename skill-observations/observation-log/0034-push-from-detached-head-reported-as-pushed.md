@@ -1,7 +1,7 @@
 ---
 id: 34
 title: "A push from a detached HEAD sent nothing, and the session reported the work as pushed"
-status: open
+status: actioned
 type: open-source
 skill: []
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Committing and pushing to main from a fresh cloud checkout"
 date: 2026-10-29
 session_context: "Writing prompts/cold-call-script.md; the clone started on a detached HEAD at origin/main"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-11-02
+resolution: "Staged as a patch to CLAUDE.md at skill-updates/2026-11-02/_target-files/CLAUDE.md.patch (Working rules: git status -sb and checkout -B main on a detached HEAD; confirm git log origin/main -1 before reporting pushed) (weekly review 2026-11-02)."
 reference:
 commands_verified: "run: git push -q -u origin main from a detached HEAD: exit 0, no output, origin/main unchanged (local main was the old tip). run: git push origin HEAD:main: pushed both commits"
 ---
