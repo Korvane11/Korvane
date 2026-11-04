@@ -1,0 +1,598 @@
+<title>Korvane Lead Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a call sheet. Summary strip, then tabs; a list of leads on the left, the open lead's card on the right (stacked on phones). */
+:root {
+  --bg: #f3f4f1;
+  --panel: #ffffff;
+  --ink: #17191c;
+  --muted: #5d636b;
+  --line: #dfe2dc;
+  --accent: #1f4fd1;
+  --accent-ink: #ffffff;
+  --accent-soft: #e5ebfb;
+  --good: #1d7a46; --good-soft: #e1f2e7;
+  --warn: #9a5b00; --warn-soft: #fbefd9;
+  --bad: #b3261e;  --bad-soft: #f9e3e1;
+  --display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121417; --panel: #1b1e22; --ink: #eceef0; --muted: #9aa1a9; --line: #2c3036;
+  --accent: #7f9cff; --accent-ink: #0d1530; --accent-soft: #1f2a4d;
+  --good: #6fd197; --good-soft: #17301f; --warn: #f0b75e; --warn-soft: #33270f; --bad: #ff8a80; --bad-soft: #3a1a18;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121417; --panel: #1b1e22; --ink: #eceef0; --muted: #9aa1a9; --line: #2c3036;
+  --accent: #7f9cff; --accent-ink: #0d1530; --accent-soft: #1f2a4d;
+  --good: #6fd197; --good-soft: #17301f; --warn: #f0b75e; --warn-soft: #33270f; --bad: #ff8a80; --bad-soft: #3a1a18;
+  color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h1 { font-size: 26px; font-weight: 700; }
+h2 { font-size: 20px; font-weight: 600; }
+h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
+header.top p { margin: 4px 0 0; color: var(--muted); }
+.status { font-size: 13px; color: var(--muted); flex-basis: 100%; }
+.who { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.who label { font-size: 13px; color: var(--muted); font-weight: 500; }
+.who select { width: auto; }
+.tasks { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+.task .tick { min-height: 0; }
+.task .tick input { width: 22px; height: 22px; min-height: 0; margin: 1px 0 0; accent-color: var(--good); }
+.task .ttitle { font-weight: 600; overflow-wrap: anywhere; }
+.task .sub { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 2px; }
+.task .tdetails { font-size: 14px; color: var(--muted); margin-top: 6px; overflow-wrap: anywhere; }
+.task.is-done .ttitle { text-decoration: line-through; color: var(--muted); }
+.btn.small { min-height: 36px; padding: 6px 10px; font-size: 13px; }
+.addtask { gap: 12px; }
+.status.err { color: var(--bad); }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin-bottom: 16px; }
+.stat { background: var(--panel); padding: 12px 14px; }
+.stat b { display: block; font: 600 22px/1.2 var(--display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12.5px; color: var(--muted); }
+
+nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+nav.tabs button { background: none; border: 0; padding: 10px 12px; min-height: 44px; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+nav.tabs .count { font-family: var(--mono); font-size: 12px; margin-left: 4px; color: var(--muted); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+.toolbar input[type="search"] { flex: 1 1 220px; min-width: 0; }
+input, select, textarea { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; min-height: 42px; width: 100%; }
+textarea { min-height: 84px; resize: vertical; }
+.toolbar select { width: auto; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 9px 14px; min-height: 42px; font-weight: 500; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--bad); }
+.btn.danger.armed { background: var(--bad); color: var(--panel); border-color: var(--bad); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.list { display: flex; flex-direction: column; gap: 6px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; text-align: left; width: 100%;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+.row[aria-current="true"] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.row .name { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.row .sub { grid-column: 1 / -1; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.plain { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+.card .head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fields .full { grid-column: 1 / -1; }
+@media (max-width: 520px) { .fields { grid-template-columns: minmax(0, 1fr); } }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 500; }
+.contact { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.contact .num { font: 500 17px var(--mono); user-select: all; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.log { display: flex; flex-direction: column; gap: 8px; }
+.log .entry { border-left: 2px solid var(--line); padding: 2px 0 2px 12px; font-size: 14px; }
+.log .entry .when { font: 12px var(--mono); color: var(--muted); }
+.logform { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.logform .full { grid-column: 1 / -1; }
+
+.checks { display: flex; flex-direction: column; gap: 2px; }
+.checks label { flex-direction: row; align-items: center; gap: 10px; color: var(--ink); font-size: 14.5px; font-weight: 400; min-height: 40px; }
+.checks input { width: 20px; height: 20px; min-height: 0; accent-color: var(--accent); flex: none; }
+.checks .done { color: var(--muted); text-decoration: line-through; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--good); }
+
+.empty { background: var(--panel); border: 1px dashed var(--line); border-radius: var(--r); padding: 24px; color: var(--muted); }
+.empty strong { color: var(--ink); display: block; margin-bottom: 4px; }
+
+.guide { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.guide section { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; }
+.guide ul, .guide ol { margin: 8px 0 0; padding-left: 20px; }
+.guide li { margin: 4px 0; }
+.note { font-size: 13px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Korvane Lead Desk</h1>
+      <p>Leads, calls, follow-ups and client projects in one place.</p>
+    </div>
+    <div class="who">
+      <label for="person">Showing</label>
+      <select id="person"><option value="all">Everyone</option><option>Marce</option><option>Kadin</option><option>Jailen</option><option>Nick</option><option>Kai</option></select>
+      <div class="status" id="status" role="status">Connecting to your saved leads…</div>
+    </div>
+  </header>
+
+  <div class="stats" id="stats" aria-label="Pipeline summary"></div>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <div id="view"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const STAGES = [
+    { id: "new", label: "New", tone: "plain" },
+    { id: "researched", label: "Researched", tone: "plain" },
+    { id: "contacted", label: "Called", tone: "" },
+    { id: "interested", label: "Interested", tone: "warn" },
+    { id: "preview", label: "Preview sent", tone: "warn" },
+    { id: "won", label: "Won", tone: "good" },
+    { id: "notnow", label: "Not now", tone: "plain" },
+    { id: "lost", label: "Lost", tone: "bad" },
+  ];
+  const OPEN_STAGES = ["new", "researched", "contacted", "interested", "preview"];
+  const OUTCOMES = ["No answer", "Left voicemail", "Spoke to staff, call back", "Spoke to owner", "Wants to see preview", "Said yes", "Not interested", "Asked not to be called"];
+  const PROJECT_STEPS = [
+    "Agreement signed",
+    "Deposit received (50%)",
+    "Onboarding questionnaire back",
+    "Facts, photos and logo files collected",
+    "Concept approved (Blueprint phase 2)",
+    "3D look approved (likeness and preview)",
+    "Site built and checked (Blueprint QA)",
+    "Owner review round 1",
+    "Owner review round 2",
+    "Final payment received",
+    "Domain connected (in the client's name)",
+    "Launch checklist done (noindex off, sitemap, forms tested live)",
+    "Handoff sent (logins, how-to, care plan)",
+    "Review request sent (2 weeks after launch)",
+  ];
+  const PEOPLE = ["Marce", "Kadin", "Jailen", "Nick", "Kai"];
+  const AREAS = ["Admin", "Leads", "Calling", "Build", "Marketing"];
+  const TABS = [
+    { id: "today", label: "Today" },
+    { id: "pipeline", label: "Pipeline" },
+    { id: "clients", label: "Clients" },
+    { id: "tasks", label: "Tasks" },
+    { id: "guide", label: "Call guide" },
+  ];
+
+  const state = { db: null, canWrite: true, leads: [], tasks: [], tasksLoaded: false, person: "all", loaded: false, tab: "today", stage: "open", q: "", selected: null, creating: false };
+  const $ = (s, el) => (el || document).querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const stage = (id) => STAGES.find((s) => s.id === id) || STAGES[0];
+  const money = (n) => "$" + Math.round(Number(n) || 0).toLocaleString("en-US");
+  const todayISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  const fmtDate = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
+
+  try { const t = localStorage.getItem("desk.tab"); if (t && TABS.some((x) => x.id === t)) state.tab = t; } catch (e) {}
+  try { const pp = localStorage.getItem("desk.person"); if (pp && (pp === "all" || PEOPLE.includes(pp))) state.person = pp; } catch (e) {}
+  const mine = (x) => state.person === "all" || x.assignee === state.person;
+  const myLeads = () => state.leads.filter(mine);
+  const myTasks = () => state.tasks.filter(mine);
+
+  /* ---------- writes: one at a time per document ---------- */
+  const queues = new Map();
+  function write(id, fn) {
+    const prev = queues.get(id) || Promise.resolve();
+    const next = prev.then(fn, fn).catch((e) => {
+      setStatus(e && e.code === "invalid_argument" ? "You can view these leads but not change them." : "Couldn't save that change. Check your connection and try again.", true);
+      if (e && e.code === "invalid_argument") { state.canWrite = false; render(); }
+      throw e;
+    });
+    queues.set(id, next.catch(() => {}));
+    return next;
+  }
+  function saveLead(lead) {
+    const body = JSON.parse(JSON.stringify(lead)); delete body.id;
+    body.updatedAt = new Date().toISOString();
+    return write(lead.id, () => state.db.collection("leads").doc(lead.id).set(body));
+  }
+
+  function setStatus(msg, isErr) { const el = $("#status"); el.textContent = msg; el.classList.toggle("err", !!isErr); }
+
+  /* ---------- derived ---------- */
+  function due(l) { return l.nextFollowUp && OPEN_STAGES.includes(l.stage) && l.nextFollowUp <= todayISO(); }
+  function filtered() {
+    const q = state.q.trim().toLowerCase();
+    return myLeads().filter((l) => {
+      if (state.stage === "open" && !OPEN_STAGES.includes(l.stage)) return false;
+      if (state.stage !== "open" && state.stage !== "all" && l.stage !== state.stage) return false;
+      if (!q) return true;
+      return [l.business, l.owner, l.phone, l.address, l.notes, l.category].join(" ").toLowerCase().includes(q);
+    }).sort((a, b) => (a.tier || 9) - (b.tier || 9) || String(a.business).localeCompare(String(b.business)));
+  }
+
+  /* ---------- render ---------- */
+  function renderStats() {
+    const open = myLeads().filter((l) => OPEN_STAGES.includes(l.stage));
+    const won = myLeads().filter((l) => l.stage === "won");
+    const dueN = myLeads().filter(due).length;
+    const openTasks = myTasks().filter((t) => !t.done).length;
+    const pipelineValue = open.reduce((s, l) => s + (Number(l.value) || 0), 0);
+    const wonValue = won.reduce((s, l) => s + (Number(l.value) || 0), 0);
+    const mrr = won.reduce((s, l) => s + (Number(l.carePlan) || 0), 0);
+    const items = [
+      [dueN, "follow-ups due today"],
+      [open.length, "open leads"],
+      [money(pipelineValue), "open pipeline value"],
+      [won.length ? `${won.length} · ${money(wonValue)}` : 0, "clients won"],
+      [money(mrr) + "/mo", "care plans"],
+      [openTasks, "open tasks"],
+    ];
+    $("#stats").innerHTML = items.map(([v, l]) => `<div class="stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+  }
+
+  function renderTabs() {
+    const counts = { today: myLeads().filter(due).length, pipeline: myLeads().filter((l) => OPEN_STAGES.includes(l.stage)).length, clients: myLeads().filter((l) => l.stage === "won").length, tasks: myTasks().filter((t) => !t.done).length };
+    $("#tabs").innerHTML = TABS.map((t) => `<button role="tab" id="tab-${t.id}" aria-selected="${t.id === state.tab}" data-tab="${t.id}">${esc(t.label)}${counts[t.id] != null ? `<span class="count">${counts[t.id]}</span>` : ""}</button>`).join("");
+  }
+
+  function rowHTML(l) {
+    const s = stage(l.stage);
+    const bits = [];
+    if (l.assignee && state.person === "all") bits.push(`<span class="pill plain">${esc(l.assignee)}</span>`);
+    if (l.owner) bits.push(esc(l.owner) + (l.ownerConfirmed ? "" : " (unconfirmed)"));
+    if (l.phone) bits.push(`<span class="mono">${esc(l.phone)}</span>`);
+    if (l.nextFollowUp && OPEN_STAGES.includes(l.stage)) bits.push(`<span class="${due(l) ? "pill warn" : ""}">Follow up ${esc(fmtDate(l.nextFollowUp))}</span>`);
+    if (l.stage === "won") { const p = progress(l); bits.push(`${p.done}/${p.total} steps`); }
+    return `<button class="row" data-open="${esc(l.id)}" aria-current="${l.id === state.selected}">
+      <span class="name">${esc(l.business || "Untitled lead")}</span>
+      <span><span class="pill ${s.tone}">${esc(s.label)}</span>${l.tier ? ` <span class="pill plain">Tier ${esc(l.tier)}</span>` : ""}</span>
+      <span class="sub">${bits.join("")}</span>
+    </button>`;
+  }
+
+  function emptyHTML(title, text) { return `<div class="empty"><strong>${esc(title)}</strong>${esc(text)}</div>`; }
+
+  function listPane(rows, emptyTitle, emptyText) {
+    if (!state.loaded) return emptyHTML("Loading your leads…", "This takes a second the first time.");
+    return rows.length ? `<div class="list">${rows.map(rowHTML).join("")}</div>` : emptyHTML(emptyTitle, emptyText);
+  }
+
+  function progress(l) {
+    const c = (l.project && l.project.checks) || {};
+    const done = PROJECT_STEPS.filter((_, i) => c[i]).length;
+    return { done, total: PROJECT_STEPS.length };
+  }
+
+  function detailHTML() {
+    if (state.creating) return leadForm({ stage: "new", tier: 2, ownerConfirmed: false, assignee: state.person === "all" ? "" : state.person }, true);
+    const l = state.leads.find((x) => x.id === state.selected);
+    if (!l) return emptyHTML("Pick a lead", "Its details, call log and next step show here.");
+    return leadForm(l, false);
+  }
+
+  function leadForm(l, isNew) {
+    const ro = !state.canWrite ? "disabled" : "";
+    const stageOpts = STAGES.map((s) => `<option value="${s.id}" ${s.id === l.stage ? "selected" : ""}>${esc(s.label)}</option>`).join("");
+    const log = (l.log || []).slice().reverse();
+    const p = progress(l);
+    return `<form class="card" id="leadform" data-id="${esc(l.id || "")}" autocomplete="off">
+      <div class="head">
+        <h2>${isNew ? "New lead" : esc(l.business || "Untitled lead")}</h2>
+        <span class="pill ${stage(l.stage).tone}">${esc(stage(l.stage).label)}</span>
+      </div>
+      ${!isNew && l.phone ? `<div class="contact"><span class="num">${esc(l.phone)}</span>
+        <button type="button" class="btn" data-copy="${esc(l.phone)}">Copy number</button>
+        <a class="btn" href="tel:${esc(String(l.phone).replace(/[^0-9+]/g, ""))}">Call</a></div>` : ""}
+      <div class="fields">
+        <label class="full">Business<input id="f-business" name="business" required value="${esc(l.business || "")}" ${ro}></label>
+        <label>Owner or contact<input id="f-owner" name="owner" value="${esc(l.owner || "")}" ${ro}></label>
+        <label>Owner name confirmed?<select id="f-ownerConfirmed" name="ownerConfirmed" ${ro}><option value="false" ${!l.ownerConfirmed ? "selected" : ""}>No, ask "are you the owner?"</option><option value="true" ${l.ownerConfirmed ? "selected" : ""}>Yes</option></select></label>
+        <label>Phone<input id="f-phone" name="phone" inputmode="tel" value="${esc(l.phone || "")}" ${ro}></label>
+        <label>Email<input id="f-email" name="email" type="email" value="${esc(l.email || "")}" ${ro}></label>
+        <label class="full">Address<input id="f-address" name="address" value="${esc(l.address || "")}" ${ro}></label>
+        <label>Category<input id="f-category" name="category" placeholder="Café, barber, contractor…" value="${esc(l.category || "")}" ${ro}></label>
+        <label>Assigned to<select id="f-assignee" name="assignee" ${ro}><option value="">Nobody yet</option>${PEOPLE.map((n) => `<option ${l.assignee === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
+        <label>Tier<select id="f-tier" name="tier" ${ro}>${[1, 2, 3].map((t) => `<option value="${t}" ${Number(l.tier) === t ? "selected" : ""}>Tier ${t}</option>`).join("")}</select></label>
+        <label>Stage<select id="f-stage" name="stage" ${ro}>${stageOpts}</select></label>
+        <label>Next follow-up<input id="f-next" name="nextFollowUp" type="date" value="${esc(l.nextFollowUp || "")}" ${ro}></label>
+        <label>Deal value ($, one-time)<input id="f-value" name="value" type="number" min="0" step="50" value="${esc(l.value != null ? l.value : 2000)}" ${ro}></label>
+        <label>Care plan ($/month)<input id="f-care" name="carePlan" type="number" min="0" step="1" value="${esc(l.carePlan || 0)}" ${ro}></label>
+        <label class="full">Their website today<input id="f-web" name="webPresence" value="${esc(l.webPresence || "")}" ${ro}></label>
+        <label class="full">Hook (the one specific thing to say)<textarea id="f-hook" name="hook" ${ro}>${esc(l.hook || "")}</textarea></label>
+        <label class="full">Watch out<textarea id="f-watch" name="watchOut" ${ro}>${esc(l.watchOut || "")}</textarea></label>
+        <label class="full">Notes<textarea id="f-notes" name="notes" ${ro}>${esc(l.notes || "")}</textarea></label>
+        <label class="full">Preview link (once built)<input id="f-preview" name="previewUrl" type="url" value="${esc(l.previewUrl || "")}" ${ro}></label>
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="submit" ${ro}>${isNew ? "Add lead" : "Save changes"}</button>
+        ${isNew ? `<button class="btn" type="button" data-cancel>Cancel</button>` : `<button class="btn danger" type="button" data-delete ${ro}>Delete lead</button>`}
+      </div>
+      ${isNew ? "" : `
+      <section class="log" aria-labelledby="h-log">
+        <h3 id="h-log">Call log</h3>
+        <div class="logform">
+          <label>Outcome<select id="c-outcome" ${ro}>${OUTCOMES.map((o) => `<option>${esc(o)}</option>`).join("")}</select></label>
+          <label>Follow up on<input id="c-next" type="date" ${ro}></label>
+          <label class="full">What was said<input id="c-note" placeholder="e.g. Owner is in after 2 PM. Liked the idea." ${ro}></label>
+          <div class="full"><button class="btn" type="button" data-logcall ${ro}>Log this call</button></div>
+        </div>
+        ${log.length ? log.map((e) => `<div class="entry"><div class="when">${esc(new Date(e.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))} · ${esc(e.outcome)}</div>${e.note ? `<div>${esc(e.note)}</div>` : ""}</div>`).join("") : `<p class="note">No calls logged yet.</p>`}
+      </section>
+      ${l.stage === "won" ? `
+      <section aria-labelledby="h-proj">
+        <h3 id="h-proj">Project steps · ${p.done} of ${p.total}</h3>
+        <div class="bar" style="margin:8px 0 10px"><i style="width:${Math.round((p.done / p.total) * 100)}%"></i></div>
+        <div class="checks">${PROJECT_STEPS.map((step, i) => { const on = !!(l.project && l.project.checks && l.project.checks[i]); return `<label><input type="checkbox" data-step="${i}" ${on ? "checked" : ""} ${ro}><span class="${on ? "done" : ""}">${esc(step)}</span></label>`; }).join("")}</div>
+      </section>` : ""}`}
+    </form>`;
+  }
+
+  function guideHTML() {
+    return `<div class="guide">
+      <section><h2>Before you dial</h2><ul>
+        <li>Open their site and Google listing. Still open? Today's hours?</li>
+        <li>Pick the one specific thing to say (it's in the Hook field).</li>
+        <li>Owner unconfirmed? Ask "Are you the owner?" Don't guess a name.</li>
+        <li>Cafés: not 7–10 AM. Restaurants: 2–4 PM. Barbers: weekday afternoons.</li>
+      </ul></section>
+      <section><h2>The call, short</h2><ol>
+        <li>"Hey, is this [business]? Are you the owner?"</li>
+        <li>"I'm [name], a web designer here in Tucson. I'll be quick."</li>
+        <li>The one specific thing about their current site. Pause.</li>
+        <li>"I already designed you a new one. Can I text you the link?" (Only after they say yes.)</li>
+        <li>Their opinion first, price second. Then stop talking.</li>
+        <li>Always end with: "What's the best way to get back to you?"</li>
+      </ol></section>
+      <section><h2>Rules that protect you</h2><ul>
+        <li>Dial by hand. No autodialers, robocalls or AI voices to cell numbers.</li>
+        <li>Never cold-text the pitch. Text only after a yes on the call.</li>
+        <li>"Don't call me again" means mark the lead Lost with that outcome, and never call again.</li>
+        <li>Call 8 AM–9 PM their time.</li>
+        <li>Never promise reviews, rankings or results you can't show.</li>
+      </ul></section>
+      <section><h2>Moving a lead along</h2><ul>
+        <li><b>New:</b> found, not checked. <b>Researched:</b> site, owner and hook checked.</li>
+        <li><b>Called:</b> at least one attempt. Always set a follow-up date.</li>
+        <li><b>Interested / Preview sent:</b> they asked to see it. Follow up within 2 days.</li>
+        <li><b>Won:</b> agreement signed. The project checklist appears.</li>
+        <li><b>Not now:</b> follow up in 60–90 days. <b>Lost:</b> said no.</li>
+      </ul><p class="note">Full scripts and templates are in the Korvane repo under prompts/ and business/.</p></section>
+    </div>`;
+  }
+
+  function tasksHTML() {
+    const ro = state.canWrite && state.db ? "" : "disabled";
+    const list = myTasks().slice().sort((a, b) => (a.done - b.done) || String(a.due || "9999").localeCompare(String(b.due || "9999")) || String(a.title).localeCompare(String(b.title)));
+    const today = todayISO();
+    const item = (t) => `<div class="task ${t.done ? "is-done" : ""}">
+        <label class="tick"><input type="checkbox" data-task="${esc(t.id)}" ${t.done ? "checked" : ""} ${ro} aria-label="Done: ${esc(t.title)}"></label>
+        <div class="tbody"><div class="ttitle">${esc(t.title)}</div>
+          <div class="sub">${state.person === "all" ? `<span class="pill plain">${esc(t.assignee || "Unassigned")}</span>` : ""}${t.area ? `<span class="pill">${esc(t.area)}</span>` : ""}${t.due ? `<span class="${!t.done && t.due <= today ? "pill warn" : "muted"}">Due ${esc(fmtDate(t.due))}</span>` : ""}</div>
+          ${t.details ? `<div class="tdetails">${esc(t.details)}</div>` : ""}</div>
+        <button class="btn danger small" type="button" data-deltask="${esc(t.id)}" ${ro} aria-label="Delete task">Delete</button>
+      </div>`;
+    const body = !state.tasksLoaded ? emptyHTML("Loading tasks…", "")
+      : list.length ? `<div class="tasks">${list.map(item).join("")}</div>`
+      : emptyHTML("No tasks here", state.person === "all" ? "Add the first one above." : "Nothing assigned to " + state.person + " yet.");
+    return `<form class="card addtask" id="taskform" autocomplete="off">
+        <h3>Add a task</h3>
+        <div class="fields">
+          <label class="full">Task<input id="t-title" name="title" required placeholder="e.g. Verify the phone number for Bamba" ${ro}></label>
+          <label>For<select id="t-assignee" name="assignee" ${ro}>${PEOPLE.map((n) => `<option ${state.person === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
+          <label>Area<select id="t-area" name="area" ${ro}>${AREAS.map((a) => `<option>${esc(a)}</option>`).join("")}</select></label>
+          <label>Due<input id="t-due" name="due" type="date" ${ro}></label>
+          <label>Details<input id="t-details" name="details" ${ro}></label>
+        </div>
+        <div class="actions"><button class="btn primary" type="submit" ${ro}>Add task</button></div>
+      </form>${body}`;
+  }
+
+  function render() {
+    renderStats(); renderTabs();
+    const v = $("#view");
+    if (state.tab === "guide") { v.innerHTML = guideHTML(); return; }
+    if (state.tab === "tasks") { v.innerHTML = tasksHTML(); return; }
+    let rows, et, ex, toolbar = "";
+    if (state.tab === "today") {
+      rows = myLeads().filter(due).sort((a, b) => a.nextFollowUp.localeCompare(b.nextFollowUp));
+      et = "Nothing due today"; ex = "Leads whose follow-up date is today or earlier show here. Set one each time you log a call.";
+    } else if (state.tab === "clients") {
+      rows = myLeads().filter((l) => l.stage === "won");
+      et = "No clients yet"; ex = "Set a lead's stage to Won and it moves here with a project checklist.";
+    } else {
+      rows = filtered();
+      et = state.leads.length ? "No leads match" : "No leads yet"; ex = state.leads.length ? "Try another stage or clear the search." : "Add your first lead with the button above.";
+      toolbar = `<div class="toolbar">
+        <input type="search" id="q" placeholder="Search business, owner, phone, notes" value="${esc(state.q)}" aria-label="Search leads">
+        <select id="stagefilter" aria-label="Filter by stage">
+          <option value="open" ${state.stage === "open" ? "selected" : ""}>Open leads</option>
+          <option value="all" ${state.stage === "all" ? "selected" : ""}>All stages</option>
+          ${STAGES.map((s) => `<option value="${s.id}" ${state.stage === s.id ? "selected" : ""}>${esc(s.label)}</option>`).join("")}
+        </select>
+        <button class="btn primary" type="button" data-new ${state.canWrite && state.db ? "" : "disabled"}>Add lead</button>
+      </div>`;
+    }
+    const hadFocus = document.activeElement && document.activeElement.id === "q";
+    const caret = hadFocus ? document.activeElement.selectionStart : null;
+    v.innerHTML = `${toolbar}<div class="grid"><div>${listPane(rows, et, ex)}</div><div id="detail">${detailHTML()}</div></div>`;
+    if (hadFocus) { const q = $("#q"); q.focus(); try { q.setSelectionRange(caret, caret); } catch (e) {} }
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener("click", async (ev) => {
+    const t = ev.target.closest("button, a");
+    if (!t) return;
+    if (t.dataset.tab) { state.tab = t.dataset.tab; state.creating = false; try { localStorage.setItem("desk.tab", state.tab); } catch (e) {} render(); return; }
+    if (t.dataset.open) { state.selected = t.dataset.open; state.creating = false; render(); if (window.innerWidth <= 860) $("#detail").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    if (t.hasAttribute("data-new")) { state.creating = true; state.selected = null; render(); $("#f-business").focus(); return; }
+    if (t.hasAttribute("data-cancel")) { state.creating = false; render(); return; }
+    if (t.dataset.copy) {
+      try { await navigator.clipboard.writeText(t.dataset.copy); t.textContent = "Copied"; }
+      catch (e) { const n = $(".contact .num"); const r = document.createRange(); r.selectNodeContents(n); const s = getSelection(); s.removeAllRanges(); s.addRange(r); t.textContent = "Selected, press copy"; }
+      setTimeout(() => { t.textContent = "Copy number"; }, 1800);
+      return;
+    }
+    if (t.hasAttribute("data-delete")) {
+      if (!t.classList.contains("armed")) { t.classList.add("armed"); t.textContent = "Tap again to delete"; setTimeout(() => { if (t.isConnected) { t.classList.remove("armed"); t.textContent = "Delete lead"; } }, 4000); return; }
+      const id = state.selected; state.selected = null;
+      await write(id, () => state.db.collection("leads").doc(id).delete()).catch(() => {});
+      setStatus("Lead deleted.");
+      return;
+    }
+    if (t.dataset.deltask) {
+      if (!t.classList.contains("armed")) { t.classList.add("armed"); t.textContent = "Sure?"; setTimeout(() => { if (t.isConnected) { t.classList.remove("armed"); t.textContent = "Delete"; } }, 4000); return; }
+      const id = t.dataset.deltask;
+      await write("task:" + id, () => state.db.collection("tasks").doc(id).delete()).catch(() => {});
+      return;
+    }
+    if (t.hasAttribute("data-logcall")) {
+      const l = state.leads.find((x) => x.id === state.selected); if (!l) return;
+      const outcome = $("#c-outcome").value, note = $("#c-note").value.trim(), next = $("#c-next").value;
+      const lead = JSON.parse(JSON.stringify(l));
+      lead.log = (lead.log || []).concat([{ at: new Date().toISOString(), outcome, note }]).slice(-100);
+      lead.lastContact = todayISO();
+      if (next) lead.nextFollowUp = next;
+      if (lead.stage === "new" || lead.stage === "researched") lead.stage = "contacted";
+      if (outcome === "Wants to see preview" && OPEN_STAGES.includes(lead.stage)) lead.stage = "interested";
+      if (outcome === "Said yes") lead.stage = "won";
+      if (outcome === "Not interested" || outcome === "Asked not to be called") { lead.stage = "lost"; lead.nextFollowUp = ""; }
+      await saveLead(lead).then(() => setStatus("Call logged."), () => {});
+      return;
+    }
+  });
+
+  document.addEventListener("change", async (ev) => {
+    const el = ev.target;
+    if (el.id === "stagefilter") { state.stage = el.value; render(); return; }
+    if (el.id === "person") { state.person = el.value; state.selected = null; state.creating = false; try { localStorage.setItem("desk.person", state.person); } catch (e) {} render(); return; }
+    if (el.dataset.task) {
+      const id = el.dataset.task, done = el.checked;
+      await write("task:" + id, () => state.db.collection("tasks").doc(id).update({ done, doneAt: done ? new Date().toISOString() : "" })).catch(() => {});
+      return;
+    }
+    if (el.dataset.step != null) {
+      const l = state.leads.find((x) => x.id === state.selected); if (!l) return;
+      const lead = JSON.parse(JSON.stringify(l));
+      lead.project = lead.project || {}; lead.project.checks = lead.project.checks || {};
+      lead.project.checks[el.dataset.step] = el.checked;
+      await saveLead(lead).catch(() => {});
+    }
+  });
+
+  let qTimer;
+  document.addEventListener("input", (ev) => {
+    if (ev.target.id === "q") { clearTimeout(qTimer); const val = ev.target.value; qTimer = setTimeout(() => { state.q = val; render(); }, 150); }
+  });
+
+  document.addEventListener("submit", async (ev) => {
+    if (ev.target.id === "taskform") {
+      ev.preventDefault(); if (!state.db) return;
+      const f = new FormData(ev.target);
+      const title = String(f.get("title") || "").trim();
+      if (!title) { setStatus("Write the task first.", true); return; }
+      const ref = state.db.collection("tasks").doc();
+      const body = { title, assignee: String(f.get("assignee") || ""), area: String(f.get("area") || ""), due: String(f.get("due") || ""), details: String(f.get("details") || "").trim(), done: false, createdAt: new Date().toISOString() };
+      if (document.activeElement) document.activeElement.blur();
+      await write("task:" + ref.id, () => ref.set(body)).then(() => setStatus("Task added."), () => {});
+      return;
+    }
+    if (ev.target.id !== "leadform") return;
+    ev.preventDefault();
+    if (!state.db) return;
+    const f = new FormData(ev.target);
+    const base = state.creating ? { log: [], createdAt: new Date().toISOString() } : JSON.parse(JSON.stringify(state.leads.find((x) => x.id === state.selected) || {}));
+    const lead = Object.assign(base, {
+      business: String(f.get("business") || "").trim(),
+      owner: String(f.get("owner") || "").trim(),
+      ownerConfirmed: f.get("ownerConfirmed") === "true",
+      phone: String(f.get("phone") || "").trim(),
+      email: String(f.get("email") || "").trim(),
+      address: String(f.get("address") || "").trim(),
+      category: String(f.get("category") || "").trim(),
+      tier: Number(f.get("tier")) || 2,
+      assignee: String(f.get("assignee") || ""),
+      stage: String(f.get("stage") || "new"),
+      nextFollowUp: String(f.get("nextFollowUp") || ""),
+      value: Number(f.get("value")) || 0,
+      carePlan: Number(f.get("carePlan")) || 0,
+      webPresence: String(f.get("webPresence") || "").trim(),
+      hook: String(f.get("hook") || "").trim(),
+      watchOut: String(f.get("watchOut") || "").trim(),
+      notes: String(f.get("notes") || "").trim(),
+      previewUrl: String(f.get("previewUrl") || "").trim(),
+    });
+    if (!lead.business) { setStatus("Add the business name first.", true); return; }
+    if (state.creating) {
+      const ref = state.db.collection("leads").doc();
+      lead.id = ref.id; state.creating = false; state.selected = ref.id;
+    }
+    if (document.activeElement) document.activeElement.blur();
+    await saveLead(lead).then(() => setStatus("Saved."), () => {});
+  });
+
+  /* Someone is mid-edit in a form field: don't redraw under them. Buttons and checkboxes don't count. */
+  function typing() {
+    const a = document.activeElement;
+    if (!a || !a.closest || !a.closest("#leadform, #taskform")) return false;
+    return (a.tagName === "INPUT" && !["checkbox", "submit", "button"].includes(a.type)) || a.tagName === "TEXTAREA" || a.tagName === "SELECT";
+  }
+
+  /* ---------- boot ---------- */
+  $("#person").value = state.person;
+  render();
+  (async () => {
+    const cl = window.claude;
+    if (!cl || !cl.use) { setStatus("Open this page on claude.ai to load your saved leads.", true); state.loaded = true; render(); return; }
+    const [db, user] = await Promise.all([cl.use("db"), cl.use("user")]);
+    if (!db) { setStatus("Your saved leads can't load here. Sign in to claude.ai and open the page there.", true); state.loaded = true; render(); return; }
+    state.db = db;
+    if (user) { try { const w = await user.can("data.write"); if (w === false) state.canWrite = false; } catch (e) {} }
+    const timer = setTimeout(() => setStatus("Still connecting. Your leads may be out of date until it finishes.", true), 10000);
+    db.collection("leads").onSnapshot((snap) => {
+      state.leads = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      state.loaded = true;
+      if (!snap.metadata.fromCache) { clearTimeout(timer); setStatus(state.canWrite ? `${state.leads.length} leads · saved automatically to this page` : `${state.leads.length} leads · view only`); }
+      if (state.selected && !state.leads.some((l) => l.id === state.selected)) state.selected = null;
+      if (!typing()) render(); else { renderStats(); renderTabs(); }
+    }, (e) => { clearTimeout(timer); setStatus(e.code === "revoked" ? "Access to the saved leads ended." : "Lost the connection to your saved leads. Reload the page to try again.", true); });
+    db.collection("tasks").onSnapshot((snap) => {
+      state.tasks = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      state.tasksLoaded = true;
+      if (!typing()) render(); else { renderStats(); renderTabs(); }
+    }, () => { state.tasksLoaded = true; render(); });
+  })();
+})();
+</script>

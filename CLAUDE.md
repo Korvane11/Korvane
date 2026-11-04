@@ -37,6 +37,29 @@ pitch kit. v1 is in git history.
 site ($500), from the owner's draft (2026-10-29). Their tonality video
 (youtu.be/KQ6c9vceu7A) couldn't be watched: YouTube is blocked here.
 
+## Running the business (`business/`)
+
+Set up 2026-11-04 when the owner asked for "everything we need" to run the
+business, "portals for leads so we can jot down", then for leads and tasks
+for each of the team: Marce (the owner), Kadin, Jailen, Nick and Kai.
+
+- Lead Desk (leads, call log, follow-ups, client project checklists, team
+  tasks): https://claude.ai/artifact/QGEo1hNei97gBYWHrP1QoV, published from
+  `business/lead-desk.html`. Its data lives in the artifact's database
+  (collections `leads` and `tasks`, readable and writable at Contributor
+  and above, not by view-only people); read or change it with ArtifactData,
+  never by putting records in the HTML. Teammates can only use it once
+  Marce shares it from the page's Share menu.
+- `business/PLAYBOOK.md`: roles, pipeline, proposed packages ($2,000 /
+  $3,500, care plans $79 / $149 a month, all Marce's call), setup in
+  Tucson, hosting, calling rules, sources. `business/templates/`:
+  proposal, client agreement (needs a lawyer's review), onboarding
+  questions, launch and handoff.
+- Lead lists with owner names and phones never go in this repo (GitHub
+  Pages serves it).
+- Paying clients' sites should move off GitHub Pages (its terms say it
+  isn't for running a business's site); Cloudflare Pages is proposed.
+
 ## SimNow (`sites/simnow/`)
 
 Sim racing lounge, 3790 Silverton Rd NE, Suite C, Salem, OR 97305.
