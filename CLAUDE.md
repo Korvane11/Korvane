@@ -24,7 +24,14 @@ and gets committed.
 `prompts/site-blueprint.md` is the brief to open a new client site with
 (fill in the fields, paste it). It's our own, written from the SimNow
 lessons; the owner asked for one after seeing a creator's "master
-blueprint" reel, which was not copied.
+blueprint" reel, which was not copied. v2 (2026-11-04), from the owner:
+"build me a bullet proof prompt that can create a cinematic 3d website
+that is better than any other competitor using my old prompt but making it
+more effecient ... optimal 4k quality, with designs that make clients want
+to pay more than 2K". It adds the render pipeline with its gates, the 4K
+encode ladder (4K stills always; 4K motion only when measured to fit, since
+Cycles here is about 7 min a 4K frame), budgets, QA, file layout and a
+pitch kit. v1 is in git history.
 
 `prompts/cold-call-script.md` is the phone pitch for selling a finished
 site ($500), from the owner's draft (2026-10-29). Their tonality video
