@@ -1,0 +1,32 @@
+--- a/prompts/site-blueprint.md
++++ b/prompts/site-blueprint.md
+@@ -165,6 +165,9 @@
+    unless the concept is black.
+ 5. Animatic GATE: the whole move at 480p and low samples, encoded and
+    played in the page. Timing is approved here, never on the final render.
++   Check it as a contact sheet (a frame every quarter second): the action
++   the shot is about stays in view from the camera for its whole length,
++   at an angle compared with the reference's.
+ 6. Measure: render 5 frames at the final resolution and samples. Total =
+    seconds per frame × frames. If that runs past 6 hours, cut in this
+    order: shorter shot, fewer samples with denoising (OpenImageDenoise),
+@@ -261,6 +264,9 @@
+ case once:
+ - Hit-test every main control at its centre with the menu open and closed.
+   A layer can block taps while screenshots look perfect.
++  (An element toggled with the `hidden` attribute whose class sets
++  `display` needs `[hidden] { display: none }` for that class, or the
++  closed layer stays on top.)
+ - Overflow: `scrollWidth` vs `document.documentElement.clientWidth` (not
+   innerWidth).
+ - Accessibility tree: the H1 and the main actions are exposed at load (not
+@@ -275,6 +281,9 @@
+ - Share tags and structured data, from the shared URL, following redirects.
+ - Full-page screenshots scrolled with `behavior: 'instant'`, so the reveals
+   fire. Look at every one yourself.
++- The test script itself: page errors fail the run; an init script waits
++  for `<html>` before reading it; an end is recorded only after its start
++  was seen.
+ Not checkable here (name it in the report): Safari/iOS, real phones,
+ H.264 playback.
+ </qa>

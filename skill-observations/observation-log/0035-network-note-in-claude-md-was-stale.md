@@ -1,7 +1,7 @@
 ---
 id: 35
 title: "CLAUDE.md states the network level as a fact; this session's network blocked the sites it implies are reachable"
-status: open
+status: actioned
 type: open-source
 skill: []
 proposes_skill: []
@@ -11,8 +11,8 @@ area: "Project memory about the environment's network access"
 date: 2026-11-03
 session_context: "Building a Tucson cold-call lead list (scratchpad leads/tucson-leads-2026-11-03.md)"
 parked_until:
-resolved:
-resolution:
+resolved: 2026-11-09
+resolution: "Staged as a patch to CLAUDE.md at skill-updates/2026-11-09/_target-files/CLAUDE.md.patch (SimNow Network line: dated history plus a curl probe and the fallback) (weekly review 2026-11-09)."
 reference:
 commands_verified: "run: curl to haleysbakehouse.godaddysites.com, www.google.com, www.yelp.com, ecorp.azcc.gov, simnowusa.com: all CONNECT 403 at the agent proxy; WebFetch: ENOTFOUND. WebSearch worked."
 ---
